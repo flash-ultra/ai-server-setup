@@ -155,13 +155,31 @@ KV-cache dtype, tensor balance — move things by single-digit percentages while
 gap is a factor of 3 to 55. Measurement time went into building the faster stack
 instead of refining the slower one.
 
-### Not measured
+---
 
-- `--spec-draft-n-max` 1 vs 3
-- 1M context end to end — duration, stability, VRAM
+## Still open
+
+Two gaps still matter, because they decide whether the fallback is trustworthy on the
+day it is needed. Both are owned by the scenario that would close them:
+
+- [`--spec-draft-n-max` 1 vs 3](scenarios/single-stream.md#not-measured) — the merge
+  notes call 1 often optimal and report regressions above 2; this setup runs 3
+- [1M context end to end](scenarios/long-context.md#not-measured) — verified only to
+  128k, while the server is configured for the full 1,048,576
+
+### Not planned
+
+Dropped for the reason given above: they move single-digit percentages against a gap
+of a factor 3 to 55.
+
 - `--threads` (default 80) against smaller values
 - KV-cache dtypes `-ctk` / `-ctv`
 - `-ts` balance (VRAM is unevenly distributed at 41–47 GiB)
+- `-np` above 8 — whether more slots move the TTFT cliff at concurrency 32, or only
+  spread the same starved compute across more queues
+
+These are listed so nobody re-derives them as fresh ideas. If this setup ever returns
+to production, they are the place to start.
 
 ---
 

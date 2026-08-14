@@ -101,7 +101,21 @@ Setup-specific sources are listed in the respective setup README.
 
 ## Still open
 
-- 1M context on llama.cpp — measured only to 128k, full length never run
-- DSpark correctness protocol (five cold starts under bursty load) not run
-- SPS cost table not re-profiled for this machine
-- Effect of lowering `reasoning_effort` on throughput unmeasured
+The questions that would change a decision. Each is owned by the document that would
+answer it.
+
+- [DSpark correctness under bursty load](sglang/README.md#still-open) — five cold
+  starts, to rule out silent draft corruption with more than a single-run confidence
+- [Prefill decay between 128k and 1M](sglang/scenarios/long-context.md#not-measured) —
+  only the two endpoints are measured, the curve between them is guessed
+- [Prefix-cache benefit on a warm 1M context](sglang/scenarios/long-context.md#not-measured)
+  — decides whether the 7:51 min cold prefill is a one-off or a per-query cost
+- [Effect of `reasoning_effort` on throughput](sglang/scenarios/concurrent-load.md#not-measured)
+  — 96 % of generated tokens are reasoning, so this is the largest untested lever on
+  cost per answer
+- [llama.cpp at full context](llama-cpp/scenarios/long-context.md#not-measured) — the fallback
+  is verified only to 128k
+
+Smaller gaps, and the knobs deliberately dropped when the llama.cpp series was cut
+short, are listed in the [SGLang](sglang/README.md#still-open) and
+[llama.cpp](llama-cpp/README.md#not-planned) setup READMEs.

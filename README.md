@@ -58,8 +58,15 @@ across setups and machines so the numbers stay comparable:
 | `concurrent-load.md` | concurrency sweep — throughput and latency under parallel load |
 | `long-context.md` | behaviour as context depth grows |
 
-A scenario file exists only where the measurement was actually run. What is missing is
-listed as open in the setup's README rather than filled with placeholders.
+A scenario file exists only where the measurement was actually run — no placeholder
+files for workloads nobody has measured.
+
+**Open items are owned by the lowest level where the work would happen.** A scenario
+file lists the measurements missing for its workload shape, a setup README lists
+configuration and correctness gaps, and the model README carries a linked rollup of
+the questions that would change a decision instead of a second copy. Anything
+deliberately dropped is marked as not planned, with the reason — so that an empty
+spot means "nobody has looked", never "we forgot to write it down".
 
 ---
 

@@ -38,3 +38,10 @@ in this setup changes it.
 3.7× gain for 32× the load. For comparison,
 [SGLang on the same hardware](../../sglang/scenarios/concurrent-load.md) delivers
 1571 output tok/s at concurrency 32 and keeps TTFT at 0.25 s.
+
+## Not measured
+
+The one open knob for this workload shape — whether `-np` above 8 moves the cliff at
+concurrency 32 or merely spreads the same starved compute across more queues — was
+[not planned](../README.md#not-planned) when the series was cut short. Nothing else
+here is untested: the sweep covers the full range the eight slots can serve.

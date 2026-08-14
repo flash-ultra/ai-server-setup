@@ -153,13 +153,17 @@ beyond that you are optimising for batch processing. Numbers in
 
 ## Still open
 
-- Warm 1M run to quantify the prefix-cache benefit; intermediate depths (256k, 512k)
-  to map the prefill decay curve
-- Lower `reasoning_effort` and measure the effect on throughput
+Configuration and correctness, owned here:
+
 - Run the correctness protocol: five cold starts under bursty load, to rule out draft
-  corruption with confidence
+  corruption with confidence. Depth 7 has held so far, but the failure mode of depth 5
+  was precisely one that a single run does not show.
 - Re-profile the SPS cost table for this machine instead of using the shipped one
-- Behaviour under real agent traffic — synthetic prompts overstate draft acceptance
+
+Missing measurements are listed in the scenario they belong to:
+[long context](scenarios/long-context.md#not-measured) ·
+[concurrent load](scenarios/concurrent-load.md#not-measured). Single stream has no
+open items.
 
 ---
 

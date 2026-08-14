@@ -71,3 +71,11 @@ slots are full.
 **Utilisation is constant at 90–95 %.** The cards are saturated at every level,
 including concurrency 1, so the throughput gain across the sweep comes from better
 batching rather than from idle capacity being filled.
+
+## Not measured
+
+- Effect of lowering `reasoning_effort` on throughput — 96 % of generated tokens are
+  reasoning, so this is the largest untested lever on cost per answer
+- Behaviour under real agent traffic — the synthetic prompts here have a uniform shape,
+  which overstates draft acceptance and with it output tok/s
+- Concurrency above 128 — the sweep stops there, and the curve had not yet flattened

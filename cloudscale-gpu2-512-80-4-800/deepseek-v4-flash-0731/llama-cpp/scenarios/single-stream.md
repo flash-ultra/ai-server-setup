@@ -41,3 +41,10 @@ ceiling is present from the first request; it just is not painful yet.
 **Watch the reasoning share when planning.** 96 % of generated tokens are reasoning
 tokens, so a visible answer of 10 tokens can cost 250 tokens of generation. At 91 tok/s
 that is under three seconds, but it scales linearly with everything else.
+
+## Not measured
+
+- `--spec-draft-n-max` 1 vs 3 — the llama.cpp merge that added DSpark states 1 is often
+  optimal and reports regressions above 2, while this setup runs 3. The 91 tok/s above
+  were measured at 3, so the number may be leaving throughput on the table rather than
+  representing the ceiling.

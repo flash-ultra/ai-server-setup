@@ -53,9 +53,14 @@ ubatch does not just lose throughput, it makes the number unreliable. Leave
 
 ## Not measured
 
-- 1M context end to end — duration, stability, VRAM
-- KV-cache dtypes `-ctk` / `-ctv` at depth
-- `-ts` balance (VRAM is unevenly distributed at 41–47 GiB)
+- **1M context end to end — duration, stability, VRAM.** Measured only to 128k. The
+  decay curve extrapolates to well over an hour of prefill, against
+  [7:51 min on SGLang](../../sglang/scenarios/long-context.md); that number decides
+  whether the fallback is usable at full length at all.
+
+The depth-related knobs that were dropped when the series was cut short — KV-cache
+dtypes at depth, `-ts` balance — are listed as
+[not planned](../README.md#not-planned).
 
 Worth knowing before running the full context: a 32-bit overflow at very long context
 when `n_kv × n_ubatch` crosses 2³² was reported in llama.cpp as #24643, #24718 and

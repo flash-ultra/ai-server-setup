@@ -37,3 +37,9 @@ suggests.
 [91 tok/s single-stream](../../llama-cpp/scenarios/single-stream.md) with a lower TTFT
 of 0.05 s. Decode here is interconnect-latency bound, and this machine has no NVLink.
 The advantage appears under [concurrent load](concurrent-load.md).
+
+## Not measured
+
+Nothing open for this workload shape. The remaining gaps on this setup are
+configuration and correctness rather than measurement, and are tracked in the
+[setup README](../README.md#still-open).
