@@ -29,8 +29,9 @@ and working speculative decoding. In production since 2026-08-15.
 | Scenario | Headline |
 |---|---|
 | [Single stream](scenarios/single-stream.md) | 131.2 output tok/s · 665.2 total tok/s · TTFT 0.15 s |
-| [Concurrent load](scenarios/concurrent-load.md) | peak **14,657 total tok/s** at C=128 · 91–95 % GPU |
+| [Concurrent load](scenarios/concurrent-load.md) | peak **27,026 total tok/s** at C=256 · curve still climbing · 97 % GPU |
 | [Long context](scenarios/long-context.md) | full 1M verified · prefill 470.7 s · **3/3 needles recovered** |
+| [Reasoning cost](scenarios/reasoning-cost.md) | thinking off = **3.5× answers/s**, 8.75× fewer tokens per answer |
 
 ---
 
@@ -126,6 +127,11 @@ one test 253 reasoning tokens against 10 tokens of visible answer. This dominate
 and capacity planning, and it is why a first measurement was off by a factor of 5: it
 counted only the answer text.
 
+Sending `chat_template_kwargs: {"thinking": false}` per request cuts cost per answer
+by a factor of 8.75 and raises answers per second by 3.5×; `reasoning_effort` in
+contrast changes almost nothing under load. Measured in
+[reasoning-cost.md](scenarios/reasoning-cost.md).
+
 ### The reasoning parser works
 
 Unlike the first fork, this stack separates cleanly: `content` holds the answer,
@@ -162,7 +168,8 @@ Configuration and correctness, owned here:
 
 Missing measurements are listed in the scenario they belong to:
 [long context](scenarios/long-context.md#not-measured) ·
-[concurrent load](scenarios/concurrent-load.md#not-measured). Single stream has no
+[concurrent load](scenarios/concurrent-load.md#not-measured) ·
+[reasoning cost](scenarios/reasoning-cost.md#not-measured). Single stream has no
 open items.
 
 ---

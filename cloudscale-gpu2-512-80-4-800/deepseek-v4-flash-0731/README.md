@@ -30,7 +30,8 @@ configured as a fallback.
 At 32 concurrent requests SGLang serves 3.2× the requests at 55× lower latency,
 running all four GPUs at 91–95 % utilisation versus llama.cpp's 20 %.
 
-Peak on the SGLang stack: **14,657 total tok/s** at concurrency 128.
+Peak on the SGLang stack: **27,026 total tok/s** at concurrency 256 — the sweep was
+stopped by the configured request limit, not by the throughput curve flattening.
 
 ## Server setups
 
@@ -44,8 +45,9 @@ Peak on the SGLang stack: **14,657 total tok/s** at concurrency 128.
 | Scenario | llama.cpp | SGLang |
 |---|---|---|
 | Single stream | [measured](llama-cpp/scenarios/single-stream.md) | [measured](sglang/scenarios/single-stream.md) |
-| Concurrent load | [C 1–32](llama-cpp/scenarios/concurrent-load.md) | [C 1–128](sglang/scenarios/concurrent-load.md) |
+| Concurrent load | [C 1–32](llama-cpp/scenarios/concurrent-load.md) | [C 1–256 + prompt mix](sglang/scenarios/concurrent-load.md) |
 | Long context | [0–128k](llama-cpp/scenarios/long-context.md) | [full 1M verified](sglang/scenarios/long-context.md) |
+| Reasoning cost | not measured | [measured](sglang/scenarios/reasoning-cost.md) |
 
 ## The one finding that decided it
 
@@ -75,6 +77,12 @@ under varying load across several cold starts.
 produced 253 reasoning tokens against 10 tokens of visible answer. Benchmarks that
 count only streamed answer text under-report throughput by roughly a factor of 5 —
 measure via the `usage` fields.
+
+Two consequences, both measured in [reasoning cost](sglang/scenarios/reasoning-cost.md):
+per-request `thinking: false` gives 3.5× the answers per second at an eighth of the
+tokens, while `reasoning_effort` changes almost nothing under load. And with thinking
+on, reasoning eats the `max_tokens` budget — visible answers came back at 107
+characters against 223 with it off, because the answer is truncated after the thinking.
 
 **Sampling is not optional:** `temperature 1.0`, `top_p 1.0`. Lower values drive this
 checkpoint into repetition loops. For llama.cpp additionally `min_p 0.01`.
@@ -110,9 +118,11 @@ answer it.
   only the two endpoints are measured, the curve between them is guessed
 - [Prefix-cache benefit on a warm 1M context](sglang/scenarios/long-context.md#not-measured)
   — decides whether the 7:51 min cold prefill is a one-off or a per-query cost
-- [Effect of `reasoning_effort` on throughput](sglang/scenarios/concurrent-load.md#not-measured)
-  — 96 % of generated tokens are reasoning, so this is the largest untested lever on
-  cost per answer
+- [Answer quality with thinking off](sglang/scenarios/reasoning-cost.md#not-measured) —
+  the 8.75× cost saving is measured, but only length and throughput; whether those
+  answers are as good needs a task-specific evaluation
+- [Concurrency ceiling](sglang/scenarios/concurrent-load.md#not-measured) — 256 is the
+  best measured level and also the configured limit, so the real maximum is unknown
 - [llama.cpp at full context](llama-cpp/scenarios/long-context.md#not-measured) — the fallback
   is verified only to 128k
 

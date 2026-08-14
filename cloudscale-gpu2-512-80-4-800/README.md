@@ -18,7 +18,7 @@ was measured on this machine.
 
 | Model | Production setup | Peak throughput | Details |
 |---|---|---|---|
-| **DeepSeek-V4-Flash-0731** | SGLang + SM120 patchset | 14,657 total tok/s @ C=128 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
+| **DeepSeek-V4-Flash-0731** | SGLang + SM120 patchset | 27,026 total tok/s @ C=256 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
 
 ---
 

@@ -21,7 +21,7 @@ Which model has been measured on which machine, and with what result.
 
 | Model | cloudscale `GPU2-512-80-4-800` |
 |---|---|
-| **DeepSeek-V4-Flash-0731** | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/) — 14,657 tok/s @ C=128 · full 1M context verified |
+| **DeepSeek-V4-Flash-0731** | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/) — 27,026 tok/s @ C=256 · full 1M context verified |
 
 A model measured on several machines keeps one row and gains a column per machine, so
 the cross-hardware comparison lives here rather than in the directory tree.
