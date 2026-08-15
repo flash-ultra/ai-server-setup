@@ -31,14 +31,18 @@ document, prefixed with a comment recording the protocol version.
 | Token counting | `usage` fields | Stream deltas miss reasoning tokens — this was off by a factor of 5 once |
 | Sampling | `temperature 1.0`, `top_p 1.0` | Checkpoint calibration for DeepSeek-V4; note deviations per model |
 | Prompt | verbatim in `bench.py` | See below |
+| Prompt language | English | Applies from v1 on; the DeepSeek series below was measured with a German prompt of the same shape |
 
 ## Why the prompt itself is pinned
 
 Fixing the token count is not enough. With speculative decoding, draft acceptance
 depends on how predictable the text is — the same 1000 tokens of repetitive prose and
 of dense code produce different throughput. The prompt is therefore stored verbatim in
-`bench.py` and kept stable across models, even though it is German and the rest of the
-repository is English. Changing it for style would invalidate every existing series.
+`bench.py`, not described by its length.
+
+Keep it stable across models. Changing the wording produces a different series even at
+identical token counts, so a change means bumping the protocol version and re-measuring
+the baseline, not quietly editing the string.
 
 ## Scenarios
 
@@ -83,6 +87,7 @@ with it:
 | Document | Deviation |
 |---|---|
 | `llama-cpp/scenarios/*` | `max_tokens` 200, counted via stream deltas |
+| all DeepSeek scenarios | German prompt text; `v1` uses an English prompt of the same structure |
 | `sglang/scenarios/concurrent-load.md` | `max_tokens` 512, `usage` counting; levels above 128 measured in a later run |
 | Model README verdict table | requests/s and TTFT only — both runs used `max_tokens` 200 and stream counting, which is why that particular comparison holds |
 

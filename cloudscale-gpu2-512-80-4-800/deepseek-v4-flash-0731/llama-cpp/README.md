@@ -32,9 +32,32 @@ under load. Superseded as of 2026-08-15; retained as a fallback.
 
 ---
 
-## Configuration
+## Deployment
 
-Runs as `docker compose`, restart-safe.
+Both files sit next to this README: [`Dockerfile`](Dockerfile) and
+[`docker-compose.yml`](docker-compose.yml).
+
+```bash
+# build for sm120 only — under two minutes on 80 cores
+docker build --build-arg LLAMA_COMMIT=$(git ls-remote \
+    https://github.com/ggml-org/llama.cpp.git HEAD | cut -f1) \
+    -t llamacpp-sm120:local .
+
+docker compose up -d          # restart: unless-stopped
+docker compose logs -f
+```
+
+Expects the GGUF conversion and the DSpark draft model under the mounted directory:
+
+```bash
+hf download unsloth/DeepSeek-V4-Flash-0731-GGUF \
+    --local-dir /mnt/scratch/models/DSv4-GGUF --include "*UD-Q8_K_XL*"
+```
+
+The build identity is readable from the image itself:
+`docker run --rm llamacpp-sm120:local cat /build-info.txt`
+
+### Configuration in effect
 
 ```
 -m   DeepSeek-V4-Flash-0731-UD-Q8_K_XL-00001-of-00005.gguf
@@ -47,13 +70,19 @@ Runs as `docker compose`, restart-safe.
 --metrics  --host 0.0.0.0  --port 8000
 ```
 
-The build targets `CMAKE_CUDA_ARCHITECTURES=120` explicitly rather than producing a
-generic multi-arch binary.
+Batch sizes are deliberately absent — the defaults `-b 2048 -ub 512` measured optimal
+and overriding them costs up to 38 % at depth. See
+[long-context.md](scenarios/long-context.md).
+
+For a single request with the full 1M context, set `-np` to 1; `-c` is the shared KV
+pool, divided across the slots.
 
 ### Build gotcha
 
 Inside a CUDA `devel` image the driver stub must be linked explicitly, otherwise
-linking fails with `undefined reference to cuMemCreate`:
+linking fails with `undefined reference to cuMemCreate`. `libcuda.so.1` ships with the
+driver, not the toolkit — the stub is link-time only, at runtime the container gets the
+real library from the host:
 
 ```bash
 ln -sf /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1
@@ -65,6 +94,8 @@ cmake -B build -G Ninja \
   -DGGML_CUDA_FA_ALL_QUANTS=ON \
   -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath-link,/usr/local/cuda/lib64/stubs -L/usr/local/cuda/lib64/stubs"
 ```
+
+One more: the image has no `curl`, so a compose healthcheck must use `python3`.
 
 ---
 

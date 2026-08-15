@@ -33,33 +33,33 @@ GPU_POLL_S = 1.0
 # The prompt is pinned, not just its length. With speculative decoding, draft
 # acceptance depends on how predictable the text is — same token count, different
 # content, different throughput. Kept verbatim across models so series stay comparable.
-FILLER = ("Die Firma betreibt eine verteilte Serverinfrastruktur an mehreren Standorten "
-          "und benoetigt eine strukturierte Auswertung der Betriebsdaten. ")
-PROMPT = "Fasse den folgenden Bericht in drei Saetzen zusammen.\n\n" + FILLER * 55
+FILLER = ("The company operates a distributed server infrastructure across several sites "
+          "and requires a structured evaluation of its operational data. ")
+PROMPT = "Summarise the following report in three sentences.\n\n" + FILLER * 60
 
 # Mixed traffic: five request shapes, drawn at random per request. Approximates agent
 # traffic, which is never uniform. Weights are equal on purpose — no claim that this
 # matches any particular production mix.
 MIX = [
-    "Was ist der Unterschied zwischen einem Index und einem Primary Key?",
-    ("Pruefe diesen Code auf Fehler:\n\ndef parse(rows):\n    out = {}\n    for r in rows:\n"
+    "What is the difference between an index and a primary key?",
+    ("Review this code for defects:\n\ndef parse(rows):\n    out = {}\n    for r in rows:\n"
      "        k, v = r.split(chr(61))\n        out[k] = int(v)\n    return out\n\n"
-     "Was passiert bei leeren Zeilen oder Werten die keine Zahl sind?"),
-    "Analysiere den folgenden Bericht und nenne die drei groessten Risiken.\n\n" + FILLER * 180,
-    ("Du hast Zugriff auf die Funktion query_metrics(host, from, to). Ein Nutzer fragt nach "
-     "der CPU-Auslastung von web-03 in den letzten 24 Stunden. Formuliere den Aufruf."),
-    "Erklaere die Vor- und Nachteile von Event Sourcing fuer ein Bestellsystem.\n\n" + FILLER * 20,
+     "What happens with empty lines, or values that are not numbers?"),
+    "Analyse the following report and name the three largest risks.\n\n" + FILLER * 180,
+    ("You have access to the function query_metrics(host, from, to). A user asks for the "
+     "CPU utilisation of web-03 over the last 24 hours. Formulate the call."),
+    "Explain the trade-offs of event sourcing for an order management system.\n\n" + FILLER * 20,
 ]
 
 # Long-context needles: one early, one mid, one late. The mid needle is the actual
 # test — models that only attend to the edges recover the outer two and miss it.
 NEEDLES = [
-    (0.10, "WICHTIG: Der Pruefcode fuer Standort Nord lautet XR-4471.", "XR-4471"),
-    (0.50, "WICHTIG: Der Pruefcode fuer Standort Mitte lautet QT-8829.", "QT-8829"),
-    (0.90, "WICHTIG: Der Pruefcode fuer Standort Sued lautet ZB-1503.", "ZB-1503"),
+    (0.10, "IMPORTANT: The verification code for site North is XR-4471.", "XR-4471"),
+    (0.50, "IMPORTANT: The verification code for site Central is QT-8829.", "QT-8829"),
+    (0.90, "IMPORTANT: The verification code for site South is ZB-1503.", "ZB-1503"),
 ]
-NEEDLE_QUESTION = ("\n\nFrage: In diesem Text sind drei Pruefcodes versteckt (Nord, Mitte, Sued). "
-                   "Nenne alle drei Codes exakt. Antworte kurz.")
+NEEDLE_QUESTION = ("\n\nQuestion: three verification codes are hidden in the text above "
+                   "(North, Central, South). Name all three exactly. Answer briefly.")
 
 
 # ---------------------------------------------------------------- gpu sampling

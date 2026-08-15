@@ -51,7 +51,37 @@ kernels no forward pass completes.
 
 ---
 
-## Operation
+## Deployment
+
+The compose file is not reproduced here — it comes from the
+[upstream repository](https://github.com/ombori/deepseek-v4-flash-0731-sglang-4x-rtx-pro-6000)
+(Apache 2.0, © 2026 Ombori) and carries per-flag rationale worth reading in the
+original. Our deployment differs from their example in exactly **two lines**:
+
+```bash
+git clone https://github.com/ombori/deepseek-v4-flash-0731-sglang-4x-rtx-pro-6000 dsv4
+cd dsv4 && cp docker-compose.example.yml docker-compose.yml
+
+# 1. use the prebuilt image instead of building it locally
+sed -i 's|image: sglang:v0.5.16-dsv4-sm120|image: ghcr.io/ombori/deepseek-v4-flash-0731-sglang-4x-rtx-pro-6000:latest|' docker-compose.yml
+
+# 2. point the model mount at where the checkpoint actually lives
+sed -i 's|- /models:/models:ro|- /mnt/scratch/models:/models:ro|' docker-compose.yml
+
+docker compose up -d
+```
+
+The checkpoint is expected at `<mount>/DeepSeek-V4-Flash-0731` (~158 GB):
+
+```bash
+hf download deepseek-ai/DeepSeek-V4-Flash-0731 --local-dir /mnt/scratch/models/DeepSeek-V4-Flash-0731
+```
+
+The repository also ships `sps/dspark_sps_g7.json`, the profiled cost table the
+compact verify path reads. Without it the scheduler degenerates to verify-all and the
+speculative decoding configuration below does nothing.
+
+### Running
 
 ```bash
 docker compose up -d          # restart: unless-stopped
@@ -68,6 +98,42 @@ docker compose down
 
 The sampling values are not optional: lower temperatures drive this checkpoint into
 repetition loops.
+
+### Configuration in effect
+
+The flags below are what the container actually runs. Their reasoning is documented
+inline in the upstream compose file; the ones that must not be changed are listed
+under [pinned values](#pinned-values).
+
+```
+--tp-size 4 --dp-size 4 --enable-dp-attention --enable-dp-lm-head --ep-size 4
+--context-length 1048576  --mem-fraction-static 0.85  --swa-full-tokens-ratio 0.1
+--max-running-requests 256  --cuda-graph-max-bs 64
+--kv-cache-dtype fp8_e4m3  --moe-runner-backend flashinfer_mxfp4
+--speculative-algorithm DSPARK  --speculative-attention-mode decode
+--speculative-dspark-block-size 7  --speculative-dspark-sps-table-path /sps/dspark_sps_g7.json
+--disable-custom-all-reduce  --chunked-prefill-size 4096
+--reasoning-parser deepseek-v4  --tool-call-parser deepseekv4
+--default-chat-template-kwargs '{"thinking": true}'
+--load-balance-method prefix_affinity  --prefix-affinity-fallback round_robin
+--enable-prefill-delayer  --prefill-delayer-max-delay-passes 8
+--prefill-delayer-token-usage-low-watermark 0.5
+```
+
+Environment, set by the same file:
+
+```
+SGLANG_OPT_DSV4_NONPAGED_INDEXER_MIN_QUERY_TOKENS=1024   # = chunked_prefill / dp_size
+SGLANG_FP8_PAGED_MQA_LOGITS_TORCH=0
+SGLANG_OPT_USE_TILELANG_INDEXER=0
+SGLANG_OPT_DEEPGEMM_HC_PRENORM=1
+SGLANG_RAGGED_VERIFY_MODE=compact
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+```
+
+`--cuda-graph-max-bs 64` caps decode graphs **per DP rank**, which is why 256 global
+running requests still stay on-graph at `--dp-size 4`. With `--dp-size 1` it would
+need to be 64 global.
 
 ---
 

@@ -1,0 +1,83 @@
+# DeepSeek-V4-Flash-0731 on 4× RTX PRO 6000 Blackwell (sm120) — fallback stack
+#
+# Image built from the Dockerfile next to this file:
+#   llamacpp-sm120:local — upstream 7e4c0a96, CUDA 13.0.1, CMAKE_CUDA_ARCHITECTURES=120
+#
+# Standard profile: 8 slots of 131,072 tokens each, for everyday multi-user operation.
+# For a single request with the full 1M context, set -np to 1.
+
+services:
+  llm:
+    image: llamacpp-sm120:local
+    container_name: dsv4
+    restart: unless-stopped
+    network_mode: host
+    ipc: host
+    gpus: all
+    volumes:
+      # Expects the Unsloth GGUF conversion and the DSpark draft model side by side.
+      - /mnt/scratch/models/DSv4-GGUF:/models:ro
+    entrypoint: ["/opt/llama/bin/llama-server"]
+    command:
+      # --- model + DSpark draft (0731 ships no MTP heads, DSpark only) ---
+      - -m
+      - /models/UD-Q8_K_XL/DeepSeek-V4-Flash-0731-UD-Q8_K_XL-00001-of-00005.gguf
+      - -md
+      - /models/dspark-DeepSeek-V4-Flash-0731-Q8_0.gguf
+      - --spec-type
+      - draft-dspark
+      # Upstream PR #25784 reports 1 is often optimal and >2 regresses. Untested here;
+      # 3 is what every measurement in scenarios/ was taken with.
+      - --spec-draft-n-max
+      - "3"
+
+      # --- everything on GPU ---
+      # -sm row and -sm tensor both fail to load this model, even with a self-built
+      # sm120 binary: attention.head_count_kv = 1 (MLA) cannot be split across cards.
+      # layer is the only mode that works, and it caps utilisation at 11-14 % per card.
+      - -ngl
+      - "99"
+      - -ngld
+      - "99"
+      - -sm
+      - layer
+
+      # --- context: 1M KV pool split across 8 slots = 131,072 per request ---
+      - -c
+      - "1048576"
+      - -np
+      - "8"
+
+      # --- batch sizes are deliberately absent ---
+      # Defaults -b 2048 -ub 512 measured optimal. ub 512 beats 2048 by 16 % and 8192
+      # by 38 % at 64k context depth, and measures far more stably (± 0.05 vs ± 97).
+      # The -ub 8192 advice circulating for 1M context was measured on a single GPU
+      # with CPU offload and does not transfer. Do not override.
+      # See scenarios/long-context.md.
+
+      - -fa
+      - on
+      - --jinja
+
+      # --- sampling per the Unsloth documentation for DeepSeek-V4 ---
+      # Not optional: lower temperatures drive this checkpoint into repetition loops.
+      - --temp
+      - "1.0"
+      - --top-p
+      - "1.0"
+      - --min-p
+      - "0.01"
+
+      - --metrics
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+
+    # curl is not installed in the image; python3 is.
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
