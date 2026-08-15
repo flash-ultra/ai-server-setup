@@ -32,6 +32,9 @@ the cross-hardware comparison lives here rather than in the directory tree.
 
 ```
 README.md                            this file — conventions and cross-machine lessons
+benchmark/
+  README.md                          measurement protocol — read before measuring
+  bench.py                           the tool every number comes from
 <machine>/
   README.md                          hardware spec, machine-level findings, model index
   <model>/
@@ -102,11 +105,22 @@ realistic depth. Re-measure at the depth and concurrency you actually run.
 
 ## Method
 
-Each scenario is measured with the same load test unless the scenario file says
-otherwise: a prompt of roughly 1000 tokens, fixed `max_tokens`, 40 seconds per
-concurrency level, GPU utilisation sampled per card throughout. Token counts come from
-the `usage` fields, not from stream deltas. Reported figures are single-machine,
-single-workload-shape measurements — a starting point, not a specification.
+All numbers come from [`benchmark/bench.py`](benchmark/README.md), which pins every
+parameter that affects throughput: prompt text, concurrency levels, `max_tokens`,
+measurement window, warmup, and how tokens are counted. That is what makes series
+comparable across engines, models and machines.
+
+```bash
+./benchmark/bench.py --url http://localhost:8000 --model <name> --scenario concurrent
+```
+
+Token counts come from the `usage` fields, never from stream deltas — on a reasoning
+model that difference was once a factor of 5. Reported figures are single-machine,
+single-workload-shape measurements: a starting point, not a specification.
+
+The DeepSeek-V4-Flash-0731 series predates the protocol and deviates from it in
+documented ways; see [known deviations](benchmark/README.md#known-deviations-in-existing-documents)
+before placing its tables side by side.
 
 Where a claim contradicts widely repeated advice, the measurement that disproves it is
 included rather than just the conclusion.
