@@ -27,7 +27,7 @@
 ```bash
 docker run -d --name g31 --restart unless-stopped \
   --gpus all -e CUDA_VISIBLE_DEVICES=0 \
-  -p 100.102.25.81:8001:8080 \
+  -p $BIND:8001:8080 \
   -v /mnt/scratch/models:/models:ro \
   llamacpp-sm120:20260816 \
   llama-server \
@@ -38,6 +38,11 @@ docker run -d --name g31 --restart unless-stopped \
     --temp 1.0 --top-p 0.95 --top-k 64 \
     --host 0.0.0.0 --port 8080
 ```
+`$BIND` is the address the server should listen on. Publishing to `0.0.0.0` exposes an
+unauthenticated inference endpoint on every interface the host has — bind it to a private
+or VPN address instead, and check what is actually reachable rather than assuming the
+host firewall covers it.
+
 
 ## Pinned values
 

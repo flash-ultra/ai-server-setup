@@ -38,7 +38,7 @@ dense Gemma-4-31B at concurrency 32, with 3.9× better median latency.
 ```bash
 docker run -d --name g26 --restart unless-stopped \
   --gpus all -e CUDA_VISIBLE_DEVICES=1 \
-  -p 100.102.25.81:8002:8080 \
+  -p $BIND:8002:8080 \
   -v /mnt/scratch/models:/models:ro \
   llamacpp-sm120:20260816 \
   llama-server \
@@ -49,6 +49,11 @@ docker run -d --name g26 --restart unless-stopped \
     --temp 1.0 --top-p 0.95 --top-k 64 \
     --host 0.0.0.0 --port 8080
 ```
+`$BIND` is the address the server should listen on. Publishing to `0.0.0.0` exposes an
+unauthenticated inference endpoint on every interface the host has — bind it to a private
+or VPN address instead, and check what is actually reachable rather than assuming the
+host firewall covers it.
+
 
 Point `-m` at the **first** shard; llama.cpp finds the rest of the split itself. The
 `mmproj-*.gguf` files in the same repository are for vision input and are not used here.
@@ -79,8 +84,11 @@ everything else identical says otherwise:
 | 32 | **816.9** | 612.5 | **+33 %** | 49 % | 58 % |
 
 Output tokens per second. Utilisation falls either way — 89 % to 58 % without
-speculation — so the curve is a property of a model this cheap per token, not of the
-draft-verify cycle.
+speculation — so the draft-verify cycle is not what empties the card.
+
+What is: llama.cpp's batching. The [engine comparison](../engine-comparison.md) runs this
+same model on this same card under vLLM at **100 % utilisation on every level**, which
+rules out both the speculation theory and the compute-per-token theory that replaced it.
 
 Two things the control does establish:
 
@@ -95,6 +103,6 @@ hide behind, and still a third at 32.
 - `--spec-draft-n-max` is at 2, the value the model card suggests. 1 and 3 were not tried
 - Slot count. 16 was chosen so all three models on this machine share one configuration;
   this model had 42 GB of card left and would carry more
-- Whether the utilisation curve is compute-per-token as argued, or something else that
-  the control run did not separate — the argument rests on the contrast with a dense
-  model, not on a profile
+- Where exactly llama.cpp loses the time. The engine comparison establishes *that* the
+  batching is the cause — same model, same card, 100 % under vLLM against 32 % here —
+  but not which part of the scheduler, which would need a profile rather than a sweep

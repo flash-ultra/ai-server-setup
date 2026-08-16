@@ -42,12 +42,16 @@ Gemmas speculate — and it is the wrong answer. A
 [control run of Gemma-4-26B-A4B with MTP disabled](../../../gemma-4-26b-a4b/llama-cpp/README.md#mtp-helps-throughput-and-does-not-explain-the-utilisation-curve)
 loses utilisation just as fast: 89 % at concurrency 1 down to 58 % at 32.
 
-What separates this run is compute per token. A dense 30 B model does far more work per
-forward pass than a sparse model with 4 B active parameters — 28.6 tokens per second
-here against 190.1 — so the fixed costs around each step take a much smaller share.
-**Low utilisation on a sparse model is the signature of cheap tokens, not of a stall:**
-the MoE delivers 816.9 output tokens per second at 49 % against this model's 520.5 at
-92 %.
+The cause is llama.cpp's batching, established in the
+[engine comparison](../../../gemma-4-26b-a4b/engine-comparison.md): vLLM serves the
+sparse Gemma on the same card at 100 % utilisation, so neither speculation nor the model
+explains the gaps.
+
+What this run adds is why they do not show here. A dense 30 B model does far more work
+per forward pass than one with 4 B active parameters — 28.6 tokens per second against
+190.1 — so the scheduler's idle windows are hidden behind compute rather than exposed by
+it. **High utilisation is not the same as high throughput:** the sparse model delivers
+816.9 output tokens per second at 49 % against this model's 520.5 at 92 %.
 
 **Throughput scales monotonically and latency degrades gently.** 28.6 → 520.5 output
 tokens per second across the sweep, with p50 rising only from 14.9 s to 42.0 s — a

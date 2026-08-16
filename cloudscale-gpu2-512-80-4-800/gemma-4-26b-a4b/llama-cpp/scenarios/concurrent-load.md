@@ -52,12 +52,17 @@ DeepSeek-V4 holds 90–97 % on every level. Speculative decoding is not the reas
 [control run of this model with MTP disabled](../README.md#mtp-helps-throughput-and-does-not-explain-the-utilisation-curve)
 falls the same way, 89 % to 58 %.
 
-The reason is that this model is cheap per token. With 4 B active parameters a forward
-pass does little work, so scheduling, sampling and host round-trips take a larger share
-of the wall clock. Utilisation here measures how much compute a token needs, not how
-well the card is being used — the same sweep on the dense
-[Muse Glimmer](../../../muse-glimmer-30b/llama-cpp/scenarios/concurrent-load.md) holds
-92 % and delivers **less** throughput, 520.5 output tokens per second against 816.9.
+The reason is llama.cpp's batching. The [engine comparison](../../engine-comparison.md)
+serves this same model on this same card under vLLM at **100 % on every level** and 5.9×
+the answers per second — which rules out the model as the explanation, since it is the
+same model.
+
+Two theories were tried and discarded on the way there: speculative decoding (refuted by
+the control run above) and compute-per-token, on the grounds that a 4 B-active forward
+pass cannot fill a card (refuted by vLLM filling it with exactly that model). What the
+dense [Muse Glimmer](../../../muse-glimmer-30b/llama-cpp/scenarios/concurrent-load.md)
+run does show — 92 % utilisation and **less** throughput, 520.5 against 816.9 — is that a
+model heavy enough per token hides the gaps this scheduler leaves.
 
 **A realistic prompt mix costs 5 %.** Answers per second drop from 1.60 to 1.52, and p50
 actually improves slightly because the mix contains shorter requests. Total tokens per
