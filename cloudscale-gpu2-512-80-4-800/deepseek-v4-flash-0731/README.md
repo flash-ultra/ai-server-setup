@@ -16,8 +16,9 @@ NVLink. Tested 14–15 August 2026.
 
 ## Verdict
 
-**Production: [SGLang with SM120 patchset](sglang/).** [llama.cpp](llama-cpp/) remains
-configured as a fallback.
+**Production: [SGLang with SM120 patchset](sglang/).** [llama.cpp](llama-cpp/) was the
+alternative it was measured against; it is no longer deployed and its weights were
+removed from the machine on 2026-08-16.
 
 | Concurrency | llama.cpp req/s | SGLang req/s | llama.cpp TTFT | SGLang TTFT |
 |---|---|---|---|---|
@@ -46,7 +47,7 @@ faster configuration is a measured finding, not yet a recommendation.
 | Setup | Role | Engine | Startup |
 |---|---|---|---|
 | [`sglang/`](sglang/) | production since 2026-08-15 | SGLang v0.5.16 + SM120 patchset | 151 s warm · 274 s cold |
-| [`llama-cpp/`](llama-cpp/) | fallback | llama.cpp `7e4c0a96`, GGUF UD-Q8_K_XL | 20 s warm |
+| [`llama-cpp/`](llama-cpp/) | measured, not deployed | llama.cpp `7e4c0a96`, GGUF UD-Q8_K_XL | 20 s warm |
 
 ### Scenario coverage
 
@@ -132,8 +133,9 @@ answer it.
 - [Stability of the faster configuration](sglang/scenarios/concurrent-load.md#not-measured)
   — `--max-running-requests 1024` measures 74 % better but sits next to a setting that
   hard-crashes; repeat and sustained-load runs decide whether it can be adopted
-- [llama.cpp at full context](llama-cpp/scenarios/long-context.md#not-measured) — the fallback
-  is verified only to 128k
+- ~~llama.cpp at full context~~ — dropped. The stack is no longer deployed and its
+  weights are gone, so closing this gap would mean re-downloading 161 GB to finish
+  measuring a setup nothing runs on
 
 Smaller gaps, and the knobs deliberately dropped when the llama.cpp series was cut
 short, are listed in the [SGLang](sglang/README.md#still-open) and

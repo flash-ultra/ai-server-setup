@@ -3,7 +3,13 @@
 **DeepSeek-V4-Flash-0731 as GGUF on 4× RTX PRO 6000 Blackwell**
 
 Stable in operation and strong for single users — with a hard, measured ceiling
-under load. Superseded as of 2026-08-15; retained as a fallback.
+under load. Superseded 2026-08-15.
+
+> **Not deployed any more.** No container is configured, and the GGUF weights were
+> removed from the machine on 2026-08-16 to free 161 GB. This page is the measurement
+> that explains why SGLang was chosen, not a stack you can start. Reviving it means
+> re-downloading the weights first — the numbers below still describe what it did, not
+> what is currently one command away.
 
 **Machine:** [cloudscale.ch `GPU2-512-80-4-800`](../../README.md) ·
 **Model:** [DeepSeek-V4-Flash-0731](../README.md)
@@ -161,7 +167,8 @@ inside the measurement spread.
 ## Why the measurement series was cut short
 
 > **This setup is no longer in production.** The SGLang stack took over on
-> 2026-08-15. llama.cpp remains configured and runnable as a fallback.
+> 2026-08-15, and on 2026-08-16 the GGUF weights were deleted to make room for other
+> models. Nothing runs on it now.
 
 A full optimisation sweep was planned: threads, KV-cache dtypes, `-ts` balance,
 DSpark tuning, and the 1M-context verification. It was stopped once a comparison
@@ -190,13 +197,15 @@ instead of refining the slower one.
 
 ## Still open
 
-Two gaps still matter, because they decide whether the fallback is trustworthy on the
-day it is needed. Both are owned by the scenario that would close them:
+Nothing, any more. Both remaining gaps were closed by decision rather than by
+measurement, when the stack stopped being a fallback:
 
-- [`--spec-draft-n-max` 1 vs 3](scenarios/single-stream.md#not-measured) — the merge
-  notes call 1 often optimal and report regressions above 2; this setup runs 3
-- [1M context end to end](scenarios/long-context.md#not-measured) — verified only to
-  128k, while the server is configured for the full 1,048,576
+- ~~`--spec-draft-n-max` 1 vs 3~~ — would tune a stack nothing runs on
+- ~~1M context end to end~~ — same, and it would cost a 161 GB download first
+
+They are described in the scenario files as
+[not measured](scenarios/single-stream.md#not-measured), which stays true. What changed
+is that nobody is going to measure them.
 
 ### Not planned
 
@@ -216,10 +225,12 @@ to production, they are the place to start.
 
 ## What this setup is still good for
 
-As a fallback it remains valuable: it starts in 20 seconds rather than two and a half
-minutes, needs no 46 GB image distribution, carries no 33 applied patches, and runs on
-a plain upstream commit. For single-user work, for testing against a known reference,
-or if the SGLang stack fails, it is back within minutes.
+The properties that made it attractive still hold and are worth remembering for the
+next model: it starts in 20 seconds rather than two and a half minutes, needs no 46 GB
+image distribution, carries no 33 applied patches, and runs on a plain upstream commit.
+On a model that fits a single card those advantages come without the layer-split
+penalty that decided this comparison — which is why llama.cpp stays the first thing to
+try for single-GPU work, even though this particular deployment is gone.
 
 ---
 

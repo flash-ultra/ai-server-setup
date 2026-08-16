@@ -1,4 +1,4 @@
-# DeepSeek-V4-Flash-0731 on 4× RTX PRO 6000 Blackwell (sm120) — fallback stack
+# DeepSeek-V4-Flash-0731 on 4× RTX PRO 6000 Blackwell (sm120) — retired 2026-08-16, weights deleted
 #
 # Image built from the Dockerfile next to this file:
 #   llamacpp-sm120:local — upstream 7e4c0a96, CUDA 13.0.1, CMAKE_CUDA_ARCHITECTURES=120

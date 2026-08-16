@@ -55,8 +55,8 @@ ubatch does not just lose throughput, it makes the number unreliable. Leave
 
 - **1M context end to end — duration, stability, VRAM.** Measured only to 128k. The
   decay curve extrapolates to well over an hour of prefill, against
-  [7:51 min on SGLang](../../sglang/scenarios/long-context.md); that number decides
-  whether the fallback is usable at full length at all.
+  [7:51 min on SGLang](../../sglang/scenarios/long-context.md). Nobody will close this
+  gap: the stack was retired on 2026-08-16 and its weights deleted.
 
 The depth-related knobs that were dropped when the series was cut short — KV-cache
 dtypes at depth, `-ts` balance — are listed as
