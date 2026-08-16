@@ -30,8 +30,14 @@ configured as a fallback.
 At 32 concurrent requests SGLang serves 3.2× the requests at 55× lower latency,
 running all four GPUs at 91–95 % utilisation versus llama.cpp's 20 %.
 
-Peak on the SGLang stack: **27,026 total tok/s** at concurrency 256 — the sweep was
-stopped by the configured request limit, not by the throughput curve flattening.
+Peak on the SGLang stack **as shipped**: 27,026 total tok/s at concurrency 256. That
+sweep was stopped by the configured request limit, not by the throughput curve
+flattening — and raising the limit confirmed it: a
+[configuration sweep](sglang/scenarios/concurrent-load.md#configuration-sweep-protocol-v1)
+reaches **74 % more answers per second** at concurrency 768 with
+`--max-running-requests 1024`. The shipped configuration is not the throughput optimum;
+it is a latency choice. One neighbouring setting crashes the scheduler outright, so the
+faster configuration is a measured finding, not yet a recommendation.
 
 ## Server setups
 
@@ -121,8 +127,9 @@ answer it.
 - [Answer quality with thinking off](sglang/scenarios/reasoning-cost.md#not-measured) —
   the 8.75× cost saving is measured, but only length and throughput; whether those
   answers are as good needs a task-specific evaluation
-- [Concurrency ceiling](sglang/scenarios/concurrent-load.md#not-measured) — 256 is the
-  best measured level and also the configured limit, so the real maximum is unknown
+- [Stability of the faster configuration](sglang/scenarios/concurrent-load.md#not-measured)
+  — `--max-running-requests 1024` measures 74 % better but sits next to a setting that
+  hard-crashes; repeat and sustained-load runs decide whether it can be adopted
 - [llama.cpp at full context](llama-cpp/scenarios/long-context.md#not-measured) — the fallback
   is verified only to 128k
 

@@ -135,6 +135,12 @@ PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 running requests still stay on-graph at `--dp-size 4`. With `--dp-size 1` it would
 need to be 64 global.
 
+`--max-running-requests 256` is a latency choice, not the throughput maximum. Raising it
+buys up to 74 % more answers per second — at loads this deployment does not currently
+reach, and at the cost of median response time. Which ceiling suits which workload is
+worked out in
+[concurrent load](scenarios/concurrent-load.md#choosing-a-configuration-for-a-workload).
+
 ---
 
 ## What the configuration does
@@ -181,6 +187,7 @@ corruption.
 | custom all-reduce | disabled | breaks graph capture |
 | indexer threshold | 1024 | must equal `chunked_prefill / dp_size` |
 | temperature / top_p | 1.0 / 1.0 | lower values cause repetition loops |
+| `--max-running-requests` | **never 768** | 192 requests per DP rank crash the SM120 FP8 blockwise GEMM on a TMA descriptor; the scheduler dies with exit code −3. 256, 512 and 1024 all run — see [concurrent load](scenarios/concurrent-load.md#max-running-requests-768-crashes-the-scheduler) |
 
 ---
 
