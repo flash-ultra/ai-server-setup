@@ -29,6 +29,7 @@ document, prefixed with a comment recording the protocol version.
 | Measurement window | 40 s per level | Long enough to fill the batch, short enough for a full sweep |
 | Warmup | 3 requests per level, discarded | The first request after start ran 21.55 s against 1.86 s afterwards |
 | Token counting | `usage` fields | Stream deltas miss reasoning tokens — this was off by a factor of 5 once |
+| Reasoning share | `usage.completion_tokens_details.reasoning_tokens` | **Engine-dependent, not model-dependent.** SGLang reports it; llama.cpp does not send the field at all, so the share reads 0 % even where the model puts every token into thinking. A 0 % in a llama.cpp row means "not reported", never "did not think" — verify against `reasoning_content` before drawing a conclusion, and never compare this column across engines |
 | Sampling | `temperature 1.0`, `top_p 1.0` | Checkpoint calibration for DeepSeek-V4; note deviations per model |
 | Prompt | verbatim in `bench.py` | See below |
 | Prompt language | English | Applies from v1 on; the DeepSeek series below was measured with a German prompt of the same shape |
@@ -56,6 +57,16 @@ Equal weights, no claim that this matches any particular production workload.
 **`reasoning`** — cost per answer with thinking on, with `reasoning_effort=low`, and
 with thinking off, at concurrency 8 and 32. Only meaningful for reasoning models;
 skip it for others and say so in the model README.
+
+> **The key that disables thinking belongs to the checkpoint, not to the protocol.**
+> `--thinking-key` selects it; the default is `thinking`, which is what DeepSeek-V4
+> uses. Gemma-4 needs `enable_thinking`. Some templates carry no switch at all.
+>
+> An unknown key is **accepted and silently ignored** — the request succeeds, thinking
+> stays on, and the row reads as "disabling thinking changes nothing". That is a false
+> negative, not a measurement. Verify against the model before running the scenario:
+> send one request with and one without the key and compare the length of
+> `reasoning_content`. If it does not go to zero, the key is wrong or absent.
 
 **`longctx`** — needle-in-a-haystack at full length. Filler is calibrated against the
 server's own tokeniser, then three codes are planted at 10 %, 50 % and 90 %. The

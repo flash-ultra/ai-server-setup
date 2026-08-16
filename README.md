@@ -88,6 +88,55 @@ Kernel support lags the checkpoints, and the gap is architecture-specific rather
 vendor-wide. Establish that a forward pass completes on your compute capability before
 planning capacity around a model.
 
+Support is also engine-version-specific, and cheap to check **before** downloading tens
+of gigabytes — every engine keeps a registry you can read:
+
+```bash
+# llama.cpp — the architecture table in the source
+docker run --rm --entrypoint sh <image> -c "grep -oE '\"[a-z0-9-]+\"' /src/src/llama-arch.cpp"
+
+# vLLM
+docker run --rm --entrypoint python3 <image> -c \
+  "from vllm.model_executor.models import ModelRegistry; print(ModelRegistry.get_supported_archs())"
+
+# SGLang — one module per architecture
+docker run --rm --entrypoint python3 <image> -c \
+  "import sglang.srt.models as m, pkgutil; print([x.name for x in pkgutil.iter_modules(m.__path__)])"
+```
+
+**Match on the architecture, not on the model's name.** The registry keys are
+architecture identifiers, and release names drift away from them: `Qwen3.8-27B` declares
+`architectures: ["Qwen3_5ForConditionalGeneration"]`, so every engine that already ran
+Qwen3.5 runs it unchanged — while a search for "qwen3.8" in the same registries returns
+nothing and reads as "unsupported". Read `config.json` from the checkpoint first:
+
+```bash
+curl -sL https://huggingface.co/<repo>/resolve/main/config.json | \
+  python3 -c "import json,sys; d=json.load(sys.stdin); print(d['architectures'], d.get('model_type'))"
+```
+
+Checked this way, four models took minutes rather than the hours their downloads would
+have cost — and one of the four was nearly dropped on a name mismatch alone.
+
+**When fetching weights, repeat the flag rather than the value.**
+`hf download REPO --include "A/*" "B/*"` reads `B/*` as an explicit filename, drops the
+pattern, and emits a warning that scrolls past in the progress output — you end up with
+whatever `B` matched and none of `A`. Write `--include "A/*" --include "B/*"`.
+
+### Switches that a model does not know are accepted, not rejected
+
+Request options that ride in `chat_template_kwargs` are rendered by the checkpoint's own
+Jinja template. A key the template never reads is not an error — the request succeeds
+and the option does nothing. Three models measured here take three different answers to
+"turn thinking off": `thinking`, `enable_thinking`, and one whose template has no switch
+at all.
+
+The failure mode is a measurement that looks like a result: the thinking-off arm matches
+the thinking-on arm, and the honest-looking conclusion is "it makes no difference". Check
+the effect before trusting the row — one request each way, compare `reasoning_content`.
+The same applies to any proxy in the path: a gateway with `drop_params` enabled will
+remove unknown options before the model ever sees them.
+
 ### Measure via `usage`, not stream deltas
 
 Reasoning models can put the overwhelming majority of generated tokens into a separate

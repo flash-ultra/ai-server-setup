@@ -16,9 +16,18 @@ was measured on this machine.
 
 ## Models tested
 
-| Model | Production setup | Peak throughput | Details |
-|---|---|---|---|
-| **DeepSeek-V4-Flash-0731** | SGLang + SM120 patchset | 19.65 req/s @ C=768 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
+| Model | Cards | Setup | Peak measured | Details |
+|---|---|---|---|---|
+| **DeepSeek-V4-Flash-0731** | 4 (TP/DP/EP) | SGLang + SM120 patchset · production | 19.65 req/s @ C=768 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
+| **Gemma-4-26B-A4B** | 1 | llama.cpp · SGLang · vLLM | **31.88 answers/s @ C=32** (vLLM) | [`gemma-4-26b-a4b/`](gemma-4-26b-a4b/) |
+| **Gemma-4-31B** | 1 | llama.cpp | 0.80 answers/s @ C=32 | [`gemma-4-31b/`](gemma-4-31b/) |
+| **Muse-Glimmer-30B** | 1 | llama.cpp | 1.27 answers/s @ C=32 | [`muse-glimmer-30b/`](muse-glimmer-30b/) |
+
+The three single-card models were measured on 2026-08-16, one per GPU. Their peak column
+is not comparable across rows without reading the scenario: the DeepSeek row and the two
+llama.cpp-only rows run with thinking **on**, the Gemma-4-26B-A4B row with thinking
+**off** — a difference worth a factor of 3.4 on its own. Within a row the comparison
+holds; across rows, follow the link.
 
 ---
 
@@ -38,6 +47,47 @@ architecture`. Tracked in [DeepGEMM #317](https://github.com/deepseek-ai/DeepGEM
 and [vLLM #41063](https://github.com/vllm-project/vllm/issues/41063).
 
 Expect to need a patched fork or a community image for any recent architecture.
+
+### A model that fits one card changes which engine wins
+
+The DeepSeek-V4 comparison was decided by tensor parallelism: llama.cpp could only
+layer-split, so four cards worked one after another. That verdict does not transfer to
+models small enough for a single card — there is nothing to split, and llama.cpp's
+advantages (20 s start, plain upstream commit, no patched image) apply without the
+penalty that decided the earlier comparison.
+
+Four cards then serve four models rather than one, and the engine choice becomes a
+question of measurement rather than of feasibility — and measured, it does **not** come
+out in llama.cpp's favour once there is load. On Gemma-4-26B-A4B, one card, identical
+workload, vLLM delivers 5.9× the answers per second at concurrency 32 *and* better
+latency, holding the card at 100 % where llama.cpp falls to 32 %
+([engine comparison](gemma-4-26b-a4b/engine-comparison.md)). For a single user the three
+engines are within 14 % of each other; the gap is entirely in batching.
+
+A single-architecture build from current master takes about two minutes here, so
+checking a same-day commit is cheaper than reasoning about which release added support:
+
+```bash
+docker build --build-arg LLAMA_COMMIT=$(git ls-remote \
+    https://github.com/ggml-org/llama.cpp.git HEAD | cut -f1) \
+    -t llamacpp-sm120:$(date +%Y%m%d) .
+```
+
+### KV cache is what runs out, not weights
+
+On a 97 GB card a 31 B model in BF16 leaves room that looks generous until the context
+is sized. Measured on Gemma-4-31B with flash attention on:
+
+| `-c` | KV cache | total | result |
+|---|---|---|---|
+| 32,768 | ~19 GB | 82.1 GB | runs, 15 GB spare |
+| 65,536 | **38.4 GB** | > 97 GB | `cudaMalloc failed: out of memory` at load |
+
+Doubling the context doubles the KV allocation, and the failure lands at model-load
+time with a clear message — but only if you read the container log, since the process
+exits rather than degrading. Size `-c` against the slot count you need
+(`-c` ÷ `-np` is the per-slot budget) rather than against what the card looks like it
+can hold.
 
 ### Single-stream speed does not scale with GPU count
 

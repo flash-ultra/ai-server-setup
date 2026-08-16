@@ -29,6 +29,7 @@ WARMUP_REQUESTS = 3       # per level, discarded — first request after start i
 MAX_TOKENS = 512          # must leave room for reasoning models; see protocol README
 LEVELS = [1, 8, 16, 32, 64, 128, 256]
 GPU_POLL_S = 1.0
+CHAT_TEMPLATE_KWARGS = None   # set from --chat-template-kwargs; applies to every request
 
 # The prompt is pinned, not just its length. With speculative decoding, draft
 # acceptance depends on how predictable the text is — same token count, different
@@ -101,6 +102,8 @@ def request(url, model, prompt, extra=None, max_tokens=MAX_TOKENS, timeout=3600,
     """One completion. Returns usage-based metrics, or None on failure."""
     body = {"model": model, "messages": [{"role": "user", "content": prompt}],
             "max_tokens": max_tokens, "temperature": 1.0, "top_p": 1.0}
+    if CHAT_TEMPLATE_KWARGS:
+        body["chat_template_kwargs"] = dict(CHAT_TEMPLATE_KWARGS)
     if extra:
         body.update(extra)
     if stream:
@@ -219,10 +222,16 @@ def scenario_single(url, model):
     print(f"| GPU utilisation | {fmt_gpu(r['gpu'])} |")
 
 
-def scenario_reasoning(url, model):
+def scenario_reasoning(url, model, thinking_key="thinking"):
+    # The key that turns thinking off is a property of the checkpoint's chat template,
+    # not of the protocol. DeepSeek-V4 uses "thinking", Gemma-4 uses "enable_thinking",
+    # and a template that carries neither cannot be switched at all — an unknown key is
+    # accepted and silently ignored, which reads as "no effect" rather than "no switch".
+    # Verify against the model before trusting a thinking-off row.
     variants = [("default", None),
                 ("reasoning_effort=low", {"reasoning_effort": "low"}),
-                ("thinking off", {"chat_template_kwargs": {"thinking": False}})]
+                (f"thinking off ({thinking_key})",
+                 {"chat_template_kwargs": {thinking_key: False}})]
     print("| Concurrency | Variant | Answers/s | Output tok/s | Tokens/answer | Reasoning | Chars/answer | Latency p50 | GPU |")
     print("|---|---|---|---|---|---|---|---|---|")
     for lvl in (8, 32):
@@ -280,6 +289,16 @@ def main():
                     choices=["concurrent", "single", "reasoning", "longctx"])
     ap.add_argument("--target-tokens", type=int, default=960000,
                     help="longctx only: prompt size to build (default 960000)")
+    ap.add_argument("--chat-template-kwargs", default=None,
+                    help="JSON object sent as chat_template_kwargs on EVERY request, e.g. "
+                         "{\"enable_thinking\": false}. Engines differ in what they default "
+                         "to for the same checkpoint — SGLang served Gemma-4 with thinking "
+                         "off where llama.cpp had it on — so a cross-engine comparison has "
+                         "to pin the state rather than inherit it")
+    ap.add_argument("--thinking-key", default="thinking",
+                    help="reasoning only: chat_template_kwargs key that disables thinking. "
+                         "DeepSeek-V4 uses the default; Gemma-4 needs enable_thinking. An "
+                         "unknown key is ignored silently, so check the model first")
     ap.add_argument("--levels", type=lambda s: [int(x) for x in s.split(",")],
                     help="concurrent only: override the protocol levels, e.g. 256,384,512. "
                          "Every other parameter stays at its pinned value; the deviation is "
@@ -287,7 +306,15 @@ def main():
                          "Method section")
     a = ap.parse_args()
 
+    global CHAT_TEMPLATE_KWARGS
+    if a.chat_template_kwargs:
+        CHAT_TEMPLATE_KWARGS = json.loads(a.chat_template_kwargs)
+
     dev = ""
+    if CHAT_TEMPLATE_KWARGS:
+        dev += " · chat_template_kwargs: " + json.dumps(CHAT_TEMPLATE_KWARGS)
+    if a.scenario == "reasoning" and a.thinking_key != "thinking":
+        dev += f" · thinking key: {a.thinking_key}"
     if a.levels and a.levels != LEVELS:
         dev = (f" · DEVIATION: levels {','.join(map(str, a.levels))} instead of the pinned "
                f"{','.join(map(str, LEVELS))}")
@@ -295,7 +322,7 @@ def main():
           f"{WARMUP_REQUESTS} warmup requests discarded · counted via usage fields{dev} -->\n")
     {"concurrent": lambda: scenario_concurrent(a.url, a.model, a.levels),
      "single": lambda: scenario_single(a.url, a.model),
-     "reasoning": lambda: scenario_reasoning(a.url, a.model),
+     "reasoning": lambda: scenario_reasoning(a.url, a.model, a.thinking_key),
      "longctx": lambda: scenario_longctx(a.url, a.model, a.target_tokens)}[a.scenario]()
 
 
