@@ -25,7 +25,7 @@ document, prefixed with a comment recording the protocol version.
 | Parameter | Value | Why it is pinned |
 |---|---|---|
 | `max_tokens` | 512 | Reasoning models spend most of the budget on thinking; at 200 the visible answer gets truncated and answers/s is inflated |
-| Concurrency levels | 1, 8, 16, 32, 64, 128, 256 | Powers of two; 256 covers the highest limit measured so far |
+| Concurrency levels | 1, 8, 16, 32, 64, 128, 256 | Powers of two; the default series. `--levels` overrides it per run for configuration sweeps — every other parameter stays pinned, and the deviation is written into the output header. A run with overridden levels is still `v1`; state the override in the scenario's Method section |
 | Measurement window | 40 s per level | Long enough to fill the batch, short enough for a full sweep |
 | Warmup | 3 requests per level, discarded | The first request after start ran 21.55 s against 1.86 s afterwards |
 | Token counting | `usage` fields | Stream deltas miss reasoning tokens — this was off by a factor of 5 once |

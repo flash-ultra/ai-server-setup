@@ -183,10 +183,10 @@ def fmt_gpu(cards):
 
 
 # ---------------------------------------------------------------- scenarios
-def scenario_concurrent(url, model):
+def scenario_concurrent(url, model, levels=None):
     print(f"| Concurrent | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 | GPU |")
     print(f"|---|---|---|---|---|---|---|")
-    for lvl in LEVELS:
+    for lvl in (levels or LEVELS):
         r = measure(url, model, lvl, lambda _: PROMPT)
         if not r:
             print(f"| {lvl} | failed | | | | | |"); continue
@@ -280,11 +280,20 @@ def main():
                     choices=["concurrent", "single", "reasoning", "longctx"])
     ap.add_argument("--target-tokens", type=int, default=960000,
                     help="longctx only: prompt size to build (default 960000)")
+    ap.add_argument("--levels", type=lambda s: [int(x) for x in s.split(",")],
+                    help="concurrent only: override the protocol levels, e.g. 256,384,512. "
+                         "Every other parameter stays at its pinned value; the deviation is "
+                         "recorded in the output header and must be stated in the scenario's "
+                         "Method section")
     a = ap.parse_args()
 
+    dev = ""
+    if a.levels and a.levels != LEVELS:
+        dev = (f" · DEVIATION: levels {','.join(map(str, a.levels))} instead of the pinned "
+               f"{','.join(map(str, LEVELS))}")
     print(f"<!-- protocol {PROTOCOL} · max_tokens {MAX_TOKENS} · {DURATION_S} s/level · "
-          f"{WARMUP_REQUESTS} warmup requests discarded · counted via usage fields -->\n")
-    {"concurrent": lambda: scenario_concurrent(a.url, a.model),
+          f"{WARMUP_REQUESTS} warmup requests discarded · counted via usage fields{dev} -->\n")
+    {"concurrent": lambda: scenario_concurrent(a.url, a.model, a.levels),
      "single": lambda: scenario_single(a.url, a.model),
      "reasoning": lambda: scenario_reasoning(a.url, a.model),
      "longctx": lambda: scenario_longctx(a.url, a.model, a.target_tokens)}[a.scenario]()
