@@ -21,10 +21,18 @@ Which model has been measured on which machine, and with what result.
 
 | Model | cloudscale `GPU2-512-80-4-800` |
 |---|---|
-| **DeepSeek-V4-Flash-0731** | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/) — 19.65 req/s peak · full 1M context verified |
+| **DeepSeek-V4-Flash-0731** · 284 B, 4 cards | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/) — 19.65 req/s peak · full 1M context verified |
+| **Gemma-4-26B-A4B** · sparse, 1 card | [llama.cpp · SGLang · vLLM](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/) — 31.88 answers/s · [vLLM 5.9× llama.cpp under load](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/engine-comparison.md) |
+| **Gemma-4-31B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/gemma-4-31b/) — 0.80 answers/s · stalls past 8 concurrent |
+| **Muse-Glimmer-30B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/muse-glimmer-30b/) — 1.27 answers/s · only engine that knows the architecture |
 
 A model measured on several machines keeps one row and gains a column per machine, so
 the cross-hardware comparison lives here rather than in the directory tree.
+
+**The peak column is a pointer, not a ranking.** These rows do not share a workload: the
+DeepSeek and the two llama.cpp-only rows ran with thinking on, the Gemma-4-26B-A4B row
+with thinking off — worth a factor of 3.4 by itself — and the single-card rows serve one
+GPU where DeepSeek serves four. Follow the link before comparing two numbers here.
 
 ---
 
