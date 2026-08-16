@@ -29,7 +29,7 @@ and working speculative decoding. In production since 2026-08-15.
 | Scenario | Headline |
 |---|---|
 | [Single stream](scenarios/single-stream.md) | 131.2 output tok/s · 665.2 total tok/s · TTFT 0.15 s |
-| [Concurrent load](scenarios/concurrent-load.md) | peak **27,026 total tok/s** at C=256 · curve still climbing · 97 % GPU |
+| [Concurrent load](scenarios/concurrent-load.md) | shipped ceiling peaks at C=256 · raising it reaches **19.65 req/s** at C=768 · 97 % GPU |
 | [Long context](scenarios/long-context.md) | full 1M verified · prefill 470.7 s · **3/3 needles recovered** |
 | [Reasoning cost](scenarios/reasoning-cost.md) | thinking off = **3.5× answers/s**, 8.75× fewer tokens per answer |
 

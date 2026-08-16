@@ -30,7 +30,9 @@ configured as a fallback.
 At 32 concurrent requests SGLang serves 3.2× the requests at 55× lower latency,
 running all four GPUs at 91–95 % utilisation versus llama.cpp's 20 %.
 
-Peak on the SGLang stack **as shipped**: 27,026 total tok/s at concurrency 256. That
+Peak on the SGLang stack **as shipped**: 27,026 total tok/s at concurrency 256 — a
+pre-`v1` figure, so it compares to the numbers below on requests per second but not on
+tokens ([why](sglang/scenarios/concurrent-load.md#throughput)). That
 sweep was stopped by the configured request limit, not by the throughput curve
 flattening — and raising the limit confirmed it: a
 [configuration sweep](sglang/scenarios/concurrent-load.md#configuration-sweep-protocol-v1)
