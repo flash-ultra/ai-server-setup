@@ -37,6 +37,12 @@ reasoning share reads as zero for every variant. Total `completion_tokens` is re
 correctly, so throughput and tokens-per-answer in the table are sound; only the split
 between thinking and answer is missing.
 
+It is this build, not the tooling. The
+[SGLang stack on the same machine](../../../deepseek-v4-flash-0731/sglang/scenarios/reasoning-cost.md),
+queried through the same gateway minutes after these runs, answers with
+`completion_tokens_details: {reasoning_tokens: 40, text_tokens: 3}` on a 43-token reply —
+the field the protocol reads, populated, on the same host with the same client.
+
 The characters-per-token ratio recovers the split well enough to prove the tokens exist:
 
 | Variant | Tokens/answer | Chars/answer | Chars per token |
