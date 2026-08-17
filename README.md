@@ -22,6 +22,7 @@ Which model has been measured on which machine, and with what result.
 | Model | cloudscale `GPU2-512-80-4-800` |
 |---|---|
 | **DeepSeek-V4-Flash-0731** · 284 B, 4 cards | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/) — 19.65 req/s peak · full 1M context verified |
+| **DeepSeek-V4-Flash-NVFP4** · 2 cards, [different release](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/README.md#what-this-is-not-comparable-to) | [vLLM B12X SM120 kit](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/) — 9.97 answers/s · 159–163 tok/s decode with MTP · non-monotone under load |
 | **Gemma-4-26B-A4B** · sparse, 1 card | [llama.cpp · SGLang · vLLM](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/) — 31.88 answers/s · [vLLM 5.9× llama.cpp under load](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/engine-comparison.md) |
 | **Gemma-4-31B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/gemma-4-31b/) — 0.80 answers/s · stalls past 8 concurrent |
 | **Muse-Glimmer-30B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/muse-glimmer-30b/) — 1.27 answers/s · only engine that knows the architecture |
@@ -31,8 +32,10 @@ the cross-hardware comparison lives here rather than in the directory tree.
 
 **The peak column is a pointer, not a ranking.** These rows do not share a workload: the
 DeepSeek and the two llama.cpp-only rows ran with thinking on, the Gemma-4-26B-A4B row
-with thinking off — worth a factor of 3.4 by itself — and the single-card rows serve one
-GPU where DeepSeek serves four. Follow the link before comparing two numbers here.
+with thinking off — worth a factor of 3.4 by itself — and the rows serve one, two or four
+GPUs. The two DeepSeek rows are different model releases rather than two setups of one
+model, so they are not each other's baseline either. Follow the link before comparing two
+numbers here.
 
 ---
 
@@ -157,6 +160,21 @@ make the safer cross-stack comparison.
 Recommendations from single-GPU or CPU-offload setups can invert on a multi-GPU box
 with everything in VRAM, and settings that look best at empty context can lose at
 realistic depth. Re-measure at the depth and concurrency you actually run.
+
+### A published configuration can be verified and still fail under load
+
+Community kits for unsupported architectures are how these models run at all, and their
+numbers are usually honest about *what* they measured. Read that scope literally. One kit
+here documents a long-context configuration as "capacity-verified; load-tested only on
+short prompts" — and it is exactly true: it serves a single long request and
+[kills the engine at 16 concurrent ones](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/vllm-b12x/README.md#pinned-values),
+because a kernel workspace is sized once at startup from a scheduling flag. Single-stream
+numbers reproduced to within a few percent on the same kit.
+
+Two habits follow. Re-run the concurrency ladder yourself before adopting any published
+configuration, however well documented. And check how the process dies: this one exits
+with **status 0** and returns HTTP 500 afterwards, so `docker ps` reads like a clean
+shutdown and only the log names the cause.
 
 ---
 

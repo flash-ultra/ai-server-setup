@@ -19,15 +19,19 @@ was measured on this machine.
 | Model | Cards | Setup | Peak measured | Details |
 |---|---|---|---|---|
 | **DeepSeek-V4-Flash-0731** | 4 (TP/DP/EP) | SGLang + SM120 patchset · production | 19.65 req/s @ C=768 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
+| **DeepSeek-V4-Flash-NVFP4** | 2 (TP) | vLLM B12X SM120 kit | 9.97 answers/s @ C=256 | [`deepseek-v4-flash-nvfp4/`](deepseek-v4-flash-nvfp4/) |
 | **Gemma-4-26B-A4B** | 1 | llama.cpp · SGLang · vLLM | **31.88 answers/s @ C=32** (vLLM) | [`gemma-4-26b-a4b/`](gemma-4-26b-a4b/) |
 | **Gemma-4-31B** | 1 | llama.cpp | 0.80 answers/s @ C=32 | [`gemma-4-31b/`](gemma-4-31b/) |
 | **Muse-Glimmer-30B** | 1 | llama.cpp | 1.27 answers/s @ C=32 | [`muse-glimmer-30b/`](muse-glimmer-30b/) |
 
-The three single-card models were measured on 2026-08-16, one per GPU. Their peak column
-is not comparable across rows without reading the scenario: the DeepSeek row and the two
-llama.cpp-only rows run with thinking **on**, the Gemma-4-26B-A4B row with thinking
-**off** — a difference worth a factor of 3.4 on its own. Within a row the comparison
-holds; across rows, follow the link.
+The three single-card models were measured on 2026-08-16, one per GPU; the NVFP4 row on
+2026-08-17. **The peak column is not a ranking.** It is not comparable across rows without
+reading the scenario: the two DeepSeek rows and the two llama.cpp-only rows run with
+thinking **on**, the Gemma-4-26B-A4B row with thinking **off** — a difference worth a factor
+of 3.4 on its own — and the rows use one, two or four cards. The two DeepSeek rows are
+additionally **different model releases**, not two setups of one model
+([why that matters](deepseek-v4-flash-nvfp4/README.md#what-this-is-not-comparable-to)).
+Within a row the comparison holds; across rows, follow the link.
 
 ---
 
@@ -88,6 +92,14 @@ time with a clear message — but only if you read the container log, since the 
 exits rather than degrading. Size `-c` against the slot count you need
 (`-c` ÷ `-np` is the per-slot budget) rather than against what the card looks like it
 can hold.
+
+**And the context length is not the only thing that sizes it.** On the NVFP4 DeepSeek
+checkpoint, changing a *scheduling* flag — `--max-num-batched-tokens` — moved the KV pool
+by 56 % at unchanged VRAM, because that flag also sizes a per-token fp32 state cache. Same
+cards, same weights, same `--gpu-memory-utilization`, 1.07 M tokens against 1.66 M. So a
+pool that looks too small is not automatically evidence that the weights are too big —
+check what else the batch budget pays for
+([measurement](deepseek-v4-flash-nvfp4/vllm-b12x/README.md#the-kv-pool-is-set-by-the-batch-budget-not-by-vram)).
 
 ### Single-stream speed does not scale with GPU count
 
