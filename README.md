@@ -23,6 +23,7 @@ Which model has been measured on which machine, and with what result.
 | Model | cloudscale `GPU2-512-80-4-800` | cloudscale `GPU2-256-40-2-1600` |
 |---|---|---|
 | **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — 9.65–9.75 answers/s over two runs · monotone ladder · 100 % on both cards |
+| **Qwen3.8-Flash-Next** · 512 experts, 10 active, 2 cards | — | [llama.cpp master](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — 6.83–6.85 answers/s · **images** · pinned at 45 % GPU by the layer split |
 | **DeepSeek-V4-Flash-0731** · 284 B | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/), 4 cards — 19.65 req/s peak · full 1M context verified | [same image at TP=2](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/), 2 cards — 32.58–32.65 answers/s, thinking off by default · spread ≤ 5 % |
 | **DeepSeek-V4-Flash-NVFP4** · 2 cards, [different release](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/README.md#what-this-is-not-comparable-to) | [vLLM B12X SM120 kit](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/) — 9.97 answers/s · 159–163 tok/s decode with MTP · non-monotone under load | — |
 | **Gemma-4-26B-A4B** · sparse, 1 card | [llama.cpp · SGLang · vLLM](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/) — 31.88 answers/s · [vLLM 5.9× llama.cpp under load](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/engine-comparison.md) | — |

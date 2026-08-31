@@ -21,6 +21,7 @@ Everything below was measured on this machine.
 |---|---|---|---|---|
 | **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | 32.58–32.65 answers/s @ C=256 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
 | **MiniMax-M2.5-NVFP4** | 2 (TP) | vLLM 0.28.0 | 9.65–9.75 answers/s @ C=256 | [`minimax-m2-5/`](minimax-m2-5/) |
+| **Qwen3.8-Flash-Next** Q5_K_XL | 2 (layer split) | llama.cpp master | 6.83–6.85 answers/s @ C=256 · **images** | [`qwen3-8-flash-next/`](qwen3-8-flash-next/) |
 
 **The peak column is not a ranking.** The 0731 row was measured with thinking **off** — the
 default of that setup — and answers at 35 tokens; the MiniMax row cannot switch thinking off
@@ -62,8 +63,18 @@ CUDA backend on this card, not the file format. Only `-sm layer` loads, so the c
 work in turn rather than together, and GPU utilisation sits near half of what vLLM
 reaches on the same hardware.
 
+**Two unrelated models now measure the same ceiling.** GLM-5.3-Flash (45 layers, denser
+activation) and Qwen3.8-Flash-Next (10 of 512 experts, micro-block sparse attention) both
+pin at 45 % GPU utilisation under llama.cpp, at every concurrency level from 1 to 256. It
+is the engine, not the architecture.
+
 Consequence for planning: any model that only runs under llama.cpp on this machine pays
-roughly a factor of 3 on generation and 20 on prompt processing against a vLLM path.
+roughly a factor of 5 in throughput and up to 37 in latency under load against an engine
+that uses both cards. Measured at concurrency 256: 6.83 answers/s and p50 291.8 s for
+Qwen3.8-Flash-Next, against 32.58 and 7.96 s for DeepSeek-V4-Flash-0731 under SGLang.
+
+**Every multimodal model that fits on these two cards runs only under llama.cpp.** That is
+what images cost here.
 
 ```
 prefill, tokens per second        0                              10500
