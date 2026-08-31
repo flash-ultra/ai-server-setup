@@ -9,7 +9,8 @@ configuration.
 
 | Machine | GPUs | Status |
 |---|---|---|
-| [`cloudscale-gpu2-512-80-4-800/`](cloudscale-gpu2-512-80-4-800/) | 4× RTX PRO 6000 Blackwell Max-Q (sm120), no NVLink | in production |
+| [`cloudscale-gpu2-256-40-2-1600/`](cloudscale-gpu2-256-40-2-1600/) | 2× RTX PRO 6000 Blackwell Max-Q (sm120), no NVLink | current |
+| [`cloudscale-gpu2-512-80-4-800/`](cloudscale-gpu2-512-80-4-800/) | 4× RTX PRO 6000 Blackwell Max-Q (sm120), no NVLink | superseded |
 
 Hardware determines what runs at all — kernel support, parallelism options, context
 capacity — so it is the top level here. Findings that only hold for one machine live
@@ -19,13 +20,14 @@ in that machine's README; only what carries across hardware is on this page.
 
 Which model has been measured on which machine, and with what result.
 
-| Model | cloudscale `GPU2-512-80-4-800` |
-|---|---|
-| **DeepSeek-V4-Flash-0731** · 284 B, 4 cards | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/) — 19.65 req/s peak · full 1M context verified |
-| **DeepSeek-V4-Flash-NVFP4** · 2 cards, [different release](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/README.md#what-this-is-not-comparable-to) | [vLLM B12X SM120 kit](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/) — 9.97 answers/s · 159–163 tok/s decode with MTP · non-monotone under load |
-| **Gemma-4-26B-A4B** · sparse, 1 card | [llama.cpp · SGLang · vLLM](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/) — 31.88 answers/s · [vLLM 5.9× llama.cpp under load](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/engine-comparison.md) |
-| **Gemma-4-31B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/gemma-4-31b/) — 0.80 answers/s · stalls past 8 concurrent |
-| **Muse-Glimmer-30B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/muse-glimmer-30b/) — 1.27 answers/s · only engine that knows the architecture |
+| Model | cloudscale `GPU2-512-80-4-800` | cloudscale `GPU2-256-40-2-1600` |
+|---|---|---|
+| **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — 9.65–9.75 answers/s over two runs · monotone ladder · 100 % on both cards |
+| **DeepSeek-V4-Flash-0731** · 284 B, 4 cards | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/) — 19.65 req/s peak · full 1M context verified | — |
+| **DeepSeek-V4-Flash-NVFP4** · 2 cards, [different release](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/README.md#what-this-is-not-comparable-to) | [vLLM B12X SM120 kit](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/) — 9.97 answers/s · 159–163 tok/s decode with MTP · non-monotone under load | — |
+| **Gemma-4-26B-A4B** · sparse, 1 card | [llama.cpp · SGLang · vLLM](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/) — 31.88 answers/s · [vLLM 5.9× llama.cpp under load](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/engine-comparison.md) | — |
+| **Gemma-4-31B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/gemma-4-31b/) — 0.80 answers/s · stalls past 8 concurrent | — |
+| **Muse-Glimmer-30B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/muse-glimmer-30b/) — 1.27 answers/s · only engine that knows the architecture | — |
 
 A model measured on several machines keeps one row and gains a column per machine, so
 the cross-hardware comparison lives here rather than in the directory tree.
