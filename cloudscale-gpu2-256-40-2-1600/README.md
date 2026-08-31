@@ -19,7 +19,13 @@ Everything below was measured on this machine.
 
 | Model | Cards | Setup | Peak measured | Details |
 |---|---|---|---|---|
+| **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | 32.58–32.65 answers/s @ C=256 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
 | **MiniMax-M2.5-NVFP4** | 2 (TP) | vLLM 0.28.0 | 9.65–9.75 answers/s @ C=256 | [`minimax-m2-5/`](minimax-m2-5/) |
+
+**The peak column is not a ranking.** The 0731 row was measured with thinking **off** — the
+default of that setup — and answers at 35 tokens; the MiniMax row cannot switch thinking off
+and answers at 258. At equal thinking state the order reverses at concurrency 32. Follow the
+link before comparing the two.
 
 ## Machine findings
 
