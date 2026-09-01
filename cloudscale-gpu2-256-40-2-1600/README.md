@@ -28,6 +28,15 @@ default of that setup — and answers at 35 tokens; the MiniMax row cannot switc
 and answers at 258. At equal thinking state the order reverses at concurrency 32. Follow the
 link before comparing the two.
 
+## Trials
+
+Engines evaluated and not adopted live in [`trials/`](trials/). Nothing there is protocol
+`v1`, and its numbers never enter the table above.
+
+| Trial | Verdict |
+|---|---|
+| [FreeToken](trials/freetoken.md) | Not for production serving; viable as a second model on the otherwise idle card |
+
 ## Machine findings
 
 ### Two cards set a hard ceiling on model size
