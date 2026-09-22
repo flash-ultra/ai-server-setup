@@ -22,13 +22,13 @@ Which model has been measured on which machine, and with what result.
 
 | Model | cloudscale `GPU2-512-80-4-800` | cloudscale `GPU2-256-40-2-1600` |
 |---|---|---|
-| **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — 9.65–9.75 answers/s over two runs · monotone ladder · 100 % on both cards |
-| **Qwen3.8-Flash-Next** · 512 experts, 10 active, 2 cards | — | [llama.cpp master, Q6 on 6 slots](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — 1,390.3 output tok/s · **images** · pinned at 39–43 % GPU by the layer split |
-| **DeepSeek-V4-Flash-0731** · 284 B | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/), 4 cards — 19.65 req/s peak · full 1M context verified | [same image at TP=2](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/), 2 cards — 32.58–32.65 answers/s, thinking off by default · spread ≤ 5 % |
-| **DeepSeek-V4-Flash-NVFP4** · 2 cards, [different release](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/README.md#what-this-is-not-comparable-to) | [vLLM B12X SM120 kit](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/) — 9.97 answers/s · 159–163 tok/s decode with MTP · non-monotone under load | — |
-| **Gemma-4-26B-A4B** · sparse, 1 card | [llama.cpp · SGLang · vLLM](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/) — 31.88 answers/s · [vLLM 5.9× llama.cpp under load](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/engine-comparison.md) | — |
-| **Gemma-4-31B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/gemma-4-31b/) — 0.80 answers/s · stalls past 8 concurrent | — |
-| **Muse-Glimmer-30B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/muse-glimmer-30b/) — 1.27 answers/s · only engine that knows the architecture | — |
+| **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — **2,947–3,126 output tok/s** @ C=256 · 9.65–9.75 answers/s · monotone ladder · 100 % on both cards |
+| **Qwen3.8-Flash-Next** · 512 experts, 10 active, 2 cards | — | [llama.cpp master, Q6 on 6 slots](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — **1,390 output tok/s** @ C=256 · 7.47 answers/s · **images** · pinned in the forties by the layer split |
+| **DeepSeek-V4-Flash-0731** · 284 B | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/), 4 cards — **6,454 output tok/s** @ C=768 · 19.65 req/s · full 1M context verified | [same image at TP=2](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/), 2 cards — **1,173–1,183 output tok/s** @ C=256 · 32.58–32.65 answers/s at 35 tokens each, thinking off by default · spread ≤ 5 % |
+| **DeepSeek-V4-Flash-NVFP4** · 2 cards, [different release](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/README.md#what-this-is-not-comparable-to) | [vLLM B12X SM120 kit](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/) — **404 output tok/s** @ C=256 · 9.97 answers/s · 159–163 tok/s decode with MTP · non-monotone under load | — |
+| **Gemma-4-26B-A4B** · sparse, 1 card | [llama.cpp · SGLang · vLLM](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/) — 31.88 answers/s @ C=32 (vLLM; **token throughput under load not recorded** for that engine) · [vLLM 5.9× llama.cpp under load](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/engine-comparison.md) | — |
+| **Gemma-4-31B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/gemma-4-31b/) — **310 output tok/s** @ C=32 · 0.80 answers/s · stalls past 8 concurrent | — |
+| **Muse-Glimmer-30B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/muse-glimmer-30b/) — **521 output tok/s** @ C=32 · 1.27 answers/s · only engine that knows the architecture | — |
 
 A model measured on several machines keeps one row and gains a column per machine, so
 the cross-hardware comparison lives here rather than in the directory tree.
@@ -40,12 +40,12 @@ GPUs. The two DeepSeek rows are different model releases rather than two setups 
 model, so they are not each other's baseline either. Follow the link before comparing two
 numbers here.
 
-**Where a row gives answers per second and another gives tokens per second, the two are
-not interchangeable.** Answer length varies by a factor of five across these models, so
-answers per second rewards terse ones. Comparing the DSv4-0731 and Qwen3.8-Flash-Next
-rows on the two-card machine inverts depending on which column is used, and the
-[machine page](cloudscale-gpu2-256-40-2-1600/README.md#llamacpp-cannot-split-across-these-cards)
-carries both.
+**Output tokens per second is quoted first because it is what the field reports**, and
+because answers per second is not comparable across these rows: tokens per answer spans
+35 to 258 here, a factor of seven, driven by thinking state rather than by speed. The
+DSv4-0731 and Qwen3.8-Flash-Next rows on the two-card machine change places depending on
+which of the two columns is read. Neither is wrong; they measure different things, and a
+row without both is a row you cannot rank.
 
 ---
 

@@ -14,7 +14,9 @@ open draft PR. The publisher's instruction is plain "use llama.cpp".
 
 ## Two configurations
 
-Both were measured under protocol `v1`. **B is the one in service.**
+Both were measured under protocol `v1`. **B is the configuration this setup is kept
+at**; which model occupies the cards at any moment is a separate question, and only one
+large model fits at a time.
 
 | | Quantisation | `-c` | `--parallel` | Context per slot | VRAM after load |
 |---|---|---|---|---|---|

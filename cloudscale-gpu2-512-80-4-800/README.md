@@ -6,7 +6,7 @@ was measured on this machine.
 | | |
 |---|---|
 | Provider | cloudscale.ch, flavour `GPU2-512-80-4-800` |
-| GPU | 4× NVIDIA RTX PRO 6000 Blackwell Max-Q, 97,887 MiB each (389,007 MiB total) |
+| GPU | 4× NVIDIA RTX PRO 6000 Blackwell Max-Q, 96 GB each — `nvidia-smi` reports 97,887 MiB, i.e. **95.6 GiB usable per card**, 382.4 GiB combined |
 | RAM | 512 GB (4 NUMA nodes) |
 | vCPU | 80 (AMD EPYC, virtualised) |
 | Storage | 800 GB scratch + 200 GB system (virtio, no NVMe passthrough) |
@@ -16,17 +16,26 @@ was measured on this machine.
 
 ## Models tested
 
-| Model | Cards | Setup | Peak measured | Details |
-|---|---|---|---|---|
-| **DeepSeek-V4-Flash-0731** | 4 (TP/DP/EP) | SGLang + SM120 patchset · production | 19.65 req/s @ C=768 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
-| **DeepSeek-V4-Flash-NVFP4** | 2 (TP) | vLLM B12X SM120 kit | 9.97 answers/s @ C=256 | [`deepseek-v4-flash-nvfp4/`](deepseek-v4-flash-nvfp4/) |
-| **Gemma-4-26B-A4B** | 1 | llama.cpp · SGLang · vLLM | **31.88 answers/s @ C=32** (vLLM) | [`gemma-4-26b-a4b/`](gemma-4-26b-a4b/) |
-| **Gemma-4-31B** | 1 | llama.cpp | 0.80 answers/s @ C=32 | [`gemma-4-31b/`](gemma-4-31b/) |
-| **Muse-Glimmer-30B** | 1 | llama.cpp | 1.27 answers/s @ C=32 | [`muse-glimmer-30b/`](muse-glimmer-30b/) |
+| Model | Cards | Setup | Output tok/s | Answers/s | At | Details |
+|---|---|---|---|---|---|---|
+| **DeepSeek-V4-Flash-0731** | 4 (TP/DP/EP) | SGLang + SM120 patchset · production | **6,453.6** | 19.65 req/s | C=768 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
+| **Gemma-4-26B-A4B** | 1 | llama.cpp · SGLang · vLLM | 816.9 *(llama.cpp)* | **31.88** *(vLLM)* | C=32 | [`gemma-4-26b-a4b/`](gemma-4-26b-a4b/) |
+| **Muse-Glimmer-30B** | 1 | llama.cpp | **520.5** | 1.27 | C=32 | [`muse-glimmer-30b/`](muse-glimmer-30b/) |
+| **DeepSeek-V4-Flash-NVFP4** | 2 (TP) | vLLM B12X SM120 kit | **403.6** | 9.97 | C=256 | [`deepseek-v4-flash-nvfp4/`](deepseek-v4-flash-nvfp4/) |
+| **Gemma-4-31B** | 1 | llama.cpp | **310.2** | 0.80 | C=32 | [`gemma-4-31b/`](gemma-4-31b/) |
+
+**The Gemma-4-26B-A4B row is the one that cannot be read straight.** Its headline
+31.88 answers/s is vLLM, which has no directory here — only the
+[engine comparison](gemma-4-26b-a4b/engine-comparison.md), and that document recorded
+answers per second under load but token throughput only at concurrency 1. The 816.9 tok/s
+is the llama.cpp arm at the same level and a different engine. The two cells are not the
+same measurement.
 
 The three single-card models were measured on 2026-08-16, one per GPU; the NVFP4 row on
-2026-08-17. **The peak column is not a ranking.** It is not comparable across rows without
-reading the scenario: the two DeepSeek rows and the two llama.cpp-only rows run with
+2026-08-17. Rows are ordered by output tokens per second, which is the metric the field
+uses and the one that survives a difference in answer length — but the rows sit at
+different concurrency levels, so even that column is not a ranking. It is not comparable
+across rows without reading the scenario: the two DeepSeek rows and the two llama.cpp-only rows run with
 thinking **on**, the Gemma-4-26B-A4B row with thinking **off** — a difference worth a factor
 of 3.4 on its own — and the rows use one, two or four cards. The two DeepSeek rows are
 additionally **different model releases**, not two setups of one model

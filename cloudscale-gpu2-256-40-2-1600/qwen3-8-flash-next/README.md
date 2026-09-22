@@ -6,7 +6,7 @@ reconfigured and re-measured 2026-09-21.
 
 | | |
 |---|---|
-| Checkpoint | [`unsloth/Qwen3.8-Flash-Next-GGUF`](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF) **UD-Q6_K_XL** in service; UD-Q5_K_XL also measured |
+| Checkpoint | [`unsloth/Qwen3.8-Flash-Next-GGUF`](https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF) — **UD-Q6_K_XL** current, UD-Q5_K_XL also measured |
 | Base model | [`Qwen/Qwen3.8-Flash-Next`](https://huggingface.co/Qwen/Qwen3.8-Flash-Next) |
 | Size on disk | 157.5 GiB (Q6) · 147.4 GiB (Q5) · + 0.84 GiB projector |
 | Architecture | `Qwen4ExpForConditionalGeneration`, 48 layers, 512 experts, **10 active** |
@@ -28,7 +28,7 @@ throughput cost at all.
 | At 8 concurrent | 209.4 output tok/s, p50 **7.8 s** |
 | Prefill, 180k tokens | 134.0 s, 1343 tok/s *(measured on Q5)* |
 | Needles at 180k | 3 of 3 *(measured on Q5)* |
-| **GPU utilisation** | **39–43 % at every level** |
+| **GPU utilisation** | **39–43 % at every level** (45–47 % on configuration A) |
 | VRAM | 87,055 / 81,773 MiB of 97,887 — 10.6 / 15.7 GiB free |
 
 **Single user: good. Small teams: workable. Heavy agent load: still not.** p50 is 2.0 s
@@ -72,7 +72,8 @@ are in [concurrent load](llama-cpp/scenarios/concurrent-load.md).
 
 ## Q6 costs 2.1 %
 
-6.9 % more weight, 88.5 → 86.6 tok/s single stream, and the same 45 % GPU. On a setup
+6.9 % more weight, 88.5 → 86.6 tok/s single stream, and unchanged GPU utilisation —
+45 %·44 % against 46 %·45 %. On a setup
 that leaves half the machine idle there is slack to absorb the extra reads, so the higher
 bit depth is close to free. See [single stream](llama-cpp/scenarios/single-stream.md).
 

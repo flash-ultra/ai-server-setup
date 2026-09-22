@@ -7,7 +7,7 @@ Everything below was measured on this machine.
 | | |
 |---|---|
 | Provider | cloudscale.ch, flavour `GPU2-256-40-2-1600` |
-| GPU | 2× NVIDIA RTX PRO 6000 Blackwell Max-Q, 97,887 MiB each (195,774 MiB total) |
+| GPU | 2× NVIDIA RTX PRO 6000 Blackwell Max-Q, 96 GB each — `nvidia-smi` reports 97,887 MiB, i.e. **95.6 GiB usable per card**, 191.2 GiB combined |
 | RAM | 251 GB |
 | vCPU | 40 (virtualised) |
 | Storage | 1.6 TB scratch (`/dev/sdb`) + 193 GB system |
@@ -17,19 +17,25 @@ Everything below was measured on this machine.
 
 ## Models tested
 
-| Model | Cards | Setup | Peak measured | Details |
-|---|---|---|---|---|
-| **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | 32.58–32.65 answers/s @ C=256 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
-| **MiniMax-M2.5-NVFP4** | 2 (TP) | vLLM 0.28.0 | 9.65–9.75 answers/s @ C=256 | [`minimax-m2-5/`](minimax-m2-5/) |
-| **Qwen3.8-Flash-Next** Q6_K_XL | 2 (layer split) | llama.cpp master, 6 slots | 7.47 answers/s · 1,390.3 output tok/s @ C=256 · **images** | [`qwen3-8-flash-next/`](qwen3-8-flash-next/) |
+All figures at concurrency 256, the top of the ladder.
 
-**The peak column is not a ranking**, and answers per second is the column that misleads
-most. The 0731 row was measured with thinking **off** — the default of that setup — and
-answers at 35 tokens; the MiniMax row cannot switch thinking off and answers at 258; the
-Qwen row writes 186. Counted in output tokens per second the same concurrency-256 point
-reads 1,173.2 for 0731 against 1,390.3 for Qwen, which reverses the order. At equal
-thinking state 0731 and MiniMax also change places at concurrency 32. Follow the link
-before comparing any two rows.
+| Model | Cards | Setup | Output tok/s | Answers/s | Tok/answer | Details |
+|---|---|---|---|---|---|---|
+| **MiniMax-M2.5-NVFP4** | 2 (TP) | vLLM 0.28.0 | **2,947–3,126** | 9.65–9.75 | 258 | [`minimax-m2-5/`](minimax-m2-5/) |
+| **Qwen3.8-Flash-Next** Q6_K_XL | 2 (layer split) | llama.cpp master, 6 slots | **1,390** | 7.47 | 186 | [`qwen3-8-flash-next/`](qwen3-8-flash-next/) · **images** |
+| **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | **1,173–1,183** | 32.58–32.65 | 35 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
+
+**Output tokens per second leads because it is the metric the rest of the field uses**,
+and because answers per second is not comparable across these rows: the tokens-per-answer
+column spans a factor of seven. The 0731 setup runs with thinking **off** by default and
+replies in 35 tokens, MiniMax cannot switch thinking off and writes 258, Qwen writes 186.
+Ranked by answers per second 0731 leads by 4×; ranked by tokens per second it comes last.
+Both are correct measurements of different things.
+
+**Neither column is a verdict.** The rows do not share a thinking state, and at equal
+thinking state 0731 and MiniMax change places at concurrency 32. Latency is missing from
+this table entirely and is where the setups differ most — 7.96 s for 0731 against 133.9 s
+for Qwen at this concurrency. Follow the link before comparing any two rows.
 
 ## Trials
 
@@ -44,7 +50,8 @@ Engines evaluated and not adopted live in [`trials/`](trials/). Nothing there is
 
 ### Two cards set a hard ceiling on model size
 
-The binding constraint is weights, not KV cache. Measured per card (102.6 GB usable):
+The binding constraint is weights, not KV cache. Measured per card against the
+95.6 GiB the driver actually offers:
 
 | Checkpoint | Weights per card | Fits |
 |---|---|---|
@@ -53,13 +60,26 @@ The binding constraint is weights, not KV cache. Measured per card (102.6 GB usa
 | DeepSeek-V4-Flash NVFP4 | 73.1 GiB | yes, at `--gpu-memory-utilization 0.93` |
 | GLM-5.3-Flash GGUF IQ4_XS | 73.0 GiB | yes, llama.cpp only |
 | Qwen3.5-122B-A10B FP8 | 59.3 GiB | yes |
+| Qwen3.8-Flash-Next GGUF UD-Q5_K_XL | 73.7 GiB | yes, llama.cpp only |
+| Qwen3.8-Flash-Next GGUF UD-Q6_K_XL | 78.8 GiB | yes, llama.cpp only |
 | GLM-5.3-Flash NVFP4 | 90.7 GiB | **no** — nothing left for KV |
 | Qwen3.5-397B-A17B NVFP4 | 117.0 GiB | **no** — exceeds both cards combined |
 
-**Two models never fit together.** DeepSeek-V4-Flash needs `0.93`; at `0.85` it aborts
-with `ValueError: No available memory for the cache blocks` after loading the weights,
-and `restart: unless-stopped` then puts the container into a restart loop. That leaves
-about 7 GB per card, and the smallest useful vision model needs 11.
+The two GGUF rows are the checkpoint size divided by two cards, like every other row.
+What llama.cpp actually places on the cards is
+[34.6 GiB less](qwen3-8-flash-next/llama-cpp/README.md#weights-on-disk-are-346-gib-larger-than-weights-in-vram)
+in both cases — so these rows are conservative, and the real headroom is larger.
+
+**Nothing fits beside DeepSeek-V4-Flash.** It needs `--mem-fraction-static 0.93`; at
+`0.85` it aborts with `ValueError: No available memory for the cache blocks` after
+loading the weights, and `restart: unless-stopped` then puts the container into a restart
+loop. That leaves about 7 GiB per card, and the smallest useful vision model needs 11.
+
+**That is a property of this checkpoint, not of the machine.** Qwen3.8-Flash-Next at
+UD-Q6_K_XL with six full-length slots leaves 10.6 and 15.7 GiB free, and at Q5 with one
+slot it left roughly 31 and 36 GiB. Whether a second model fits depends entirely on which
+first model is chosen — an earlier version of this page stated the DeepSeek case as a
+general rule, which it is not.
 
 ### llama.cpp cannot split across these cards
 
@@ -77,9 +97,10 @@ reaches on the same hardware.
 
 **Two unrelated models now measure the same ceiling.** GLM-5.3-Flash (45 layers, denser
 activation) and Qwen3.8-Flash-Next (10 of 512 experts, micro-block sparse attention) both
-pin at 39–46 % GPU utilisation under llama.cpp, at every concurrency level from 1 to 256.
-It is the engine, not the architecture — and not the configuration either: the number
-holds across two quantisations and slot counts of 1, 4 and 6.
+pin in the **forties** under llama.cpp at every concurrency level from 1 to 256 —
+39–47 % across everything measured here, and 55–61 % during prefill, which is the only
+phase that escapes it. It is the engine, not the architecture, and not the configuration
+either: the range holds across two quantisations and slot counts of 1, 4 and 6.
 
 Consequence for planning: any model that only runs under llama.cpp on this machine pays
 **in latency, not in token throughput**. Measured at concurrency 256 against

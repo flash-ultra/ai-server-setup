@@ -41,9 +41,9 @@ truncated thinking, not a finished reply.
 **A higher bit depth costs 2.1 % of output throughput here.** Q6_K_XL carries 6.9 % more
 weight than Q5_K_XL — 157.5 against 147.4 GiB — and gives up 88.5 → 86.6 tok/s for it.
 That is not the trade a bandwidth-bound decoder would make. It follows from the
-[45 % ceiling](../../../README.md#llamacpp-cannot-split-across-these-cards): with half the
-machine idle at every level, there is slack to absorb the extra weight reads, and the
-extra precision is close to free.
+[ceiling in the forties](../../../README.md#llamacpp-cannot-split-across-these-cards):
+with half the machine idle at every level, there is slack to absorb the extra weight
+reads, and the extra precision is close to free.
 
 **Do not read the latency and requests columns as a Q6 win.** p50 is 2.01 s against
 2.22 s, but the answers are also shorter — 182 against 197 tokens. Output tokens per
@@ -55,10 +55,10 @@ competitive:
 [DeepSeek-0731](../../../deepseek-v4-flash-0731/sglang/scenarios/single-stream.md) is at
 0.47 s but answers in 35 tokens; this one writes ~190.
 
-**45 % on both cards, with a single request in flight.** Nothing else is running. That is
-`-sm layer` alternating between the cards, and it is the same number the
+**Mid-forties on both cards, with a single request in flight.** Nothing else is running.
+That is `-sm layer` alternating between the cards, and it is the same range the
 [concurrency ladder](concurrent-load.md) shows at every level and in every slot
-configuration.
+configuration — 39–47 % across all of them.
 
 **0 % reasoning is "not reported".** llama.cpp omits the field. ~190 tokens for a
 three-sentence summary is not a model that skipped thinking.

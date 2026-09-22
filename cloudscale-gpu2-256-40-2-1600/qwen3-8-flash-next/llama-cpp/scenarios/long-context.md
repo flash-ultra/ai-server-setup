@@ -33,7 +33,7 @@ were measured at, so the three are comparable.
 that forced a manual correction under vLLM does not appear here, as it did not under
 SGLang. Two engines clean, one affected — the fault is in the vLLM combination.
 
-**Prefill utilisation reaches 55–61 %, against 45 % everywhere else.** Prefill
+**Prefill utilisation reaches 55–61 %, against the forties everywhere else.** Prefill
 parallelises across the layer split better than decode does. It is the only measurement in
 this directory where the second card contributes meaningfully.
 
@@ -45,7 +45,7 @@ Two minutes to first token against twenty-six seconds for the same prompt.
 
 - **The full 262,144 context.**
 - **A second run.** Prefill here is a single measurement.
-- **Configuration B.** The setup now in service runs UD-Q6_K_XL across six slots. A
+- **Configuration B.** The current configuration runs UD-Q6_K_XL across six slots. A
   needle test does not carry over untested: each slot holds 262,144 tokens as before,
   but the pool is six times larger and the quantisation differs. Re-running this
   scenario on B is the open item with the shortest path — one `--scenario longctx`
