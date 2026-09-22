@@ -24,7 +24,7 @@ Which model has been measured on which machine, and with what result.
 |---|---|---|
 | **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — **2,947–3,126 output tok/s** @ C=256 · 9.65–9.75 answers/s · monotone ladder · 100 % on both cards |
 | **Qwen3.8-Flash-Next** · 512 experts, 10 active, 2 cards | — | [llama.cpp master, Q6 on 6 slots](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — **1,390 output tok/s** @ C=256 · 7.47 answers/s · **images** · pinned in the forties by the layer split |
-| **DeepSeek-V4-Flash-0731** · 284 B | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/), 4 cards — **6,454 output tok/s** @ C=768 · 19.65 req/s · full 1M context verified | [same image at TP=2](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/), 2 cards — **1,173–1,183 output tok/s** @ C=256 · 32.58–32.65 answers/s at 35 tokens each, thinking off by default · spread ≤ 5 % |
+| **DeepSeek-V4-Flash-0731** · 284 B | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/), 4 cards — **6,454 output tok/s** @ C=768 · 19.65 req/s · full 1M context verified | [same image at TP=2](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/), 2 cards — thinking **off**: **1,159–1,183 output tok/s** @ C=256, 32.10–32.65 answers/s at 35 tokens · thinking **on**: **3,584 tok/s**, 10.97 answers/s at 327 tokens · extended to C=512: **1,436.5 tok/s** and still climbing · spread ≤ 5 % |
 | **DeepSeek-V4-Flash-NVFP4** · 2 cards, [different release](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/README.md#what-this-is-not-comparable-to) | [vLLM B12X SM120 kit](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/) — **404 output tok/s** @ C=256 · 9.97 answers/s · 159–163 tok/s decode with MTP · non-monotone under load | — |
 | **Gemma-4-26B-A4B** · sparse, 1 card | [llama.cpp · SGLang · vLLM](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/) — 31.88 answers/s @ C=32 (vLLM; **token throughput under load not recorded** for that engine) · [vLLM 5.9× llama.cpp under load](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/engine-comparison.md) | — |
 | **Gemma-4-31B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/gemma-4-31b/) — **310 output tok/s** @ C=32 · 0.80 answers/s · stalls past 8 concurrent | — |
@@ -42,10 +42,13 @@ numbers here.
 
 **Output tokens per second is quoted first because it is what the field reports**, and
 because answers per second is not comparable across these rows: tokens per answer spans
-35 to 258 here, a factor of seven, driven by thinking state rather than by speed. The
-DSv4-0731 and Qwen3.8-Flash-Next rows on the two-card machine change places depending on
-which of the two columns is read. Neither is wrong; they measure different things, and a
-row without both is a row you cannot rank.
+35 to 327 here, a factor of nine, driven by thinking state rather than by speed.
+
+**The thinking state moves a row further than the hardware does.** DeepSeek-V4-Flash-0731
+on two cards, measured both ways on the same day, spans 1,173 to 3,584 output tokens per
+second — a 3.1× range from one request parameter. That is wider than the gap between any
+two models in this table. A figure without a stated thinking arm is not comparable to
+anything, and neither column is wrong; they measure different work.
 
 ---
 
@@ -157,6 +160,14 @@ the thinking-on arm, and the honest-looking conclusion is "it makes no differenc
 the effect before trusting the row — one request each way, compare `reasoning_content`.
 The same applies to any proxy in the path: a gateway with `drop_params` enabled will
 remove unknown options before the model ever sees them.
+
+### The protocol ladder stops at 256, and models do not
+
+Concurrency 256 is where `v1` ends, not where a machine ends. Extended to 512, one setup
+here gained 22 % in answers per second and 24 % in tokens per second over its own 256
+figure, at 98 % GPU and with the curve still rising. Every peak in this repository is
+therefore "the best measured inside the protocol", and for a capacity decision the ladder
+has to be pushed until it turns over.
 
 ### A KV pool does not scale linearly, so do not extrapolate its size
 

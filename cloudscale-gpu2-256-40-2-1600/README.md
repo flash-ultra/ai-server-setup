@@ -17,20 +17,28 @@ Everything below was measured on this machine.
 
 ## Models tested
 
-All figures at concurrency 256, the top of the ladder.
+All figures at concurrency 256, which is the top of the protocol ladder — not of every
+model, see the note below the table.
 
-| Model | Cards | Setup | Output tok/s | Answers/s | Tok/answer | Details |
-|---|---|---|---|---|---|---|
-| **MiniMax-M2.5-NVFP4** | 2 (TP) | vLLM 0.28.0 | **2,947–3,126** | 9.65–9.75 | 258 | [`minimax-m2-5/`](minimax-m2-5/) |
-| **Qwen3.8-Flash-Next** Q6_K_XL | 2 (layer split) | llama.cpp master, 6 slots | **1,390** | 7.47 | 186 | [`qwen3-8-flash-next/`](qwen3-8-flash-next/) · **images** |
-| **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | **1,173–1,183** | 32.58–32.65 | 35 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
+| Model | Cards | Setup | Thinking | Output tok/s | Answers/s | Tok/answer | Details |
+|---|---|---|---|---|---|---|---|
+| **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | **on** | **3,584** | 10.97 | 327 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
+| **MiniMax-M2.5-NVFP4** | 2 (TP) | vLLM 0.28.0 | on, not switchable | **2,947–3,126** | 9.65–9.75 | 258 | [`minimax-m2-5/`](minimax-m2-5/) |
+| **Qwen3.8-Flash-Next** Q6_K_XL | 2 (layer split) | llama.cpp master, 6 slots | not established | **1,390** | 7.47 | 186 | [`qwen3-8-flash-next/`](qwen3-8-flash-next/) · **images** |
+| **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | **off** (default) | **1,159–1,183** | 32.10–32.65 | 35 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
 
-**Output tokens per second leads because it is the metric the rest of the field uses**,
-and because answers per second is not comparable across these rows: the tokens-per-answer
-column spans a factor of seven. The 0731 setup runs with thinking **off** by default and
-replies in 35 tokens, MiniMax cannot switch thinking off and writes 258, Qwen writes 186.
-Ranked by answers per second 0731 leads by 4×; ranked by tokens per second it comes last.
-Both are correct measurements of different things.
+**The same setup appears twice, and that is the point.** 0731 measured with thinking on
+and off on the same day differs by 3.1× in tokens per second and 3.0× in answers per
+second, in opposite directions. It tops this table and it comes last in it. A row without
+a stated thinking arm cannot be ranked against anything.
+
+**Concurrency 256 is the protocol ceiling, not the machine's.** Extended to 512, 0731 with
+thinking off reaches 39.62 answers/s and 1,436.5 output tok/s at 98 % GPU and was still
+climbing. The other two rows were never taken past 256, so the table stops where they do.
+
+**Output tokens per second leads because it is the metric the rest of the field uses.**
+It is still not a ranking on its own: the tokens-per-answer column spans 35 to 327 here,
+and that is the thinking state rather than speed.
 
 **Neither column is a verdict.** The rows do not share a thinking state, and at equal
 thinking state 0731 and MiniMax change places at concurrency 32. Latency is missing from

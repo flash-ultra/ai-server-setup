@@ -40,14 +40,22 @@ python3 -m sglang.launch_server --model-path /model --served-model-name cyberlin
 
 | Scenario | Status |
 |---|---|
-| [single stream](scenarios/single-stream.md) | measured |
-| [concurrent load](scenarios/concurrent-load.md) | measured, two runs |
+| [single stream](scenarios/single-stream.md) | measured, two runs 23 days apart — 0.3 % apart |
+| [concurrent load](scenarios/concurrent-load.md) | measured, **four runs** — two at protocol levels, one to 512, one with thinking on |
 | [reasoning cost](scenarios/reasoning-cost.md) | measured — and it is the one that reframes the rest |
-| [long context](scenarios/long-context.md) | measured |
+| [long context](scenarios/long-context.md) | measured at **64k, 128k and 180k**, 180k twice |
 
 ## Still open
 
 - **FP8 KV without scaling factors.** The only admissible setting, and the engine says it
   costs accuracy. Whether a checkpoint with KV scales exists was not investigated.
-- **`--mem-fraction-static` not swept.** 0.93 was carried over from the NVFP4 setup.
-- **1M context untried.** The pool would hold one such request.
+- **`--mem-fraction-static` not swept.** 0.93 was carried over from the NVFP4 setup, and
+  `0.85` is documented above as failing. The floor between them is unmeasured, and it is
+  the number that decides whether a second model fits on these cards at all. Three or four
+  restarts would settle it.
+- **No speculative decoding.** The four-card setup of this same image runs DSpark with
+  block size 7; this configuration passes no speculation flags at all. Whether the
+  single-stream gap to that machine — 131.2 against 75.3 tok/s — is card count or
+  speculation is untested, and the flags are already in the image.
+- **1M context untried.** The pool holds 1,382,912 tokens, but `--context-length` is
+  262,144: reaching the native window needs a restart, not a longer prompt.
