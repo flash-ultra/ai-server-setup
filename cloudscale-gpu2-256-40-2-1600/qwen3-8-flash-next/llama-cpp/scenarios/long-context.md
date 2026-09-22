@@ -2,8 +2,10 @@
 
 Needle-in-a-haystack at 180k tokens.
 
-**Setup:** [llama.cpp `-sm layer`](../README.md) · `Qwen3.8-Flash-Next` UD-Q5_K_XL ·
-[cloudscale `GPU2-256-40-2-1600`](../../../README.md) · measured 2026-08-31
+**Setup:** [llama.cpp `-sm layer`](../README.md) · `Qwen3.8-Flash-Next` ·
+[cloudscale `GPU2-256-40-2-1600`](../../../README.md) · measured 2026-08-31 on
+[configuration A](../README.md#two-configurations) — UD-Q5_K_XL, one slot holding the
+full context
 
 ## Method
 
@@ -43,3 +45,8 @@ Two minutes to first token against twenty-six seconds for the same prompt.
 
 - **The full 262,144 context.**
 - **A second run.** Prefill here is a single measurement.
+- **Configuration B.** The setup now in service runs UD-Q6_K_XL across six slots. A
+  needle test does not carry over untested: each slot holds 262,144 tokens as before,
+  but the pool is six times larger and the quantisation differs. Re-running this
+  scenario on B is the open item with the shortest path — one `--scenario longctx`
+  invocation against the running server.

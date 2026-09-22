@@ -23,7 +23,7 @@ Which model has been measured on which machine, and with what result.
 | Model | cloudscale `GPU2-512-80-4-800` | cloudscale `GPU2-256-40-2-1600` |
 |---|---|---|
 | **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — 9.65–9.75 answers/s over two runs · monotone ladder · 100 % on both cards |
-| **Qwen3.8-Flash-Next** · 512 experts, 10 active, 2 cards | — | [llama.cpp master](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — 6.83–6.85 answers/s · **images** · pinned at 45 % GPU by the layer split |
+| **Qwen3.8-Flash-Next** · 512 experts, 10 active, 2 cards | — | [llama.cpp master, Q6 on 6 slots](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — 1,390.3 output tok/s · **images** · pinned at 39–43 % GPU by the layer split |
 | **DeepSeek-V4-Flash-0731** · 284 B | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/), 4 cards — 19.65 req/s peak · full 1M context verified | [same image at TP=2](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/), 2 cards — 32.58–32.65 answers/s, thinking off by default · spread ≤ 5 % |
 | **DeepSeek-V4-Flash-NVFP4** · 2 cards, [different release](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/README.md#what-this-is-not-comparable-to) | [vLLM B12X SM120 kit](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/) — 9.97 answers/s · 159–163 tok/s decode with MTP · non-monotone under load | — |
 | **Gemma-4-26B-A4B** · sparse, 1 card | [llama.cpp · SGLang · vLLM](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/) — 31.88 answers/s · [vLLM 5.9× llama.cpp under load](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/engine-comparison.md) | — |
@@ -39,6 +39,13 @@ with thinking off — worth a factor of 3.4 by itself — and the rows serve one
 GPUs. The two DeepSeek rows are different model releases rather than two setups of one
 model, so they are not each other's baseline either. Follow the link before comparing two
 numbers here.
+
+**Where a row gives answers per second and another gives tokens per second, the two are
+not interchangeable.** Answer length varies by a factor of five across these models, so
+answers per second rewards terse ones. Comparing the DSv4-0731 and Qwen3.8-Flash-Next
+rows on the two-card machine inverts depending on which column is used, and the
+[machine page](cloudscale-gpu2-256-40-2-1600/README.md#llamacpp-cannot-split-across-these-cards)
+carries both.
 
 ---
 
@@ -150,6 +157,23 @@ the thinking-on arm, and the honest-looking conclusion is "it makes no differenc
 the effect before trusting the row — one request each way, compare `reasoning_content`.
 The same applies to any proxy in the path: a gateway with `drop_params` enabled will
 remove unknown options before the model ever sees them.
+
+### A KV pool does not scale linearly, so do not extrapolate its size
+
+Sizing a large context budget from a measurement at a small one overestimates what it
+costs. On Qwen3.8-Flash-Next the first 229,376 tokens of pool cost 0.0266 MiB each and
+the next 786,432 cost 0.0164 — a projection from the first pair put the larger pool
+14 % above what it actually used. Measure at the size you intend to serve, or at two
+points that bracket it.
+
+### More server slots lower latency without raising the ceiling
+
+Where an engine exposes a slot count, it decides how quickly the machine reaches
+saturation, not where saturation is. Measured on llama.cpp with one slot against six:
+73 % more output tokens per second at eight concurrent requests, 6.8 % at 256, and
+roughly half the median latency at every level from eight upward. The throughput curves
+converge; the latency curves do not. If the complaint is response time under moderate
+load, the slot count is the first thing to check — and it costs only KV memory.
 
 ### Measure via `usage`, not stream deltas
 

@@ -21,12 +21,15 @@ Everything below was measured on this machine.
 |---|---|---|---|---|
 | **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | 32.58–32.65 answers/s @ C=256 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
 | **MiniMax-M2.5-NVFP4** | 2 (TP) | vLLM 0.28.0 | 9.65–9.75 answers/s @ C=256 | [`minimax-m2-5/`](minimax-m2-5/) |
-| **Qwen3.8-Flash-Next** Q5_K_XL | 2 (layer split) | llama.cpp master | 6.83–6.85 answers/s @ C=256 · **images** | [`qwen3-8-flash-next/`](qwen3-8-flash-next/) |
+| **Qwen3.8-Flash-Next** Q6_K_XL | 2 (layer split) | llama.cpp master, 6 slots | 7.47 answers/s · 1,390.3 output tok/s @ C=256 · **images** | [`qwen3-8-flash-next/`](qwen3-8-flash-next/) |
 
-**The peak column is not a ranking.** The 0731 row was measured with thinking **off** — the
-default of that setup — and answers at 35 tokens; the MiniMax row cannot switch thinking off
-and answers at 258. At equal thinking state the order reverses at concurrency 32. Follow the
-link before comparing the two.
+**The peak column is not a ranking**, and answers per second is the column that misleads
+most. The 0731 row was measured with thinking **off** — the default of that setup — and
+answers at 35 tokens; the MiniMax row cannot switch thinking off and answers at 258; the
+Qwen row writes 186. Counted in output tokens per second the same concurrency-256 point
+reads 1,173.2 for 0731 against 1,390.3 for Qwen, which reverses the order. At equal
+thinking state 0731 and MiniMax also change places at concurrency 32. Follow the link
+before comparing any two rows.
 
 ## Trials
 
@@ -74,13 +77,26 @@ reaches on the same hardware.
 
 **Two unrelated models now measure the same ceiling.** GLM-5.3-Flash (45 layers, denser
 activation) and Qwen3.8-Flash-Next (10 of 512 experts, micro-block sparse attention) both
-pin at 45 % GPU utilisation under llama.cpp, at every concurrency level from 1 to 256. It
-is the engine, not the architecture.
+pin at 39–46 % GPU utilisation under llama.cpp, at every concurrency level from 1 to 256.
+It is the engine, not the architecture — and not the configuration either: the number
+holds across two quantisations and slot counts of 1, 4 and 6.
 
 Consequence for planning: any model that only runs under llama.cpp on this machine pays
-roughly a factor of 5 in throughput and up to 37 in latency under load against an engine
-that uses both cards. Measured at concurrency 256: 6.83 answers/s and p50 291.8 s for
-Qwen3.8-Flash-Next, against 32.58 and 7.96 s for DeepSeek-V4-Flash-0731 under SGLang.
+**in latency, not in token throughput**. Measured at concurrency 256 against
+DeepSeek-V4-Flash-0731 under SGLang on the same cards:
+
+| | llama.cpp · Qwen3.8-Flash-Next | SGLang · DSv4-0731 |
+|---|---|---|
+| Output tok/s | **1,390.3** | 1,173.2 |
+| Answers/s | 7.47 | **32.58** |
+| Tokens per answer | 186 | 35 |
+| Latency p50 | 133.9 s | **7.96 s** |
+
+The factor of 17 in latency is the cost. The factor of 4.4 in answers per second is
+mostly answer length — the two setups do not produce comparable replies — and in tokens
+per second llama.cpp is ahead here. An earlier version of this page reported a
+"factor of 5 in throughput" from the answers-per-second column alone; that reading was
+wrong, and the single-slot configuration it was measured on made it worse.
 
 **Every multimodal model that fits on these two cards runs only under llama.cpp.** That is
 what images cost here.
