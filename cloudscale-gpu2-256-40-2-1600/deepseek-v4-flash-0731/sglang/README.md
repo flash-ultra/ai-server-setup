@@ -20,9 +20,11 @@ run here at TP=2. Tested 2026-08-30.
 ## Configuration in effect
 
 ```
+docker run ... -e NCCL_SOCKET_IFNAME=lo ...
 python3 -m sglang.launch_server --model-path /model --served-model-name cyberlink
   --host 127.0.0.1 --port 8000
-  --tp-size 2 --mem-fraction-static 0.93 --context-length 262144
+  --tp-size 2 --dist-init-addr 127.0.0.1:29500
+  --mem-fraction-static 0.93 --context-length 262144
   --trust-remote-code --kv-cache-dtype fp8_e4m3
   --reasoning-parser deepseek-v4 --tool-call-parser deepseekv4
 ```
@@ -35,6 +37,8 @@ python3 -m sglang.launch_server --model-path /model --served-model-name cyberlin
 | `--reasoning-parser` | `deepseek-v4` | without it the raw `<think>` block, closing tag included, lands in the middle of `content` |
 | `--tool-call-parser` | `deepseekv4` | without it every request carrying `tool_choice` is rejected before the model sees it |
 | `--mem-fraction-static` | `0.93` | 77.7 GiB of weights per card; the same value the NVFP4 release needs on this hardware |
+| `NCCL_SOCKET_IFNAME` | `lo` | without it the two `sglang::scheduler` processes open **14 listening sockets on the host's primary network interface** — 7 per TP rank, on ephemeral ports. They are NCCL bootstrap sockets, not the data path, and binding them to loopback costs nothing measurable (75.8 against 75.3–75.5 tok/s single stream, p50 0.48 against 0.47 s, load 181 against 196 s) |
+| `--dist-init-addr` | `127.0.0.1:29500` | **does not by itself move those sockets** — measured, the count stayed at 14. It is kept because it pins the rendezvous explicitly rather than leaving the whole question to one environment variable |
 
 ## Scenarios
 

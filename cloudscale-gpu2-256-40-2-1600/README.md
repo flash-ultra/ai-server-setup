@@ -148,6 +148,37 @@ this hardware. Both ran on the same two cards with the same driver. The GPU util
 tells the same story from the other side: llama.cpp with `-sm layer` leaves one card idle
 much of the time, vLLM holds both at 100 % even on a single request.
 
+### SGLang binds its NCCL sockets to the public interface by default
+
+With `--tp-size 2` the two `sglang::scheduler` processes open **14 listening sockets on
+the host's primary network interface** — seven per tensor-parallel rank, on ephemeral
+ports. They are NCCL bootstrap sockets. Nothing in the documented configuration asks for
+this; it is what NCCL's interface heuristic picks when left alone.
+
+On this machine they were never reachable: ufw runs default-deny on incoming with only
+`22/tcp` allowed, and the `DOCKER-USER` chain is empty while both published container
+ports bind to `127.0.0.1`. The exposure was therefore latent, not actual — but it rested
+entirely on the firewall staying correct.
+
+**`NCCL_SOCKET_IFNAME=lo` moves all fourteen to loopback, and costs nothing measurable:**
+
+| | default | `NCCL_SOCKET_IFNAME=lo` |
+|---|---|---|
+| Listeners on the public interface | 14 | **0** |
+| Listeners on `127.x` | 22 | 36 |
+| Single stream | 75.3–75.5 tok/s | **75.8 tok/s** |
+| Latency p50 | 0.47 s | 0.48 s |
+| Time to `/health` 200 | 196 s | 181 s |
+
+The throughput figure sits inside the 0.3 % spread of two earlier runs, so inter-GPU
+communication is unaffected — NCCL uses the socket for bootstrap only, and the transfers
+go over PCIe P2P.
+
+**`--dist-init-addr 127.0.0.1:29500` does not do this on its own.** Measured: the count
+stayed at 14. It pins the rendezvous, not what the ranks bind afterwards. Worth setting
+anyway so the property does not depend on a single environment variable, but it is not
+the fix.
+
 ### Standard vLLM works here — the sm120 failure was model-specific
 
 `vllm/vllm-openai:v0.28.0` runs unpatched on these cards. The
