@@ -22,7 +22,7 @@ Which model has been measured on which machine, and with what result.
 
 | Model | cloudscale `GPU2-512-80-4-800` | cloudscale `GPU2-256-40-2-1600` |
 |---|---|---|
-| **MiMo-V2.6-Flash-RL** · FP8, 2 cards | — | [vLLM, vendor image](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/) — **3,116 output tok/s** @ C=256 · **46.10 answers/s** at p50 5.71 s · thinking **on** · **images** · 100 % on both cards at every level · context cut to 49,152 |
+| **MiMo-V2.6-Flash-RL** · FP8, 2 cards | — | [vLLM, vendor image](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/) — **3,129 output tok/s** @ C=256 · **46.05 answers/s** at p50 5.74 s · thinking **on** · **images** · 100 % on both cards at every level · 196,608 context, 3/3 needles at 180k |
 | **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — **2,947–3,126 output tok/s** @ C=256 · 9.65–9.75 answers/s · monotone ladder · 100 % on both cards |
 | **Qwen3.8-Flash-Next** · 512 experts, 10 active, 2 cards | — | [llama.cpp master, Q6 on 6 slots](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — **1,390 output tok/s** @ C=256 · 7.47 answers/s · **images** · pinned in the forties by the layer split |
 | **DeepSeek-V4-Flash-0731** · 284 B | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/), 4 cards — **6,454 output tok/s** @ C=768 · 19.65 req/s · full 1M context verified | [same image at TP=2](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/), 2 cards — thinking **off**: **1,159–1,183 output tok/s** @ C=256, 32.10–32.65 answers/s at 35 tokens · thinking **on**: **3,584 tok/s**, 10.97 answers/s at 327 tokens · extended to C=512: **1,436.5 tok/s** and still climbing · spread ≤ 5 % |
@@ -37,8 +37,9 @@ the cross-hardware comparison lives here rather than in the directory tree.
 **The peak column is a pointer, not a ranking.** These rows do not share a workload: the
 DeepSeek and the two llama.cpp-only rows ran with thinking on, the Gemma-4-26B-A4B row
 with thinking off — worth a factor of 3.4 by itself — and the rows serve one, two or four
-GPUs. The context served differs too, by a factor of five between the two fastest rows on
-the current machine, and a smaller window leaves more room for the batch. The two DeepSeek rows are different model releases rather than two setups of one
+GPUs. The context served differs too, and a smaller window leaves more room for the
+batch — though on the one row where that was tested, quadrupling the window changed
+throughput by 0.1 %. The two DeepSeek rows are different model releases rather than two setups of one
 model, so they are not each other's baseline either. Follow the link before comparing two
 numbers here.
 
@@ -173,10 +174,45 @@ The sharpest case measured here is
 [MiMo-V2.6-Flash](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/vllm/README.md#thinking-can-be-switched-off-and-only-two-of-five-ways-work):
 five plausible candidate keys, **two** that work and **three** that return a normal answer
 with thinking still on — including `thinking`, which is the correct key for a different
-model on the same machine. Switching it off is worth 46 % more answers per second there,
+model on the same machine. Switching it off is worth 43 % more answers per second there,
 so the false negative would have cost a real result.
+
+**The same applies one level down, to engine flags.** `--kv-cache-dtype fp8` on that
+setup is accepted, logs nothing unusual, and leaves the cache arithmetic
+[identical to the digit](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/vllm/README.md#--kv-cache-dtype-fp8-is-accepted-and-does-nothing):
+3.18 GiB needed at 131,072 either way, same max-length estimate. A flag that should halve
+the cache and does not is invisible unless you read the engine's own KV figures before and
+after.
 The same applies to any proxy in the path: a gateway with `drop_params` enabled will
 remove unknown options before the model ever sees them.
+
+### A serving ceiling can be an engine default rather than a hardware limit
+
+One setup here served 49,152 tokens of context and failed to start at anything larger,
+with the engine reporting 2.36 GiB of KV cache available and estimating 54,528 as the
+longest workable window. The weights left 12.8 GiB per card unaccounted for, so the
+arithmetic looked like a hardware wall.
+
+It was a profiling default. vLLM's CUDA-graph memory estimator was reserving the
+difference and saying so in a line that reads like an informational note:
+`--gpu-memory-utilization=0.9700 is equivalent to 0.9637 without CUDA graph memory
+profiling`. Disabling it and raising utilisation by one point:
+
+| | before | after |
+|---|---|---|
+| Available KV | 2.36 GiB | 3.9 GiB |
+| Longest window the engine would start | 54,528 | 198,208 |
+| Served | 49,152 | **196,608** |
+| Answers/s at concurrency 256 | 46.10 | 46.05 |
+
+**Four times the context at unchanged throughput.** The full before/after is in the
+[setup README](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/vllm/README.md#a-cuda-graph-profiling-default-costs-three-quarters-of-the-context-window).
+
+Two things generalise. **A "model does not fit" conclusion drawn from a first boot is a
+statement about the engine's defaults as much as about the model** — read the startup log
+for what is being reserved before sizing hardware around the result. And **the KV figure
+an engine reports is not a constant of the checkpoint**: it moved by 65 % here without
+touching weights, quantisation or cards.
 
 ### The protocol ladder stops at 256, and models do not
 
@@ -189,10 +225,27 @@ has to be pushed until it turns over.
 ### A KV pool does not scale linearly, so do not extrapolate its size
 
 Sizing a large context budget from a measurement at a small one overestimates what it
-costs. On Qwen3.8-Flash-Next the first 229,376 tokens of pool cost 0.0266 MiB each and
-the next 786,432 cost 0.0164 — a projection from the first pair put the larger pool
-14 % above what it actually used. Measure at the size you intend to serve, or at two
-points that bracket it.
+costs, and the error can be large enough to change a hardware decision.
+
+On Qwen3.8-Flash-Next the first 229,376 tokens of pool cost 0.0266 MiB each and the next
+786,432 cost 0.0164 — a projection from the first pair put the larger pool 14 % above
+what it actually used.
+
+On MiMo-V2.6-Flash the same effect is a factor of two. The same setup, two window sizes:
+
+| | 49,152 window | 196,608 window |
+|---|---|---|
+| KV pool | 135,191 tokens | 197,494 tokens |
+| Bytes per token | 49.1 KiB | **25.4 KiB** |
+
+**The pool got 46 % larger on 38 % less memory.** Hybrid attention explains it: some
+layers carry a sliding window whose cost saturates once the context exceeds its width,
+while the rest keep growing. Below that width every layer stores in full — so a
+short-window measurement is the expensive regime, not the cheap one. The same signature
+shows in that engine's failure messages: 3.18 GiB needed at 131,072 but 4.59 GiB at
+262,144, where a linear cache would want 6.36.
+
+Measure at the size you intend to serve, or at two points that bracket it.
 
 ### More server slots lower latency without raising the ceiling
 

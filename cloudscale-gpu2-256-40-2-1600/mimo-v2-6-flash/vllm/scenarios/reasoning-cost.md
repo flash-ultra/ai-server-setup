@@ -24,36 +24,40 @@ a false negative rather than a result.
 
 | Concurrency | Variant | Answers/s | Output tok/s | Tokens/answer | Reasoning | Chars/answer | Latency p50 |
 |---|---|---|---|---|---|---|---|
-| 8 | default | 3.75 | 256.1 | 68 | 22 % | 316 | 2.14 s |
-| 8 | `reasoning_effort=low` | 4.88 | 325.2 | 67 | 22 % | 310 | 1.65 s |
-| 8 | thinking off (`enable_thinking`) | **6.72** | 316.5 | 47 | **0 %** | 291 | **1.18 s** |
-| 32 | default | 10.10 | 697.5 | 69 | 22 % | 320 | 3.15 s |
-| 32 | `reasoning_effort=low` | 10.28 | 695.1 | 68 | 22 % | 312 | 3.10 s |
-| 32 | thinking off (`enable_thinking`) | **14.78** | 695.5 | 47 | **0 %** | 290 | **2.18 s** |
+| 8 | default | 4.67 | 320.2 | 68 | 23 % | 314 | 1.68 s |
+| 8 | `reasoning_effort=low` | 4.80 | 324.1 | 68 | 21 % | 317 | 1.64 s |
+| 8 | thinking off (`enable_thinking`) | **6.83** | 320.2 | 47 | **0 %** | 290 | **1.18 s** |
+| 32 | default | 10.32 | 706.2 | 68 | 23 % | 314 | 3.12 s |
+| 32 | `reasoning_effort=low` | 10.35 | 705.7 | 68 | 22 % | 318 | 3.09 s |
+| 32 | thinking off (`enable_thinking`) | **14.72** | 703.6 | 48 | **0 %** | 293 | **2.16 s** |
+
+An earlier series at a 49,152 window matched every row except `default` at concurrency 8,
+where it read 3.75 answers/s — below its own `reasoning_effort=low` arm, which never made
+sense. That value was an outlier; the ordering here is the reproducible one.
 
 ## Reading
 
-**Switching thinking off buys 46 % more answers and 31 % less latency at no cost in token
-rate.** At concurrency 32: 10.10 → 14.78 answers/s and 3.15 → 2.18 s, while output tokens
-per second stay flat at 697.5 → 695.5. The machine was already saturated; the same tokens
+**Switching thinking off buys 43 % more answers and 31 % less latency at no cost in token
+rate.** At concurrency 32: 10.32 → 14.72 answers/s and 3.12 → 2.16 s, while output tokens
+per second stay flat at 706.2 → 703.6. The machine was already saturated; the same tokens
 simply get spent on answers instead of scratchpad. That is the clean form of this
 trade-off and it is not what the other models here do — DeepSeek's thinking arm *raises*
 tokens per second while cutting answers by a factor of four.
 
-**`reasoning_effort=low` does not reduce reasoning.** 22 % in both the default and the
-`low` row, 67–68 tokens per answer against 68–69. At concurrency 32 it is
-indistinguishable from the default (10.28 against 10.10). The parameter is accepted; it
+**`reasoning_effort=low` does not reduce reasoning.** 21–23 % in both the default and the
+`low` row, 68 tokens per answer in both. At concurrency 32 it is indistinguishable from
+the default (10.35 against 10.32). The parameter is accepted; it
 moves nothing worth measuring. Only `reasoning_effort: "none"` and
 `enable_thinking: false` reach zero.
 
-**Thinking here is cheap in absolute terms.** 22 % of 68 tokens is roughly 15 tokens of
+**Thinking here is cheap in absolute terms.** 23 % of 68 tokens is roughly 16 tokens of
 scratchpad per answer. DeepSeek with thinking on spends 85 % of 290. That is the whole
 reason MiMo can be measured with thinking on and still lead the
 [concurrency ladder](concurrent-load.md) — its thinking arm is not a different operating
 point, it is the same one with a short preamble.
 
-**Visible output shrinks by 8 % when thinking is off**, 320 → 290 characters. Whether
-those 30 characters are worth 46 % of the answer rate is a quality question this scenario
+**Visible output shrinks by 7 % when thinking is off**, 314 → 293 characters. Whether
+those 21 characters are worth 43 % of the answer rate is a quality question this scenario
 cannot answer. The [quality battery](../../README.md#quality-checks-outside-the-protocol) was run
 with thinking on.
 

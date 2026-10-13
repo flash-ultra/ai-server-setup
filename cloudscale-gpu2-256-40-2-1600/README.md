@@ -23,7 +23,7 @@ model, see the note below the table.
 | Model | Cards | Setup | Thinking | Output tok/s | Answers/s | Tok/answer | Details |
 |---|---|---|---|---|---|---|---|
 | **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | **on** | **3,584** | 10.97 | 327 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
-| **MiMo-V2.6-Flash-RL** | 2 (TP) | vLLM, vendor image | **on** | **3,116** | **46.10** | 68 | [`mimo-v2-6-flash/`](mimo-v2-6-flash/) · **images** |
+| **MiMo-V2.6-Flash-RL** | 2 (TP) | vLLM, vendor image | **on** | **3,129** | **46.05** | 68 | [`mimo-v2-6-flash/`](mimo-v2-6-flash/) · **images** |
 | **MiniMax-M2.5-NVFP4** | 2 (TP) | vLLM 0.28.0 | on, not switchable | **2,947–3,126** | 9.65–9.75 | 258 | [`minimax-m2-5/`](minimax-m2-5/) |
 | **Qwen3.8-Flash-Next** Q6_K_XL | 2 (layer split) | llama.cpp master, 6 slots | not established | **1,390** | 7.47 | 186 | [`qwen3-8-flash-next/`](qwen3-8-flash-next/) · **images** |
 | **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | **off** (default) | **1,159–1,183** | 32.10–32.65 | 35 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
@@ -32,8 +32,8 @@ model, see the note below the table.
 It is third on output tokens per second and first on answers per second — 4.2× the
 nearest thinking row, 1.4× the fastest row in the table at any thinking state. The reason
 is the tokens-per-answer column: 68 against 327 for the row above it. More tokens per
-second is a longer reply, not more replies. What MiMo pays for it is the context window,
-49,152 against 262,144, which is not a column here and is the one where it comes last.
+second is a longer reply, not more replies. What MiMo pays for it is prefill depth —
+3,070 tok/s at 180,000 tokens against DeepSeek's 7,133 — which is not a column here.
 
 **The same setup appears twice, and that is the point.** 0731 measured with thinking on
 and off on the same day differs by 3.1× in tokens per second and 3.0× in answers per
@@ -79,7 +79,7 @@ The binding constraint is weights, not KV cache. Measured per card against the
 | Qwen3.5-122B-A10B FP8 | 59.3 GiB | yes |
 | Qwen3.8-Flash-Next GGUF UD-Q5_K_XL | 73.7 GiB | yes, llama.cpp only |
 | Qwen3.8-Flash-Next GGUF UD-Q6_K_XL | 78.8 GiB | yes, llama.cpp only |
-| MiMo-V2.6-Flash-RL FP8 | 82.8 GiB | yes, at `--gpu-memory-utilization 0.97` and 49,152 context |
+| MiMo-V2.6-Flash-RL FP8 | 82.8 GiB | yes, at `--gpu-memory-utilization 0.98` and 196,608 context |
 | GLM-5.3-Flash NVFP4 | 90.7 GiB | **no** — nothing left for KV |
 | Qwen3.5-397B-A17B NVFP4 | 117.0 GiB | **no** — exceeds both cards combined |
 
@@ -99,12 +99,18 @@ slot it left roughly 31 and 36 GiB. Whether a second model fits depends entirely
 first model is chosen — an earlier version of this page stated the DeepSeek case as a
 general rule, which it is not.
 
-**The tighter case is MiMo-V2.6-Flash**, which at `0.97` occupies 94,013 of 97,887 MiB
-per card and leaves 3.8 GiB. It is also the case where the weights table understates the
-cost: at 82.8 GiB per card the arithmetic suggests 12.8 GiB of headroom, and what is
-actually left for KV is [6.33 GiB](mimo-v2-6-flash/vllm/README.md#pinned-values). The
-vision and audio encoders plus CUDA graphs take the difference, and the model only fits
-at all because its context is cut from 1,048,576 to 49,152.
+**The tighter case is MiMo-V2.6-Flash**, which at `0.98` occupies 92,645 of 97,887 MiB
+per card. It is also the case where the weights table understates the cost: at 82.8 GiB
+per card the arithmetic suggests 12.8 GiB of headroom, and what is actually left for KV
+is [3.9 GiB](mimo-v2-6-flash/vllm/README.md#pinned-values). The vision and audio encoders
+plus CUDA graphs take the difference.
+
+**How much of that difference is a default rather than a requirement is worth knowing.**
+The same checkpoint served 49,152 tokens until
+`VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0` was set, and 196,608 afterwards, at
+[unchanged throughput](mimo-v2-6-flash/vllm/scenarios/concurrent-load.md). A headroom
+figure read off a first boot is a property of the engine's defaults as much as of the
+model.
 
 ### llama.cpp cannot split across these cards
 
