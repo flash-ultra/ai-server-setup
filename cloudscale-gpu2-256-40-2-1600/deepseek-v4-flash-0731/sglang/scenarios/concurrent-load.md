@@ -143,7 +143,9 @@ grow from 36 to 327 tokens, a factor of 9.1, which matches the 8.75× measured o
 Neither column is the model being faster or slower. Both are correct measurements of
 different work, and **any table that ranks this setup against another has to state which
 arm it used.** Ranked by tokens this setup leads the machine with thinking on and trails
-with it off; ranked by answers it leads either way.
+with it off. It led on answers per second in both arms until
+[MiMo-V2.6-Flash](../../../mimo-v2-6-flash/vllm/scenarios/concurrent-load.md) was measured,
+which reaches 46.10 at this level with thinking on.
 
 **The most reproducible ladder measured on this machine.**
 

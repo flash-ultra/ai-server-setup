@@ -18,9 +18,11 @@ NVLink. Tested 2026-08-30.
 
 ## Verdict
 
-**The fastest thing measured on this machine, and the only large model here that runs on
-an unpatched engine.** One setup, [vLLM 0.28.0 at TP=2](vllm/), no fork, no kernel
-patchset, no community image.
+**The only large model here that runs on a completely unpatched engine.** One setup,
+[vLLM 0.28.0 at TP=2](vllm/), no fork, no kernel patchset, no community image. It was the
+fastest thing on this machine when it was measured; [MiMo-V2.6-Flash](../mimo-v2-6-flash/)
+has since passed it on every column — 4.7× the answers per second at a tenth of the
+latency — and does so while also serving images.
 
 | | Measured |
 |---|---|

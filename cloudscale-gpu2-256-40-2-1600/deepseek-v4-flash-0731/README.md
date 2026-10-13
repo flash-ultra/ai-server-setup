@@ -19,8 +19,11 @@ this directory is a fresh `v1` series.
 
 ## Verdict
 
-**The most stable thing measured on this machine, and the fastest under load — with one
-caveat that decides how the number should be read.**
+**The most stable thing measured on this machine, and the one that delivers the most
+output tokens per second — with one caveat that decides how the number should be read.**
+It is no longer the leader on answers per second or on latency:
+[MiMo-V2.6-Flash](../mimo-v2-6-flash/) delivers 46.10 answers/s at p50 5.71 s against
+32.58 at 7.96 s here, with thinking **on** against this setup's **off**.
 
 | | Measured, thinking **off** |
 |---|---|

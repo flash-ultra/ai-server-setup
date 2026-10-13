@@ -22,6 +22,7 @@ Which model has been measured on which machine, and with what result.
 
 | Model | cloudscale `GPU2-512-80-4-800` | cloudscale `GPU2-256-40-2-1600` |
 |---|---|---|
+| **MiMo-V2.6-Flash-RL** · FP8, 2 cards | — | [vLLM, vendor image](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/) — **3,116 output tok/s** @ C=256 · **46.10 answers/s** at p50 5.71 s · thinking **on** · **images** · 100 % on both cards at every level · context cut to 49,152 |
 | **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — **2,947–3,126 output tok/s** @ C=256 · 9.65–9.75 answers/s · monotone ladder · 100 % on both cards |
 | **Qwen3.8-Flash-Next** · 512 experts, 10 active, 2 cards | — | [llama.cpp master, Q6 on 6 slots](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — **1,390 output tok/s** @ C=256 · 7.47 answers/s · **images** · pinned in the forties by the layer split |
 | **DeepSeek-V4-Flash-0731** · 284 B | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/), 4 cards — **6,454 output tok/s** @ C=768 · 19.65 req/s · full 1M context verified | [same image at TP=2](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/), 2 cards — thinking **off**: **1,159–1,183 output tok/s** @ C=256, 32.10–32.65 answers/s at 35 tokens · thinking **on**: **3,584 tok/s**, 10.97 answers/s at 327 tokens · extended to C=512: **1,436.5 tok/s** and still climbing · spread ≤ 5 % |
@@ -36,7 +37,8 @@ the cross-hardware comparison lives here rather than in the directory tree.
 **The peak column is a pointer, not a ranking.** These rows do not share a workload: the
 DeepSeek and the two llama.cpp-only rows ran with thinking on, the Gemma-4-26B-A4B row
 with thinking off — worth a factor of 3.4 by itself — and the rows serve one, two or four
-GPUs. The two DeepSeek rows are different model releases rather than two setups of one
+GPUs. The context served differs too, by a factor of five between the two fastest rows on
+the current machine, and a smaller window leaves more room for the batch. The two DeepSeek rows are different model releases rather than two setups of one
 model, so they are not each other's baseline either. Follow the link before comparing two
 numbers here.
 
@@ -142,6 +144,14 @@ curl -sL https://huggingface.co/<repo>/resolve/main/config.json | \
 Checked this way, four models took minutes rather than the hours their downloads would
 have cost — and one of the four was nearly dropped on a name mismatch alone.
 
+**The architecture string tells you whether the model loads, not which implementation
+loads it.** MiMo-V2.6-Flash declares `MiMoV2ForCausalLM`, which in vLLM's registry is a
+text-only class; the engine resolves the multimodal `MiMoV2OmniForCausalLM` instead,
+evidently from the `vision_config` and `audio_config` sitting in the same `config.json`.
+The difference is not cosmetic — the multimodal class loads encoders that take GiB out of
+the KV budget. The registry check is still the right first step; the startup log is where
+the question is actually settled.
+
 **When fetching weights, repeat the flag rather than the value.**
 `hf download REPO --include "A/*" "B/*"` reads `B/*` as an explicit filename, drops the
 pattern, and emits a warning that scrolls past in the progress output — you end up with
@@ -158,6 +168,13 @@ at all.
 The failure mode is a measurement that looks like a result: the thinking-off arm matches
 the thinking-on arm, and the honest-looking conclusion is "it makes no difference". Check
 the effect before trusting the row — one request each way, compare `reasoning_content`.
+
+The sharpest case measured here is
+[MiMo-V2.6-Flash](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/vllm/README.md#thinking-can-be-switched-off-and-only-two-of-five-ways-work):
+five plausible candidate keys, **two** that work and **three** that return a normal answer
+with thinking still on — including `thinking`, which is the correct key for a different
+model on the same machine. Switching it off is worth 46 % more answers per second there,
+so the false negative would have cost a real result.
 The same applies to any proxy in the path: a gateway with `drop_params` enabled will
 remove unknown options before the model ever sees them.
 

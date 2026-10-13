@@ -23,9 +23,17 @@ model, see the note below the table.
 | Model | Cards | Setup | Thinking | Output tok/s | Answers/s | Tok/answer | Details |
 |---|---|---|---|---|---|---|---|
 | **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | **on** | **3,584** | 10.97 | 327 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
+| **MiMo-V2.6-Flash-RL** | 2 (TP) | vLLM, vendor image | **on** | **3,116** | **46.10** | 68 | [`mimo-v2-6-flash/`](mimo-v2-6-flash/) · **images** |
 | **MiniMax-M2.5-NVFP4** | 2 (TP) | vLLM 0.28.0 | on, not switchable | **2,947–3,126** | 9.65–9.75 | 258 | [`minimax-m2-5/`](minimax-m2-5/) |
 | **Qwen3.8-Flash-Next** Q6_K_XL | 2 (layer split) | llama.cpp master, 6 slots | not established | **1,390** | 7.47 | 186 | [`qwen3-8-flash-next/`](qwen3-8-flash-next/) · **images** |
 | **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | **off** (default) | **1,159–1,183** | 32.10–32.65 | 35 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
+
+**The two speed columns disagree, and MiMo-V2.6-Flash is where they disagree hardest.**
+It is third on output tokens per second and first on answers per second — 4.2× the
+nearest thinking row, 1.4× the fastest row in the table at any thinking state. The reason
+is the tokens-per-answer column: 68 against 327 for the row above it. More tokens per
+second is a longer reply, not more replies. What MiMo pays for it is the context window,
+49,152 against 262,144, which is not a column here and is the one where it comes last.
 
 **The same setup appears twice, and that is the point.** 0731 measured with thinking on
 and off on the same day differs by 3.1× in tokens per second and 3.0× in answers per
@@ -34,7 +42,8 @@ a stated thinking arm cannot be ranked against anything.
 
 **Concurrency 256 is the protocol ceiling, not the machine's.** Extended to 512, 0731 with
 thinking off reaches 39.62 answers/s and 1,436.5 output tok/s at 98 % GPU and was still
-climbing. The other two rows were never taken past 256, so the table stops where they do.
+climbing. MiMo was also still climbing at 256 and was not taken further. The other rows
+were never taken past 256, so the table stops where they do.
 
 **Output tokens per second leads because it is the metric the rest of the field uses.**
 It is still not a ranking on its own: the tokens-per-answer column spans 35 to 327 here,
@@ -70,6 +79,7 @@ The binding constraint is weights, not KV cache. Measured per card against the
 | Qwen3.5-122B-A10B FP8 | 59.3 GiB | yes |
 | Qwen3.8-Flash-Next GGUF UD-Q5_K_XL | 73.7 GiB | yes, llama.cpp only |
 | Qwen3.8-Flash-Next GGUF UD-Q6_K_XL | 78.8 GiB | yes, llama.cpp only |
+| MiMo-V2.6-Flash-RL FP8 | 82.8 GiB | yes, at `--gpu-memory-utilization 0.97` and 49,152 context |
 | GLM-5.3-Flash NVFP4 | 90.7 GiB | **no** — nothing left for KV |
 | Qwen3.5-397B-A17B NVFP4 | 117.0 GiB | **no** — exceeds both cards combined |
 
@@ -88,6 +98,13 @@ UD-Q6_K_XL with six full-length slots leaves 10.6 and 15.7 GiB free, and at Q5 w
 slot it left roughly 31 and 36 GiB. Whether a second model fits depends entirely on which
 first model is chosen — an earlier version of this page stated the DeepSeek case as a
 general rule, which it is not.
+
+**The tighter case is MiMo-V2.6-Flash**, which at `0.97` occupies 94,013 of 97,887 MiB
+per card and leaves 3.8 GiB. It is also the case where the weights table understates the
+cost: at 82.8 GiB per card the arithmetic suggests 12.8 GiB of headroom, and what is
+actually left for KV is [6.33 GiB](mimo-v2-6-flash/vllm/README.md#pinned-values). The
+vision and audio encoders plus CUDA graphs take the difference, and the model only fits
+at all because its context is cut from 1,048,576 to 49,152.
 
 ### llama.cpp cannot split across these cards
 
@@ -194,3 +211,12 @@ Glm5NextForConditionalGeneration  -> False   (GLM-5.3-Flash, released 2026-08-27
 ```
 
 A registry check costs 30 seconds and no GPU. Do it before downloading 150 GB.
+
+**It answers whether the model loads, not which class loads it, and not whether the
+kernels build.** MiMo-V2.6-Flash is the counterexample on both counts: its declared
+`MiMoV2ForCausalLM` resolves in the registry to a text-only class, and the engine
+[loads the multimodal one instead](mimo-v2-6-flash/vllm/README.md#the-checkpoint-declares-a-text-architecture-and-gets-loaded-as-a-multimodal-one);
+and the vendor image the model card names, built against CUDA 12.9, aborts here with
+`#error "DeepGEMM SM120 kernels require CUDA 13.0 or newer"`. Because those kernels are
+compiled at launch, that failure arrives minutes into startup rather than at pull time —
+which is the part a registry check cannot warn you about.
