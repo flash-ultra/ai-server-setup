@@ -155,3 +155,7 @@ All three are documented with their failure modes in the
 - **Vision on real images and documents**, as against synthetic geometry.
 - **Levels above 256**, where the ladder was still climbing.
 - **Quality with thinking off.** The whole battery ran thinking on.
+- **Coherence across a long session.** Every quality item here is a single question
+  answered in isolation. Nothing in protocol `v1` covers whether a model holds context
+  and earlier decisions over a working session — not here and not for any other model in
+  this repository.

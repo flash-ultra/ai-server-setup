@@ -49,6 +49,7 @@ log.
 | `VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS` | **`0`** | left at the default, available KV drops from 3.9 GiB to 2.36 GiB and the longest window that starts is 54,528 — a quarter of what the same hardware serves with it off. Measured below |
 | `--max-model-len` | `196608` | `262144` aborts: 4.59 GiB of KV needed against 3.9 GiB available. The engine's own estimate at that point is 198,208, so the ceiling sits just above the configured value |
 | `--gpu-memory-utilization` | `0.98` | at `0.97` with the profiler off the window still reaches 131,072 but not beyond; at `0.95` KV falls to 0.45 GiB. The weights are 82.8 GiB per card |
+| `--override-generation-config` | **`{"max_new_tokens": 32768}`** | without it the checkpoint's own `generation_config.json` caps every reply at **2,048 tokens**. vLLM applies that file's defaults when the client sends no `max_tokens`, so answers stop mid-sentence with `finish_reason: length` and no error anywhere. Measured: 8,435 characters and `length` before, 12,366 and `stop` after, same prompt |
 | `--reasoning-parser` | `mimo` | without it the thinking block is not separated and `reasoning_tokens` stays empty |
 | thinking switch | **`enable_thinking`** | `thinking`, the DeepSeek-V4 key, is **accepted and silently ignored** — verified below, not assumed |
 
@@ -109,6 +110,31 @@ Identical to the digit. The flag produces no error, no warning, and no effect �
 failure shape as the thinking keys below, one level down in the stack. Anyone reaching for
 fp8 KV on this checkpoint should check the engine's own cache figures rather than assume
 the dtype took.
+
+## The checkpoint caps replies at 2,048 tokens and nothing says so
+
+Code generation stopped mid-function. The cap is not in the engine's configuration, the
+gateway, or the client — it ships with the weights:
+
+```json
+// generation_config.json
+{ "max_new_tokens": 2048, "temperature": 1.0, "top_p": 0.95, ... }
+```
+
+vLLM reads that file and uses its values whenever the request omits `max_tokens`. Same
+prompt, no `max_tokens`, before and after `--override-generation-config`:
+
+| | characters | `finish_reason` | completion tokens |
+|---|---|---|---|
+| default | 8,435 | **`length`** | 2,048 |
+| overridden to 32,768 | **12,366** | **`stop`** | 3,224 |
+
+With thinking on the gap is wider still: 7,993 characters against 54,034.
+
+**DeepSeek-V4-Flash's `generation_config.json` has no `max_new_tokens` field**, which is
+why the truncation appeared only after switching models and looked like a gateway
+problem. Prefer `--override-generation-config` over `--generation-config vllm`: the
+latter also discards the checkpoint's recommended `top_p` and `do_sample`.
 
 ## Thinking can be switched off, and only two of five ways work
 
