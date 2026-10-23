@@ -63,6 +63,29 @@ MiniMax is ahead there. With thinking off, 0731 delivers 11.9 answers/s at the s
 **The two are not interchangeable measurements**; which one applies depends on whether the
 workload wants a thinking model.
 
+## Quality, protocol `q1`
+
+Measured 2026-10-23 with Inspect AI against the engine directly, 200 samples per
+benchmark (HumanEval 164), **both thinking arms** —
+[full table and method](sglang/scenarios/quality.md).
+
+| Benchmark | thinking off | thinking on |
+|---|---|---|
+| GSM8K | **0.985** | 0.970 |
+| MMLU-Pro | 0.845 | **0.870** |
+| HumanEval | 0.939 | **0.963** |
+| IFEval `prompt_strict` | 0.810 | **0.895** |
+
+**What thinking actually buys here is instruction following**, +8.5 points on IFEval —
+far more than on code (+2.4) or knowledge (+2.5). Arithmetic gets marginally worse.
+Read together with [reasoning cost](sglang/scenarios/reasoning-cost.md), which puts
+the price at a factor of four in answers per second, that makes the arm a workload
+decision: off for short factual turns at high concurrency, on for agent loops that
+must honour a format.
+
+**These are the first numbers in this repository that measure whether answers are
+right.** Everything before was throughput.
+
 ## Measurements
 
 | Setup | Scenarios |

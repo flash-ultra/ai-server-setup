@@ -47,6 +47,7 @@ python3 -m sglang.launch_server --model-path /model --served-model-name cyberlin
 | [single stream](scenarios/single-stream.md) | measured, two runs 23 days apart — 0.3 % apart |
 | [concurrent load](scenarios/concurrent-load.md) | measured, **four runs** — two at protocol levels, one to 512, one with thinking on |
 | [reasoning cost](scenarios/reasoning-cost.md) | measured — and it is the one that reframes the rest |
+| [quality](scenarios/quality.md) | measured — protocol `q1`, both thinking arms |
 | [long context](scenarios/long-context.md) | measured at **64k, 128k and 180k**, 180k twice |
 
 ## Still open

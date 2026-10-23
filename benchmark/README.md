@@ -5,7 +5,7 @@ protocol is that series stay comparable — across engines, across models, acros
 machines. Numbers produced with different parameters are a different series and must
 say so.
 
-**Current protocol: `v1`**
+**Current protocols: `v1` for throughput, `q1` for quality.**
 
 ## Usage
 
@@ -89,6 +89,52 @@ name.
 
 **One measurement is not a result** where variance matters. Concurrency 128 was
 measured twice with 6 % spread; that is worth stating rather than hiding.
+
+## Quality: protocol `q1`, measured with Inspect AI
+
+`v1` measures throughput and says nothing about whether answers are right. Quality is
+a separate protocol with its own pinned parameters, because it uses a different tool
+and a different notion of a run.
+
+**Tool:** [Inspect AI](https://inspect.aisi.org.uk/) by the UK AI Security Institute,
+with the `inspect_evals` benchmark collection. Installed per machine in its own venv
+via `uv` — not `pip`, see the machine README.
+
+| Parameter | Value | Why it is pinned |
+|---|---|---|
+| Benchmarks | `gsm8k`, `ifeval`, `mmlu_pro`, `humaneval` | Multi-step arithmetic, instruction following, domain knowledge, code. The four shapes an agent workload actually hits |
+| Sample limit | 200 per benchmark, HumanEval 164 (its full set) | A full MMLU-Pro run is 12,000 samples and takes hours. 200 keeps stderr near 0.025, which is small enough to separate models that differ by more than ~5 points |
+| `--max-connections` | 32 | Matches a level of the `v1` ladder, so the server is in a comparable state |
+| Endpoint | the engine directly, **not** the gateway | litellm, HAProxy and their timeouts are not part of the model |
+| Thinking | **both arms, always** | The whole point. A quality number without a stated thinking state is not comparable |
+| Model string | `openai-api/<name>/<served-name>` | Works against any OpenAI-compatible engine; `vllm/` and `sglang/` providers would make Inspect start its own server |
+
+```bash
+export CYBL_BASE_URL=http://127.0.0.1:8001/v1
+export CYBL_API_KEY=dummy
+inspect eval inspect_evals/gsm8k --model openai-api/cybl/cyberlink \
+  --limit 200 --max-connections 32 [--reasoning-effort low]
+```
+
+**Which flag switches thinking is per model**, exactly as in the `reasoning` scenario
+of `v1`, and it has to be verified before the run rather than assumed. For
+DeepSeek-V4-Flash `--reasoning-effort low` turns it **on** (default is off); a probe
+against the engine showed 2 completion tokens without it and 82 with it on the same
+question.
+
+**IFEval needs an extra dependency** that is not pulled in by `inspect-evals`:
+`uv pip install "git+https://github.com/josejg/instruction_following_eval"`. Without
+it the run aborts with an `AssertionError` after the model has already answered — so
+install it first, or lose the time twice.
+
+**Report the metric the benchmark defines, not a derived one.** IFEval has four:
+`prompt_strict`, `prompt_loose`, `inst_strict`, `inst_loose`. The strict ones are the
+honest ones; quote them and say which.
+
+**Sample limits are part of the result.** A `q1` figure at 200 samples is not
+comparable to a published figure over the full set, and the numbers here are not
+meant to be compared against vendor benchmark tables — only against each other, on
+this hardware, with these limits.
 
 ## Known deviations in existing documents
 
