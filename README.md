@@ -22,7 +22,7 @@ Which model has been measured on which machine, and with what result.
 
 | Model | cloudscale `GPU2-512-80-4-800` | cloudscale `GPU2-256-40-2-1600` |
 |---|---|---|
-| **Qwen3.8-27B** · dense **BF16**, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/qwen3-8-27b/) — **throughput not measured** · quality under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) both arms — **not measurably behind a 284 B MoE** in either arm, ahead in four of five with thinking on · **images**, native · full precision, no quantisation |
+| **Qwen3.8-27B** · dense **BF16**, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/qwen3-8-27b/) — thinking **on**: **1,821 output tok/s** @ C=256, 9.43 answers/s at 193 tokens · thinking **off**: **718 tok/s**, 13.45 answers/s at 53 tokens · 3/3 needles to **240k**, the deepest here · **0.6× DeepSeek in both decode and prefill** · best quality measured under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) · **images**, native · full precision |
 | **MiMo-V2.6-Flash-RL** · FP8, 2 cards | — | [vLLM, vendor image](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/) — **3,129 output tok/s** @ C=256 · **46.05 answers/s** at p50 5.74 s · thinking **on** · **images** · 100 % on both cards at every level · 196,608 context, 3/3 needles at 180k |
 | **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — **2,947–3,126 output tok/s** @ C=256 · 9.65–9.75 answers/s · monotone ladder · 100 % on both cards |
 | **Qwen3.8-Flash-Next** · 512 experts, 10 active, 2 cards | — | [llama.cpp master, Q6 on 6 slots](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — **1,390 output tok/s** @ C=256 · 7.47 answers/s · **images** · pinned in the forties by the layer split |
@@ -35,12 +35,12 @@ Which model has been measured on which machine, and with what result.
 A model measured on several machines keeps one row and gains a column per machine, so
 the cross-hardware comparison lives here rather than in the directory tree.
 
-**One row carries no speed figure at all.** Qwen3.8-27B is the only model in this
-repository measured for quality and not for throughput, and the cell says so rather than
-borrowing a number from an operational note. The reverse holds for every other row:
-measured speed, unmeasured answers. The two protocols have one model in common
-([DeepSeek-V4-Flash-0731](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/)), which
-is too few to say anything about how the two relate.
+**The one row measured under both protocols comes first in one and last in the other.**
+Qwen3.8-27B has the best answers and the slowest serving of anything on its machine. Two
+models now carry both a `v1` and a `q1` series; everything else here has throughput only,
+so the repository still cannot say how the two generally relate — but for this pair they
+are inversely ordered, and that is worth knowing before reading either table as a
+ranking.
 
 **The peak column is a pointer, not a ranking.** These rows do not share a workload: the
 DeepSeek and the two llama.cpp-only rows ran with thinking on, the Gemma-4-26B-A4B row
@@ -263,6 +263,33 @@ saturation, not where saturation is. Measured on llama.cpp with one slot against
 roughly half the median latency at every level from eight upward. The throughput curves
 converge; the latency curves do not. If the complaint is response time under moderate
 load, the slot count is the first thing to check — and it costs only KV memory.
+
+### Active parameter count predicts serving speed, not parameter count
+
+Two models on the same two cards with the same driver, both under `v1`: a **27 B dense**
+model at BF16 and a **284 B mixture-of-experts** at FP8 that activates 6 of 256 experts
+per token. The 284 B model is faster, by the same factor in both phases of inference:
+
+| | 27 B dense | 284 B MoE | ratio |
+|---|---|---|---|
+| Single-stream decode | 45.3 tok/s | 75.3–75.5 | **0.60** |
+| Prefill at 64k | 5131 tok/s | 8227 | 0.62 |
+| Prefill at 128k | 4343 tok/s | 7480 | 0.58 |
+| Prefill at 180k | 4207 tok/s | 7133 | 0.59 |
+
+Decode is bandwidth-bound and prefill is compute-bound, so a tuning gap in one engine
+would not produce the same ratio in both. The dense model reads all 25.9 GiB of its
+per-card weights for every token; the sparse one reads a fraction of a much larger
+number.
+
+**The consequence is for capacity planning from a model card.** "27 B" reads as the
+cheap option and serves at 0.6× the speed of the 284 B alternative on the same hardware,
+while needing the full precision that makes it good. Size on disk predicts whether a
+model *fits*; the activation pattern predicts what it *costs* to serve. The two
+questions have different answers and are routinely conflated.
+
+The same pair inverts on answer quality — see the
+[machine's quality section](cloudscale-gpu2-256-40-2-1600/README.md#quality).
 
 ### A benchmark score hides why the model stopped talking
 

@@ -51,17 +51,22 @@ This is the first model in this repository served at **full precision**: 25.9 Gi
 weights per card against 95.6 GiB available. No quantisation, so no question about what
 the quantisation cost.
 
-**Dense is the trade-off.** Every token reads every weight, so decode is bound by memory
-bandwidth rather than by how many experts are active:
+**Dense is the trade-off, and it costs a steady 0.6×.** Every token reads every weight,
+so decode is bound by memory bandwidth rather than by how many experts are active.
+Measured against DeepSeek-V4-Flash-0731 on these same two cards:
 
-| | weights read per token |
-|---|---|
-| this model, BF16, TP=2 | 25.9 GiB per card |
-| DeepSeek-V4-Flash-0731, 6 of 256 experts | a fraction of 284 B |
+| | this model | DeepSeek-0731 | ratio |
+|---|---|---|---|
+| [Single-stream decode](scenarios/single-stream.md) | 45.3 tok/s | 75.3–75.5 | **0.60** |
+| [Prefill at 64k](scenarios/long-context.md) | 5131 tok/s | 8227 | **0.62** |
+| [Prefill at 128k](scenarios/long-context.md) | 4343 tok/s | 7480 | **0.58** |
+| [Prefill at 180k](scenarios/long-context.md) | 4207 tok/s | 7133 | **0.59** |
 
-DeepSeek is ten times the parameter count and faster per token. Size and decode speed
-point in opposite directions here. **How much faster is not measured** — see
-[Still open](#still-open).
+DeepSeek has ten times the parameters and is consistently faster, in both the
+bandwidth-bound and the compute-bound phase. **Parameter count does not predict serving
+speed; active parameter count does.** That the ratio is the same 0.6 in prefill and in
+decode is the part worth keeping — it means the handicap is the architecture, not a
+tuning gap in one phase.
 
 ## Thinking is on by default, and two of four switches work
 
@@ -82,6 +87,32 @@ just the other arm. This is the third distinct answer to "turn thinking off" mea
 this machine — see the
 [repository-level note](../../../README.md#switches-that-a-model-does-not-know-are-accepted-not-rejected).
 
+## The reasoning text is in `reasoning`, not `reasoning_content`
+
+With `--reasoning-parser qwen3` the separation works — `content` holds only the answer —
+but vLLM 0.28 names the field **`reasoning`**. SGLang, serving DeepSeek on this same
+machine, names it `reasoning_content`.
+
+```
+message keys: ['annotations', 'audio', 'content', 'function_call',
+               'reasoning', 'refusal', 'role']
+usage.completion_tokens_details: {"reasoning_tokens": 96}
+content:   "17 × 23 = 17 × (20 + 3) = 340 + 51 = **391**"
+reasoning: <96 tokens of working>
+```
+
+**This breaks the documented way of checking whether thinking is on.** Both the `v1` and
+`q1` protocols say to compare `reasoning_content` between two requests; against this
+engine that field is absent in *both* arms, so the check reports "no difference" and the
+thinking-off row looks verified when nothing was verified. The protocol
+[now says to use `usage` instead](../../../benchmark/README.md#what-is-fixed), which
+both engines report.
+
+A client written against SGLang and pointed at this engine sees no thinking at all and
+no error — the same silent-acceptance failure mode as the
+[switch keys above](#thinking-is-on-by-default-and-two-of-four-switches-work), one layer
+further out.
+
 ## Images need no second service
 
 The checkpoint carries its own vision tower, and vLLM loads it with the rest of the
@@ -100,22 +131,28 @@ Here the capability is in the weights that were loaded anyway.
 
 | Scenario | Status |
 |---|---|
-| [quality](scenarios/quality.md) | measured — protocol `q1`, both thinking arms |
-| `single-stream` | **not measured** |
-| `concurrent-load` | **not measured** |
-| `long-context` | **not measured** |
+| [single-stream](scenarios/single-stream.md) | measured — `v1`, both arms |
+| [concurrent-load](scenarios/concurrent-load.md) | measured — `v1`, both arms, full ladder |
+| [long-context](scenarios/long-context.md) | measured — `v1`, four depths to 240k, 3/3 needles each |
+| [reasoning-cost](scenarios/reasoning-cost.md) | measured — `v1`, three variants at C=8 and 32 |
+| [quality](scenarios/quality.md) | measured — `q1`, both arms |
+
+**The only setup in this repository with a complete series under both protocols.**
 
 ## Still open
 
-- **No `v1` throughput series exists for this setup.** Not one level of the ladder was
-  run. The figure of ~47 output tok/s that appears in operational notes was read off the
-  engine's own log line during a single-stream quality run; it is not a `v1` number, it
-  has no concurrency level attached, and it must not be placed in the machine or
-  repository tables. Until `bench.py` has run, this model has no throughput result.
+- **Every `v1` figure here is a single run.** DeepSeek's series states a ≤ 5 %
+  run-to-run spread from three runs; nothing is known about variance in this one. That
+  is the cheapest gap to close and it bounds how hard any of the comparisons can be
+  pushed.
+- **The thinking-on ladder had not flattened at 256**, gaining 16–18 % over 128. The
+  protocol stops there; `--levels 256,384,512` would find the real ceiling, as it did
+  for DeepSeek.
 - **Single-card operation.** 51.8 GiB of weights fit on one 95.6 GiB card, which no other
   large model here manages. What that costs in tokens per second, and what the freed card
   could then host, is unmeasured — and it is the question that would change the machine's
   capacity plan.
 - **Vision quality.** It answers correctly on an ad-hoc test image. No benchmark was run.
-- **Context above the measured depth.** 262,144 is configured and the KV arithmetic
-  allows 5.78 full-length requests in parallel. No needle test was run at any depth.
+- **The last 22,000 tokens of the window.** Retrieval is verified to 240,000 of 262,144.
+- **Whether the embedding co-tenant costs throughput.** Every number here was measured
+  at `0.82` with it resident. The comparison setups had the cards to themselves.

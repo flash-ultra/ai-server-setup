@@ -25,17 +25,22 @@ model, see the note below the table.
 | **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | **on** | **3,584** | 10.97 | 327 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
 | **MiMo-V2.6-Flash-RL** | 2 (TP) | vLLM, vendor image | **on** | **3,129** | **46.05** | 68 | [`mimo-v2-6-flash/`](mimo-v2-6-flash/) · **images** |
 | **MiniMax-M2.5-NVFP4** | 2 (TP) | vLLM 0.28.0 | on, not switchable | **2,947–3,126** | 9.65–9.75 | 258 | [`minimax-m2-5/`](minimax-m2-5/) |
+| **Qwen3.8-27B** · BF16 | 2 (TP) | vLLM 0.28.0 | **on** (default) | **1,821** | 9.43 | 193 | [`qwen3-8-27b/`](qwen3-8-27b/) · **images** |
 | **Qwen3.8-Flash-Next** Q6_K_XL | 2 (layer split) | llama.cpp master, 6 slots | not established | **1,390** | 7.47 | 186 | [`qwen3-8-flash-next/`](qwen3-8-flash-next/) · **images** |
 | **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | **off** (default) | **1,159–1,183** | 32.10–32.65 | 35 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
-| **Qwen3.8-27B** · **BF16** | 2 (TP) | vLLM 0.28.0 | on by default | **not measured** | **not measured** | — | [`qwen3-8-27b/`](qwen3-8-27b/) · **images** |
+| **Qwen3.8-27B** · BF16 | 2 (TP) | vLLM 0.28.0 | **off** | **718** | 13.45 | 53 | [`qwen3-8-27b/`](qwen3-8-27b/) · **images** |
 
-**The last row is in the table and has no numbers in it, deliberately.**
-Qwen3.8-27B is what this machine serves today and the only model here with a
-[measured quality result on both thinking arms](qwen3-8-27b/vllm/scenarios/quality.md) —
-but not one level of the `v1` ladder has been run against it. The ~47 output tok/s that
-appears in operational notes was read off the engine log during a single-stream quality
-run; it has no concurrency level and is not a `v1` figure, so it is not here. An empty
-cell is a statement; a borrowed number would not be.
+**Qwen3.8-27B is last in this table and first in the quality one**, and that is the
+whole finding of the past two days. It is the only setup here measured under both
+protocols: it [answers best](#quality) and it serves slowest. The cost is a steady
+**0.6×** against DeepSeek in both decode and prefill, because a dense 27 B model reads
+all of itself per token while a 284 B mixture-of-experts reads a fraction. Active
+parameter count, not parameter count, is what the speed columns track.
+
+**It is also the only row with both cards at 100 % at every level including
+concurrency 1.** The sparse setups idle a card at low concurrency; this one is
+bandwidth-saturated from the first request, so its utilisation column carries no
+information about headroom.
 
 **The two speed columns disagree, and MiMo-V2.6-Flash is where they disagree hardest.**
 It is third on output tokens per second and first on answers per second — 4.2× the
@@ -94,9 +99,11 @@ same model scored 0.755 with a token cap of 8,192 and 0.850 at 50,000, purely be
 38 of 200 answers were cut off and graded wrong. That is now
 [pinned in the protocol](../benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai).
 
-**Quality and throughput have no overlap on this machine.** The model with the best
-measured answers has no measured speed, and the models in the table above have no
-measured quality except one. Neither table ranks anything on its own.
+**One model is now in both tables, and it comes first in one and last in the other.**
+Qwen3.8-27B has a complete `v1` series and a complete `q1` series; DeepSeek-0731 has
+`v1` and `q1`; every other row here has throughput only. That the two orderings are
+reversed for the one model measured both ways is the reason neither table ranks anything
+on its own.
 
 ## Trials
 

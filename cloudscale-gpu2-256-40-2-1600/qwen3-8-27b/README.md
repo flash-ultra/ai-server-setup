@@ -15,8 +15,8 @@ NVLink. Set up and measured 2026-10-23.
 
 ## Verdict
 
-**The best answers measured on this machine, with no throughput measurement to set
-against them.** Both halves of that sentence matter.
+**The best answers measured on this machine, and the slowest serving of any model in
+the table.** Both halves are now measured, and they point opposite ways.
 
 On quality it beats [DeepSeek-V4-Flash-0731](../deepseek-v4-flash-0731/) — 284 B against
 27 B, on the same cards, same protocol, same day — in **four of five benchmarks with
@@ -40,13 +40,26 @@ one result here that does clear its error bar by a wide margin is the arm compar
 *within* this model: thinking is worth **+13.5 points** on IFEval `prompt_strict`, far
 more than it buys anywhere else.
 
-**What is missing is the other half of the decision.** Not one level of the `v1` ladder
-has been run against this setup — no single-stream figure, no concurrency sweep, no
-long-context test, no needles. Dense at BF16 reads 25.9 GiB of weights per card for
-every token, so it is expected to be slower per token than the sparse models in the
-machine table; by how much is **unmeasured**, and a number read off the engine log during
-a quality run is not a substitute. Until `bench.py` has run, this model is absent from
-every throughput table in this repository on purpose.
+**The other half of the decision is speed, and there it loses.** The full `v1` series
+ran 2026-10-24, both arms, and DeepSeek is ahead in every cell:
+
+| at concurrency 256 | this model **on** | DS **on** | this model **off** | DS **off** |
+|---|---|---|---|---|
+| [Answers/s](vllm/scenarios/concurrent-load.md) | 9.43 | **10.97** | 13.45 | **32.58–32.65** |
+| [Output tok/s](vllm/scenarios/concurrent-load.md) | 1821.0 | **3583.8** | 718.0 | **1173.2–1182.6** |
+| Latency p50 | 34.89 s | **27.58 s** | 19.94 s | **7.95–7.96 s** |
+
+**The handicap is a steady 0.6× and it is architectural, not a tuning gap.**
+[Single-stream decode](vllm/scenarios/single-stream.md) 45.3 against 75.3–75.5 tok/s,
+[prefill](vllm/scenarios/long-context.md) 4207 against 7133 tok/s at 180k — the same
+ratio in the bandwidth-bound and the compute-bound phase. A dense 27 B model reads all
+25.9 GiB of its per-card weights for every token; a 284 B mixture-of-experts reads a
+fraction of itself. **Parameter count does not predict serving speed; active parameter
+count does**, and here the small model is the slow one.
+
+**Where it is not behind is depth.** 3 of 3 needles at 64k, 128k, 180k **and 240k** —
+the deepest verified retrieval in this repository, since nothing else here was taken
+past 180k.
 
 ## What it changes operationally
 
@@ -62,7 +75,10 @@ details are in the [setup README](vllm/README.md#configuration-in-effect).
 
 **The thinking switch is inverted relative to DeepSeek.** Thinking is **on** by default
 here and off by default there, and the key that works on one is silently ignored by the
-other. A gateway alias copied across does not fail; it serves the wrong arm.
+other. A gateway alias copied across does not fail; it serves the wrong arm. The field
+carrying the thinking text is also named differently —
+[`reasoning`, not `reasoning_content`](vllm/README.md#the-reasoning-text-is-in-reasoning-not-reasoning_content) —
+which breaks the documented way of checking which arm you are on.
 
 ## Setups
 
@@ -74,19 +90,24 @@ other. A gateway alias copied across does not fail; it serves the wrong arm.
 
 | Scenario | vLLM TP=2 |
 |---|---|
+| [single-stream](vllm/scenarios/single-stream.md) | measured, both arms |
+| [concurrent-load](vllm/scenarios/concurrent-load.md) | measured, both arms, full ladder |
+| [long-context](vllm/scenarios/long-context.md) | measured, four depths to 240k |
+| [reasoning-cost](vllm/scenarios/reasoning-cost.md) | measured, three variants |
 | [quality](vllm/scenarios/quality.md) | measured, both arms |
-| `single-stream` | **not measured** |
-| `concurrent-load` | **not measured** |
-| `long-context` | **not measured** |
+
+**The only setup here complete under both `v1` and `q1`** — which is what makes the
+trade it offers legible at all.
 
 ## Open questions that would change a decision
 
 Owned one level down, in [`vllm/README.md`](vllm/README.md#still-open) — summarised here,
 not duplicated:
 
-- **The whole `v1` series.** Without it this model cannot be ranked against anything in
-  the machine table, and the trade it offers — better answers, dense decode — is half
-  unquantified.
+- **Variance.** Every `v1` figure here is one run; the comparison setups state spreads
+  from two or three. Nothing in the tables above should be pushed harder than that.
+- **Where the thinking-on ladder turns over.** It was still gaining 16–18 % at the
+  protocol's top level.
 - **Single-card operation**, which no other large model here can do. It would free a
   whole card and change the machine's capacity plan.
 - **Vision quality.** Native images are a main argument for this model and nothing was

@@ -29,7 +29,7 @@ document, prefixed with a comment recording the protocol version.
 | Measurement window | 40 s per level | Long enough to fill the batch, short enough for a full sweep |
 | Warmup | 3 requests per level, discarded | The first request after start ran 21.55 s against 1.86 s afterwards |
 | Token counting | `usage` fields | Stream deltas miss reasoning tokens — this was off by a factor of 5 once |
-| Reasoning share | `usage.completion_tokens_details.reasoning_tokens` | **Engine-dependent, not model-dependent.** SGLang reports it; llama.cpp does not send the field at all, so the share reads 0 % even where the model puts every token into thinking. A 0 % in a llama.cpp row means "not reported", never "did not think" — verify against `reasoning_content` before drawing a conclusion, and never compare this column across engines |
+| Reasoning share | `usage.completion_tokens_details.reasoning_tokens` | **Engine-dependent, not model-dependent.** SGLang and vLLM report it; llama.cpp does not send the field at all, so the share reads 0 % even where the model puts every token into thinking. A 0 % in a llama.cpp row means "not reported", never "did not think" — and never compare this column across engines. **Verify against this `usage` field, not against a message field**: the name of the field carrying the thinking text differs per engine, see below |
 | Sampling | `temperature 1.0`, `top_p 1.0` | Checkpoint calibration for DeepSeek-V4; note deviations per model |
 | Prompt | verbatim in `bench.py` | See below |
 | Prompt language | English | Applies from v1 on; the DeepSeek series below was measured with a German prompt of the same shape |
@@ -65,8 +65,16 @@ skip it for others and say so in the model README.
 > An unknown key is **accepted and silently ignored** — the request succeeds, thinking
 > stays on, and the row reads as "disabling thinking changes nothing". That is a false
 > negative, not a measurement. Verify against the model before running the scenario:
-> send one request with and one without the key and compare the length of
-> `reasoning_content`. If it does not go to zero, the key is wrong or absent.
+> send one request with and one without the key and compare
+> `usage.completion_tokens_details.reasoning_tokens`. If it does not go to zero, the key
+> is wrong or absent.
+>
+> **Compare the `usage` field, not a message field.** The name of the message field that
+> carries the thinking text is engine-specific: SGLang uses `reasoning_content`, vLLM
+> 0.28 uses **`reasoning`**. A check written against the wrong name finds nothing in
+> *either* arm and reports the key as working when it was never tested — the same false
+> negative one layer further out. Measured on
+> [Qwen3.8-27B](../cloudscale-gpu2-256-40-2-1600/qwen3-8-27b/vllm/README.md#the-reasoning-text-is-in-reasoning-not-reasoning_content).
 
 **`longctx`** — needle-in-a-haystack at full length. Filler is calibrated against the
 server's own tokeniser, then three codes are planted at 10 %, 50 % and 90 %. The
@@ -120,10 +128,13 @@ inspect eval inspect_evals/gsm8k --model openai-api/cybl/cyberlink \
 ```
 
 **Which flag switches thinking is per model**, exactly as in the `reasoning` scenario
-of `v1`, and it has to be verified before the run rather than assumed. For
-DeepSeek-V4-Flash `--reasoning-effort low` turns it **on** (default is off); a probe
-against the engine showed 2 completion tokens without it and 82 with it on the same
-question.
+of `v1`, and it has to be verified before the run rather than assumed — against
+`usage.completion_tokens_details.reasoning_tokens`, which every engine here reports,
+never against a message field whose name varies by engine. For DeepSeek-V4-Flash
+`--reasoning-effort low` turns thinking **on** (default off): 2 completion tokens
+without it, 82 with it, same question. For Qwen3.8-27B thinking is **on** by default and
+`enable_thinking: false` turns it off: 93 reasoning tokens down to 0, while the
+DeepSeek key `thinking: false` leaves it at 132.
 
 **IFEval needs an extra dependency** that is not pulled in by `inspect-evals`:
 `uv pip install "git+https://github.com/josejg/instruction_following_eval"`. Without
