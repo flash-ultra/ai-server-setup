@@ -105,6 +105,8 @@ via `uv` — not `pip`, see the machine README.
 | Benchmarks | `gsm8k`, `ifeval`, `mmlu_pro`, `humaneval` | Multi-step arithmetic, instruction following, domain knowledge, code. The four shapes an agent workload actually hits |
 | Sample limit | 200 per benchmark, HumanEval 164 (its full set) | A full MMLU-Pro run is 12,000 samples and takes hours. 200 keeps stderr near 0.025, which is small enough to separate models that differ by more than ~5 points |
 | `--max-connections` | 32 | Matches a level of the `v1` ladder, so the server is in a comparable state |
+| `--max-tokens` | **50,000** | A thinking model with no cap generates toward the context window and the run never ends; a cap set too low silently truncates and the benchmark grades the truncation as a wrong answer. 50,000 was binding for 1 sample in 200 on the longest benchmark measured here |
+| `-M client_timeout` | **3600** | A thinking answer measured here took 614 s against the OpenAI client's own 600 s default, which produced 50 retries and no result. Note this is **not** Inspect's `--timeout`, which already defaults to no timeout — the limit sits in the provider's HTTP client and has to be passed through with `-M`. It must clear the slowest single answer, not the median |
 | Endpoint | the engine directly, **not** the gateway | litellm, HAProxy and their timeouts are not part of the model |
 | Thinking | **both arms, always** | The whole point. A quality number without a stated thinking state is not comparable |
 | Model string | `openai-api/<name>/<served-name>` | Works against any OpenAI-compatible engine; `vllm/` and `sglang/` providers would make Inspect start its own server |
@@ -113,7 +115,8 @@ via `uv` — not `pip`, see the machine README.
 export CYBL_BASE_URL=http://127.0.0.1:8001/v1
 export CYBL_API_KEY=dummy
 inspect eval inspect_evals/gsm8k --model openai-api/cybl/cyberlink \
-  --limit 200 --max-connections 32 [--reasoning-effort low]
+  --limit 200 --max-connections 32 --max-tokens 50000 \
+  -M client_timeout=3600 [--reasoning-effort low]
 ```
 
 **Which flag switches thinking is per model**, exactly as in the `reasoning` scenario
@@ -130,6 +133,47 @@ install it first, or lose the time twice.
 **Report the metric the benchmark defines, not a derived one.** IFEval has four:
 `prompt_strict`, `prompt_loose`, `inst_strict`, `inst_loose`. The strict ones are the
 honest ones; quote them and say which.
+
+**Check why each answer stopped before using the score.** This is a reporting
+obligation, not a nicety: an answer cut off at the token cap is graded wrong, and the
+run reports an ordinary accuracy with an ordinary standard error. Nothing in the output
+distinguishes "the model was wrong" from "the model was interrupted". Measured on one
+cell of one benchmark, the difference between a cap of 8,192 and one of 50,000 was
+**9.5 points** — 0.755 against 0.850, with 38 of 200 samples truncated in the first.
+
+```bash
+python3 - <<'PY'
+import json, zipfile, glob, os, collections
+for f in sorted(glob.glob(os.path.expanduser("~/logs/*.eval")), key=os.path.getmtime):
+    z = zipfile.ZipFile(f); fr = collections.Counter(); n = 0
+    for nm in (x for x in z.namelist() if x.startswith("samples/")):
+        try: d = json.loads(z.read(nm))
+        except Exception: continue
+        n += 1
+        for ev in (d.get("events") or []):
+            o = ev.get("output")
+            if isinstance(o, dict):
+                for ch in (o.get("choices") or []):
+                    if ch.get("stop_reason"): fr[ch["stop_reason"]] += 1
+    bad = sum(v for k, v in fr.items() if k != "stop")
+    print(f"{os.path.basename(f)[:40]:42} n={n:4} {dict(fr)}"
+          f"{'   <-- TRUNCATED' if bad else ''}")
+PY
+```
+
+A run that reports anything other than `{'stop': n}` is not a result. Either raise the
+cap and repeat it, or quote the score with the truncation count beside it — never the
+score alone. **Also check that `n` equals the sample limit:** a run killed by a client
+timeout finishes with fewer samples and still prints a table.
+
+**These three parameters were added after the first two models were measured**, which is
+why neither series ran under them. Both were re-checked against the criterion rather
+than re-measured: every DeepSeek cell in both arms, the whole Qwen thinking-off arm, and
+Qwen's GSM8K and IFEval thinking-on report `{'stop': n}` at the full sample count. The
+single exception is 1 of 200 on Qwen's MMLU-Pro thinking-on, which is
+[stated where the number is](../cloudscale-gpu2-256-40-2-1600/qwen3-8-27b/vllm/scenarios/quality.md#an-abort-reason-that-reads-as-a-quality-result).
+Checking an old run against a new requirement is weaker than having measured under it,
+and it is the most that can honestly be claimed for these two series.
 
 **Sample limits are part of the result.** A `q1` figure at 200 samples is not
 comparable to a published figure over the full set, and the numbers here are not

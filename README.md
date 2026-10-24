@@ -22,6 +22,7 @@ Which model has been measured on which machine, and with what result.
 
 | Model | cloudscale `GPU2-512-80-4-800` | cloudscale `GPU2-256-40-2-1600` |
 |---|---|---|
+| **Qwen3.8-27B** · dense **BF16**, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/qwen3-8-27b/) — **throughput not measured** · quality under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) both arms — **not measurably behind a 284 B MoE** in either arm, ahead in four of five with thinking on · **images**, native · full precision, no quantisation |
 | **MiMo-V2.6-Flash-RL** · FP8, 2 cards | — | [vLLM, vendor image](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/) — **3,129 output tok/s** @ C=256 · **46.05 answers/s** at p50 5.74 s · thinking **on** · **images** · 100 % on both cards at every level · 196,608 context, 3/3 needles at 180k |
 | **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — **2,947–3,126 output tok/s** @ C=256 · 9.65–9.75 answers/s · monotone ladder · 100 % on both cards |
 | **Qwen3.8-Flash-Next** · 512 experts, 10 active, 2 cards | — | [llama.cpp master, Q6 on 6 slots](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — **1,390 output tok/s** @ C=256 · 7.47 answers/s · **images** · pinned in the forties by the layer split |
@@ -33,6 +34,13 @@ Which model has been measured on which machine, and with what result.
 
 A model measured on several machines keeps one row and gains a column per machine, so
 the cross-hardware comparison lives here rather than in the directory tree.
+
+**One row carries no speed figure at all.** Qwen3.8-27B is the only model in this
+repository measured for quality and not for throughput, and the cell says so rather than
+borrowing a number from an operational note. The reverse holds for every other row:
+measured speed, unmeasured answers. The two protocols have one model in common
+([DeepSeek-V4-Flash-0731](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/)), which
+is too few to say anything about how the two relate.
 
 **The peak column is a pointer, not a ranking.** These rows do not share a workload: the
 DeepSeek and the two llama.cpp-only rows ran with thinking on, the Gemma-4-26B-A4B row
@@ -256,6 +264,27 @@ roughly half the median latency at every level from eight upward. The throughput
 converge; the latency curves do not. If the complaint is response time under moderate
 load, the slot count is the first thing to check — and it costs only KV memory.
 
+### A benchmark score hides why the model stopped talking
+
+An answer cut off at the token cap is graded as a wrong answer. The run reports an
+ordinary accuracy with an ordinary standard error, and nothing in the output separates
+"the model was wrong" from "the model was interrupted".
+
+Measured on one benchmark cell, one model, same day: **0.755 at a cap of 8,192 and
+0.850 at 50,000**, with 38 of 200 answers truncated in the first. A second benchmark in
+the same run moved 0.921 to 0.982 the same way.
+
+Two things follow, and both cost nothing. **Read the abort reasons before using the
+score** — the
+[one command that does it](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai)
+is in the protocol. And **be suspicious of the direction of the error**: truncation only
+ever lowers a score, so it is indistinguishable from the result you may already expect
+when a small model is compared against a large one.
+
+The same shape appears one layer out. A reply that is slower than the client's own HTTP
+timeout produces retries and a run that ends with fewer samples than it was asked for —
+and still prints a table. Check that the sample count matches the limit.
+
 ### Measure via `usage`, not stream deltas
 
 Reasoning models can put the overwhelming majority of generated tokens into a separate
@@ -288,10 +317,17 @@ shutdown and only the log names the cause.
 
 ## Method
 
-All numbers come from [`benchmark/bench.py`](benchmark/README.md), which pins every
-parameter that affects throughput: prompt text, concurrency levels, `max_tokens`,
-measurement window, warmup, and how tokens are counted. That is what makes series
-comparable across engines, models and machines.
+Throughput numbers come from [`benchmark/bench.py`](benchmark/README.md) under
+protocol `v1`, which pins every parameter that affects them: prompt text, concurrency
+levels, `max_tokens`, measurement window, warmup, and how tokens are counted. That is
+what makes series comparable across engines, models and machines.
+
+Quality is a second protocol,
+[`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai), measured with
+Inspect AI against the engine directly and always on **both thinking arms**. A `v1`
+figure and a `q1` figure answer different questions and neither substitutes for the
+other — one model here has both, the rest have one or the other, and the tables say
+which.
 
 ```bash
 ./benchmark/bench.py --url http://localhost:8000 --model <name> --scenario concurrent

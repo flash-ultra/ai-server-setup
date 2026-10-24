@@ -27,6 +27,15 @@ model, see the note below the table.
 | **MiniMax-M2.5-NVFP4** | 2 (TP) | vLLM 0.28.0 | on, not switchable | **2,947–3,126** | 9.65–9.75 | 258 | [`minimax-m2-5/`](minimax-m2-5/) |
 | **Qwen3.8-Flash-Next** Q6_K_XL | 2 (layer split) | llama.cpp master, 6 slots | not established | **1,390** | 7.47 | 186 | [`qwen3-8-flash-next/`](qwen3-8-flash-next/) · **images** |
 | **DeepSeek-V4-Flash-0731** | 2 (TP) | SGLang + SM120 patchset | **off** (default) | **1,159–1,183** | 32.10–32.65 | 35 | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
+| **Qwen3.8-27B** · **BF16** | 2 (TP) | vLLM 0.28.0 | on by default | **not measured** | **not measured** | — | [`qwen3-8-27b/`](qwen3-8-27b/) · **images** |
+
+**The last row is in the table and has no numbers in it, deliberately.**
+Qwen3.8-27B is what this machine serves today and the only model here with a
+[measured quality result on both thinking arms](qwen3-8-27b/vllm/scenarios/quality.md) —
+but not one level of the `v1` ladder has been run against it. The ~47 output tok/s that
+appears in operational notes was read off the engine log during a single-stream quality
+run; it has no concurrency level and is not a `v1` figure, so it is not here. An empty
+cell is a statement; a borrowed number would not be.
 
 **The two speed columns disagree, and MiMo-V2.6-Flash is where they disagree hardest.**
 It is third on output tokens per second and first on answers per second — 4.2× the
@@ -53,6 +62,41 @@ and that is the thinking state rather than speed.
 thinking state 0731 and MiniMax change places at concurrency 32. Latency is missing from
 this table entirely and is where the setups differ most — 7.96 s for 0731 against 133.9 s
 for Qwen at this concurrency. Follow the link before comparing any two rows.
+
+## Quality
+
+Throughput is the whole of the table above and says nothing about whether the answers
+are right. Two models have been measured under protocol
+[`q1`](../benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai), both arms
+each, on the same day and against the engine directly:
+
+| | Measured |
+|---|---|
+| [Qwen3.8-27B](qwen3-8-27b/vllm/scenarios/quality.md) | 27 B dense BF16 — ahead in four of five with thinking on, behind in four of five with thinking off, **every margin inside the error bars** |
+| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/sglang/scenarios/quality.md) | 284 B MoE FP8 — ahead on domain knowledge in both arms |
+
+**The result is the absence of a gap, not a winner.** No margin between the two models
+reaches twice the standard error of its difference; `q1` at 200 samples resolves about
+5 points and the largest margin is 2.5. That a 27 B dense model is not measurably behind
+a 284 B MoE on this hardware is the finding worth having — and it is a different claim
+from "the small one wins".
+
+The side-by-side table lives in the
+[first of those two files](qwen3-8-27b/vllm/scenarios/quality.md#against-deepseek-v4-flash-0731)
+rather than here, so the numbers exist once.
+
+**Two findings carry past the pair.** Thinking is worth far more on instruction
+following than on anything else — +13.5 points of IFEval `prompt_strict` on Qwen, +8.5
+on DeepSeek, against low single digits everywhere else — which is the column that
+decides whether an agent run completes and the one no model card leads with. And **a
+quality score is only as good as its abort reasons**: the same benchmark cell on the
+same model scored 0.755 with a token cap of 8,192 and 0.850 at 50,000, purely because
+38 of 200 answers were cut off and graded wrong. That is now
+[pinned in the protocol](../benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai).
+
+**Quality and throughput have no overlap on this machine.** The model with the best
+measured answers has no measured speed, and the models in the table above have no
+measured quality except one. Neither table ranks anything on its own.
 
 ## Trials
 
@@ -81,12 +125,22 @@ The binding constraint is weights, not KV cache. Measured per card against the
 | Qwen3.8-Flash-Next GGUF UD-Q6_K_XL | 78.8 GiB | yes, llama.cpp only |
 | MiMo-V2.6-Flash-RL FP8 | 82.8 GiB | yes, at `--gpu-memory-utilization 0.98` and 196,608 context |
 | GLM-5.3-Flash NVFP4 | 90.7 GiB | **no** — nothing left for KV |
+| Qwen3.8-27B **BF16** | 25.9 GiB | yes — **and on a single card**, 51.8 GiB of 95.6 |
+| Qwen3-Embedding-8B BF16 | 7.1 GiB | yes, [beside the row above](qwen3-embedding-8b/) |
 | Qwen3.5-397B-A17B NVFP4 | 117.0 GiB | **no** — exceeds both cards combined |
 
 The two GGUF rows are the checkpoint size divided by two cards, like every other row.
 What llama.cpp actually places on the cards is
 [34.6 GiB less](qwen3-8-flash-next/llama-cpp/README.md#weights-on-disk-are-346-gib-larger-than-weights-in-vram)
 in both cases — so these rows are conservative, and the real headroom is larger.
+
+**One row in that table fits on one card, and that is new here.** Qwen3.8-27B at BF16 is
+51.8 GiB in total, so both cards together hold it twice over. Running it at TP=2 at
+`--gpu-memory-utilization 0.82` leaves enough for [`Qwen3-Embedding-8B`](qwen3-embedding-8b/) at `0.14` on the
+same two cards — 95,230 of 97,887 MiB per card in use, two services, no quantisation
+anywhere. **Whether it would be better to put the 27 B on one card and something else on
+the other is unmeasured**, and it is the open question with the largest consequence for
+this machine's capacity.
 
 **Nothing fits beside DeepSeek-V4-Flash.** It needs `--mem-fraction-static 0.93`; at
 `0.85` it aborts with `ValueError: No available memory for the cache blocks` after
