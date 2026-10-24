@@ -51,6 +51,8 @@ streaming request measures the two apart: tokens after the first, divided by
 | thinking off, run 1 | 51 | 0.10 s | **49.5 tok/s** |
 | thinking off, run 2 | 44 | 0.10 s | **49.5 tok/s** |
 | thinking on, 64k prompt | 291 | 10.57 s | **45.7 tok/s** |
+| thinking on, 1500 tokens | 1500 | 0.30 s | **49.0 tok/s** |
+| thinking on, 1500 tokens | 1500 | 0.06 s | **48.6 tok/s** |
 
 **49.5 tok/s in both arms, spread 0.2 % over four runs.** Thinking does not change how
 fast a token is produced — it changes how many are produced. The 51.9 against 45.3 in
@@ -58,6 +60,13 @@ the `v1` table above is therefore an artefact of the measurement window, not a p
 of the model: short answers pay the 1,270-token prompt more often inside 40 s.
 
 **Decode holds up at depth**: 45.7 tok/s with 64,000 tokens of context, 8 % below empty.
+
+**And it barely moves with generation length**: 48.6–49.0 tok/s over 1500 tokens against
+49.5 over ~200, a loss of 1.5 %. That matters for comparing across models, because the
+same measurement on
+[MiniMax-M2.5](../../../minimax-m2-5/vllm/scenarios/single-stream.md#decode-rate-measured-separately)
+loses 12 % over the same span. The 1500-token figure is the one used in the
+[machine table](../../../README.md#per-stream-one-request-at-a-time).
 
 ## Reading
 

@@ -32,7 +32,7 @@ disagree in ways that are worth seeing.
 | Model | Setup | Prefill tok/s at 180k | Decode tok/s at 1500 | `v1` window tok/s | Latency p50 |
 |---|---|---|---|---|---|
 | [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) | SGLang + SM120 patchset | **7,133** | 95.0–95.1 | 75.3–75.5 | **0.47 s** |
-| [Qwen3.8-27B](qwen3-8-27b/) · BF16 · images | vLLM 0.28.0 | **4,207** | 49.5 (at ~200 tok) | 51.9 on · 45.3 off | 3.84 s · 1.13 s |
+| [Qwen3.8-27B](qwen3-8-27b/) · BF16 · images | vLLM 0.28.0 | **4,207** | 48.6–49.0 | 51.9 on · 45.3 off | 3.84 s · 1.13 s |
 | [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) · images | vLLM, vendor image | **3,070** | **118.4–118.7** | 113.9–114.7 | 0.56–0.57 s |
 | [MiniMax-M2.5-NVFP4](minimax-m2-5/) | vLLM 0.28.0 | **2,580** | 116.6–116.7 | **122.4** | 1.96 s |
 | [Qwen3.8-Flash-Next](qwen3-8-flash-next/) Q6_K_XL · images | llama.cpp, layer split | **1,343** | 82.1–83.6 | 86.6–88.5 | 2.01 s |
@@ -45,7 +45,7 @@ disagree in ways that are worth seeing.
 | 2 | Qwen3.8-27B · 4,207 | MiniMax · 116.6 |
 | 3 | MiMo · 3,070 | DeepSeek-0731 · 95.0 |
 | 4 | MiniMax · 2,580 | Qwen3.8-Flash-Next · 82.1 |
-| 5 | Qwen3.8-Flash-Next · 1,343 | Qwen3.8-27B · 49.5 |
+| 5 | Qwen3.8-Flash-Next · 1,343 | Qwen3.8-27B · 48.6 |
 
 DeepSeek prefills 2.8× faster than MiniMax and decodes 0.8× as fast. Qwen3.8-27B is
 second on prefill and last on decode. **Which end matters is the workload**: long
@@ -65,11 +65,12 @@ measured over 1500. **Decode slows as the KV cache grows inside one request** �
 12 % over that span here. A decode rate needs its generation length stated, the way a
 throughput figure needs its concurrency, which is why the column header carries one.
 
-**Qwen3.8-27B's figure is at a different length** (~200 tokens, not 1500) and is
-therefore flattered relative to the other four. Its own page has the
-[four runs and both thinking arms](qwen3-8-27b/vllm/scenarios/single-stream.md#decode-rate-measured-separately);
-decode there is identical in both arms at 0.2 % spread, where the `v1` column splits
-them 51.9 against 45.3.
+**How much the length matters is itself model-specific.** Qwen3.8-27B loses 1.5 %
+between a 200-token and a 1500-token generation where MiniMax loses 12 %, so the two
+cannot be corrected by a common factor — they have to be measured at the same length,
+which is what this column does. Qwen's own page also shows decode
+[identical in both thinking arms](qwen3-8-27b/vllm/scenarios/single-stream.md#decode-rate-measured-separately)
+at 0.2 % spread, where the `v1` column splits them 51.9 against 45.3.
 
 **Prefill is clean**: same 180,000-token prompt, one request, TTFT measured directly.
 
@@ -117,16 +118,32 @@ are right. Two models have been measured under protocol
 [`q1`](../benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai), both arms
 each, on the same day and against the engine directly:
 
-| | Measured |
-|---|---|
-| [Qwen3.8-27B](qwen3-8-27b/vllm/scenarios/quality.md) | 27 B dense BF16 — ahead in four of five with thinking on, behind in four of five with thinking off, **every margin inside the error bars** |
-| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/sglang/scenarios/quality.md) | 284 B MoE FP8 — ahead on domain knowledge in both arms |
+| Model | Arms | Result with thinking on |
+|---|---|---|
+| [Qwen3.8-27B](qwen3-8-27b/vllm/scenarios/quality.md) | both | 27 B dense BF16 — **first in four of five** |
+| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/sglang/scenarios/quality.md) | both | 284 B MoE FP8 — first on domain knowledge, second elsewhere |
+| [MiniMax-M2.5-NVFP4](minimax-m2-5/vllm/scenarios/quality.md) | **one** — no switch exists | 116 B MoE — last in three of five |
 
-**The result is the absence of a gap, not a winner.** No margin between the two models
-reaches twice the standard error of its difference; `q1` at 200 samples resolves about
-5 points and the largest margin is 2.5. That a 27 B dense model is not measurably behind
-a 284 B MoE on this hardware is the finding worth having — and it is a different claim
-from "the small one wins".
+| Benchmark | Qwen 27 B | DeepSeek 284 B | MiniMax 116 B |
+|---|---|---|---|
+| GSM8K | **0.990** | 0.970 | 0.985 |
+| MMLU-Pro | 0.850 | **0.870** | 0.825 |
+| HumanEval | **0.982** | 0.963 | 0.970 |
+| IFEval `prompt_strict` | **0.920** | 0.895 | 0.855 |
+| IFEval `inst_strict` | **0.943** | 0.928 | 0.909 |
+
+**Exactly one margin in that table clears its error bar.** Qwen beats MiniMax on IFEval
+`prompt_strict` by 6.5 points against a two-standard-error band of 6.3 — it clears by
+0.2, which is as marginal as a result can be while still counting. Everything else here,
+including Qwen's 4-of-5 lead over DeepSeek, sits inside the noise that 200 samples
+leaves.
+
+**So the finding is narrow and worth stating narrowly.** On following a written
+instruction exactly, a 27 B dense model at full precision measurably beats a 116 B MoE
+on this hardware. Everywhere else the three are tied, which is itself the useful result:
+**parameter count buys nothing measurable in answer quality across this field**, while
+it [costs a factor of 2.4 in decode speed](#per-stream-one-request-at-a-time) between
+the fastest and the slowest of the three.
 
 The side-by-side table lives in the
 [first of those two files](qwen3-8-27b/vllm/scenarios/quality.md#against-deepseek-v4-flash-0731)

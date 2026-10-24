@@ -83,3 +83,24 @@ think".
 
 **Context is 196,608, not 262,144.** `max_position_embeddings` of the checkpoint. A
 gateway that advertises more will produce `ContextWindowExceededError` mid-session.
+
+## Quality, protocol `q1`
+
+Measured 2026-10-24, [full table](vllm/scenarios/quality.md). One arm only — this
+checkpoint has no thinking switch, which was probed rather than assumed.
+
+| Benchmark | this model | [Qwen3.8-27B](../qwen3-8-27b/) 27 B | [DeepSeek-0731](../deepseek-v4-flash-0731/) 284 B |
+|---|---|---|---|
+| GSM8K | 0.985 | **0.990** | 0.970 |
+| MMLU-Pro | 0.825 | 0.850 | **0.870** |
+| HumanEval | 0.970 | **0.982** | 0.963 |
+| IFEval `prompt_strict` | 0.855 | **0.920** | 0.895 |
+| IFEval `inst_strict` | 0.909 | **0.943** | 0.928 |
+
+**Last of the three in three benchmarks, second in the other two**, and behind the 27 B
+dense model in all five. Only one of those gaps clears its error bar: IFEval
+`prompt_strict`, 6.5 points against a band of 6.3. The rest is a tie at 200 samples.
+
+**Instruction following is the weak column** — roughly one prompt in seven not followed
+to the letter, against one in twelve for Qwen3.8-27B.
+
