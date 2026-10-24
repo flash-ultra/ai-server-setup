@@ -23,26 +23,34 @@ and both are needed.
 
 ### Per stream — one request at a time
 
-The directly comparable column: same pinned prompt, concurrency 1, no batching, no
-thinking arms played against each other.
+Prefill and generation are the two things the hardware actually does, and they rank
+differently. Prefill is measured at 180,000 tokens for every model here, one request at
+a time. Generation is single-stream throughput at the pinned prompt — see the caveat
+below, it is not a pure decode rate.
 
-| Model | Setup | tok/s | Tok/answer | Latency p50 | Details |
+| Model | Setup | Prefill tok/s at 180k | Generation tok/s | Tok/answer | Latency p50 |
 |---|---|---|---|---|---|
-| **MiniMax-M2.5-NVFP4** | vLLM 0.28.0 | **122.4** | 258 | 1.96 s | [`minimax-m2-5/`](minimax-m2-5/) |
-| **MiMo-V2.6-Flash-RL** | vLLM, vendor image | **113.9–114.7** | 67 | **0.56–0.57 s** | [`mimo-v2-6-flash/`](mimo-v2-6-flash/) · images |
-| **Qwen3.8-Flash-Next** Q6_K_XL | llama.cpp, layer split | **86.6–88.5** | 182 | 2.01 s | [`qwen3-8-flash-next/`](qwen3-8-flash-next/) · images |
-| **DeepSeek-V4-Flash-0731** | SGLang + SM120 patchset | **75.3–75.5** | 35 | **0.47 s** | [`deepseek-v4-flash-0731/`](deepseek-v4-flash-0731/) |
-| **Qwen3.8-27B** · BF16 | vLLM 0.28.0 | **51.9** on · **45.3** off | 173 · 53 | 3.84 s · 1.13 s | [`qwen3-8-27b/`](qwen3-8-27b/) · images |
+| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) | SGLang + SM120 patchset | **7,133** | 75.3–75.5 | 35 | **0.47 s** |
+| [Qwen3.8-27B](qwen3-8-27b/) · BF16 · images | vLLM 0.28.0 | **4,207** | 51.9 on · 45.3 off | 173 · 53 | 3.84 s · 1.13 s |
+| [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) · images | vLLM, vendor image | **3,070** | **113.9–114.7** | 67 | 0.56–0.57 s |
+| [MiniMax-M2.5-NVFP4](minimax-m2-5/) | vLLM 0.28.0 | **2,580** | **122.4** | 258 | 1.96 s |
+| [Qwen3.8-Flash-Next](qwen3-8-flash-next/) Q6_K_XL · images | llama.cpp, layer split | **1,343** | 86.6–88.5 | 182 | 2.01 s |
 
-**Read the second and third columns together.** A short answer pays the prompt more
-often inside the 40 s window, so a model that answers in 35 tokens has its tokens-per-
-second depressed relative to one that answers in 258. DeepSeek's 75 and MiniMax's 122
-are closer together than they look; MiMo's 114 at 67 tokens per answer is the strongest
-figure here.
+**The two speed columns put the models in opposite orders.** DeepSeek leads prefill by
+2.3× over MiniMax and trails it on generation; Qwen3.8-Flash-Next is third on generation
+and last on prefill by a factor of five. Which one matters is the workload: long
+documents and large agent contexts are prefill-bound, chat and long generated answers
+are generation-bound.
 
-**Latency is the column to use for an interactive workload**, and it does not follow
-the tok/s order: DeepSeek is first at 0.47 s while fourth on throughput, because it
-answers briefly.
+**The generation column is not a pure decode rate**, and on the one model where both
+were measured the difference is large. `v1` counts output tokens over a 40 s window, so
+a model answering in 35 tokens pays the pinned prompt far more often than one answering
+in 258. Measured apart on Qwen3.8-27B with a streaming request, decode is
+[**49.5 tok/s in both thinking arms**](qwen3-8-27b/vllm/scenarios/single-stream.md#decode-rate-measured-separately)
+at 0.2 % spread — so the 51.9 against 45.3 in this column is the measurement window, not
+the model. The other four rows have no separate decode figure.
+
+**Prefill is clean**: same 180,000-token prompt, one request, TTFT measured directly.
 
 **Dense at full precision is the slow end.** Qwen3.8-27B is 0.60× DeepSeek per token
 despite a tenth of the parameters — it reads all 25.9 GiB of its per-card weights for
@@ -58,7 +66,7 @@ field reports; see the caveat below the table.
 |---|---|---|---|---|---|
 | [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) | **on** | **3,584** | 10.97 | 327 | 27.58 s |
 | [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) | **on** | **3,129** | **46.05** | 68 | **5.74 s** |
-| [MiniMax-M2.5-NVFP4](minimax-m2-5/) | on, not switchable | **2,947–3,126** | 9.65–9.75 | 258 | — |
+| [MiniMax-M2.5-NVFP4](minimax-m2-5/) | on, not switchable | **2,947–3,126** | 9.65–9.75 | 302–324 | 57.34–58.28 s |
 | [Qwen3.8-27B](qwen3-8-27b/) | **on** | **1,821** | 9.43 | 193 | 34.89 s |
 | [Qwen3.8-Flash-Next](qwen3-8-flash-next/) Q6 | not established | **1,390** | 7.47 | 186 | 133.9 s |
 | [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) | **off** | **1,159–1,183** | 32.10–32.65 | 35 | 7.96 s |

@@ -38,6 +38,27 @@ spreads; this does not.
 | Tokens per answer | 173 (**76 %** reasoning) | 53 (0 %) |
 | GPU utilisation | 100 % · 100 % | 99 % · 100 % |
 
+## Decode rate, measured separately
+
+`v1` reports output tokens over a 40 s window, which mixes prefill into the figure. A
+streaming request measures the two apart: tokens after the first, divided by
+`duration − TTFT`.
+
+| | completion tokens | TTFT | Decode |
+|---|---|---|---|
+| thinking on, run 1 | 128 | 0.11 s | **49.6 tok/s** |
+| thinking on, run 2 | 272 | 0.10 s | **49.5 tok/s** |
+| thinking off, run 1 | 51 | 0.10 s | **49.5 tok/s** |
+| thinking off, run 2 | 44 | 0.10 s | **49.5 tok/s** |
+| thinking on, 64k prompt | 291 | 10.57 s | **45.7 tok/s** |
+
+**49.5 tok/s in both arms, spread 0.2 % over four runs.** Thinking does not change how
+fast a token is produced — it changes how many are produced. The 51.9 against 45.3 in
+the `v1` table above is therefore an artefact of the measurement window, not a property
+of the model: short answers pay the 1,270-token prompt more often inside 40 s.
+
+**Decode holds up at depth**: 45.7 tok/s with 64,000 tokens of context, 8 % below empty.
+
 ## Reading
 
 **Both cards sit at 100 % on a single request.** Dense at BF16 reads all 25.9 GiB of
