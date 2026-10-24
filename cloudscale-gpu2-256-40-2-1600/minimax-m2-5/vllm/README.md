@@ -38,6 +38,27 @@ the defaults of the release.
 | `--max-model-len` | `196608` | the checkpoint's `max_position_embeddings`; higher is refused at start |
 | `--gpu-memory-utilization` | `0.93` | 65.2 GiB of weights per card leaves room; this is not a tight fit |
 
+## Thinking cannot be switched off, and that is measured
+
+Four candidate switches, same question, `reasoning_tokens` from `usage`:
+
+| Variant | reasoning tokens |
+|---|---|
+| default | 213 |
+| `chat_template_kwargs: {"enable_thinking": false}` | 369 |
+| `chat_template_kwargs: {"thinking": false}` | 152 |
+| `reasoning_effort: "none"` | 176 |
+
+**None reaches zero.** All four requests succeed, none logs a warning, and the
+checkpoint's template carries no switch the engine can reach. Every figure for this
+setup is therefore a thinking-on figure, and it cannot be put beside another model's
+thinking-off row.
+
+The keys that do work elsewhere on this machine are listed at
+[repository level](../../../README.md#switches-that-a-model-does-not-know-are-accepted-not-rejected) —
+this is the case where the answer is "there is none", which only a probe distinguishes
+from "the key was wrong".
+
 ## Scenarios
 
 | Scenario | Status |

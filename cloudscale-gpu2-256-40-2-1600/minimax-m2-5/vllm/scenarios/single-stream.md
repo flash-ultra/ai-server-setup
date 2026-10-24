@@ -37,6 +37,30 @@ visible     54  ██████████░░░░░░░░░░░�
 
 The visible share is what a client sees; the whole bar is what it pays for.
 
+## Decode rate, measured separately
+
+`v1` reports output tokens over a 40 s window, which folds one prefill into every
+answer. A streaming request separates the two: completion tokens after the first,
+divided by `duration − TTFT`, counted from `usage`. Measured 2026-10-24 against the
+engine directly, this model alone on both cards, 1500 completion tokens per run.
+
+| | tokens | TTFT | Decode |
+|---|---|---|---|
+| run 1 | 1500 | 0.09 s | **116.6 tok/s** |
+| run 2 | 1500 | 0.02 s | **116.7 tok/s** |
+
+**116.6 tok/s over 1500 tokens — and the `v1` column above reads *higher*, at 122.4.**
+That ordering looks impossible, because window throughput also carries prefill and
+should therefore sit below the decode rate. The explanation is in this page's own
+numbers: 258 tokens at a p50 of 1.96 s is about 132 tok/s, so at a short generation this
+setup decodes faster than it does at 1500.
+
+**Decode slows as the KV cache grows within one request** — roughly 12 % between a
+258-token answer and a 1500-token one here. A decode rate therefore needs its generation
+length stated, exactly as a throughput figure needs its concurrency. The 1500-token
+figure is the one comparable across the models on this machine; it is not the figure
+that applies to a short chat turn.
+
 ## Reading
 
 **The 79 % reasoning share is the number that matters for budgeting.** An answer of 258

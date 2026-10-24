@@ -23,32 +23,53 @@ and both are needed.
 
 ### Per stream — one request at a time
 
-Prefill and generation are the two things the hardware actually does, and they rank
-differently. Prefill is measured at 180,000 tokens for every model here, one request at
-a time. Generation is single-stream throughput at the pinned prompt — see the caveat
-below, it is not a pure decode rate.
+Prefill and decode are the two things the hardware actually does, and they rank
+differently. Both are measured one request at a time: prefill at a 180,000-token prompt,
+decode over a 1500-token generation with the prefill subtracted. The `v1` column is kept
+beside them because it is what the protocol produces — and because the three columns
+disagree in ways that are worth seeing.
 
-| Model | Setup | Prefill tok/s at 180k | Generation tok/s | Tok/answer | Latency p50 |
+| Model | Setup | Prefill tok/s at 180k | Decode tok/s at 1500 | `v1` window tok/s | Latency p50 |
 |---|---|---|---|---|---|
-| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) | SGLang + SM120 patchset | **7,133** | 75.3–75.5 | 35 | **0.47 s** |
-| [Qwen3.8-27B](qwen3-8-27b/) · BF16 · images | vLLM 0.28.0 | **4,207** | 51.9 on · 45.3 off | 173 · 53 | 3.84 s · 1.13 s |
-| [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) · images | vLLM, vendor image | **3,070** | **113.9–114.7** | 67 | 0.56–0.57 s |
-| [MiniMax-M2.5-NVFP4](minimax-m2-5/) | vLLM 0.28.0 | **2,580** | **122.4** | 258 | 1.96 s |
-| [Qwen3.8-Flash-Next](qwen3-8-flash-next/) Q6_K_XL · images | llama.cpp, layer split | **1,343** | 86.6–88.5 | 182 | 2.01 s |
+| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) | SGLang + SM120 patchset | **7,133** | 95.0–95.1 | 75.3–75.5 | **0.47 s** |
+| [Qwen3.8-27B](qwen3-8-27b/) · BF16 · images | vLLM 0.28.0 | **4,207** | 49.5 (at ~200 tok) | 51.9 on · 45.3 off | 3.84 s · 1.13 s |
+| [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) · images | vLLM, vendor image | **3,070** | **118.4–118.7** | 113.9–114.7 | 0.56–0.57 s |
+| [MiniMax-M2.5-NVFP4](minimax-m2-5/) | vLLM 0.28.0 | **2,580** | 116.6–116.7 | **122.4** | 1.96 s |
+| [Qwen3.8-Flash-Next](qwen3-8-flash-next/) Q6_K_XL · images | llama.cpp, layer split | **1,343** | 82.1–83.6 | 86.6–88.5 | 2.01 s |
 
-**The two speed columns put the models in opposite orders.** DeepSeek leads prefill by
-2.3× over MiniMax and trails it on generation; Qwen3.8-Flash-Next is third on generation
-and last on prefill by a factor of five. Which one matters is the workload: long
-documents and large agent contexts are prefill-bound, chat and long generated answers
-are generation-bound.
+**Prefill and decode rank the models almost in reverse.**
 
-**The generation column is not a pure decode rate**, and on the one model where both
-were measured the difference is large. `v1` counts output tokens over a 40 s window, so
-a model answering in 35 tokens pays the pinned prompt far more often than one answering
-in 258. Measured apart on Qwen3.8-27B with a streaming request, decode is
-[**49.5 tok/s in both thinking arms**](qwen3-8-27b/vllm/scenarios/single-stream.md#decode-rate-measured-separately)
-at 0.2 % spread — so the 51.9 against 45.3 in this column is the measurement window, not
-the model. The other four rows have no separate decode figure.
+| rank | by prefill | by decode |
+|---|---|---|
+| 1 | DeepSeek-0731 · 7,133 | MiMo · 118.4 |
+| 2 | Qwen3.8-27B · 4,207 | MiniMax · 116.6 |
+| 3 | MiMo · 3,070 | DeepSeek-0731 · 95.0 |
+| 4 | MiniMax · 2,580 | Qwen3.8-Flash-Next · 82.1 |
+| 5 | Qwen3.8-Flash-Next · 1,343 | Qwen3.8-27B · 49.5 |
+
+DeepSeek prefills 2.8× faster than MiniMax and decodes 0.8× as fast. Qwen3.8-27B is
+second on prefill and last on decode. **Which end matters is the workload**: long
+documents, large agent contexts and RAG are prefill-bound; chat and long generated
+answers are decode-bound. A single "tokens per second" figure hides this completely.
+
+**Decode and the `v1` window are two different things, and the gap is the answer
+length.** `v1` counts output tokens over a fixed 40 s window, so every answer drags one
+prefill in with it; decode counts tokens after the first over `duration − TTFT`.
+DeepSeek-0731 answers in 35 tokens and the two differ by **26 %** — 95.0 against 75.4.
+MiMo answers in 67 and they differ by 4 %. The `v1` column is not a speed ranking.
+
+**Two rows read higher in the `v1` column than in decode, which should be impossible.**
+Window throughput carries prefill and must sit below the decode rate. The cause is in
+MiniMax's own numbers: 258 tokens at a p50 of 1.96 s is about 132 tok/s, against 116.6
+measured over 1500. **Decode slows as the KV cache grows inside one request** — some
+12 % over that span here. A decode rate needs its generation length stated, the way a
+throughput figure needs its concurrency, which is why the column header carries one.
+
+**Qwen3.8-27B's figure is at a different length** (~200 tokens, not 1500) and is
+therefore flattered relative to the other four. Its own page has the
+[four runs and both thinking arms](qwen3-8-27b/vllm/scenarios/single-stream.md#decode-rate-measured-separately);
+decode there is identical in both arms at 0.2 % spread, where the `v1` column splits
+them 51.9 against 45.3.
 
 **Prefill is clean**: same 180,000-token prompt, one request, TTFT measured directly.
 

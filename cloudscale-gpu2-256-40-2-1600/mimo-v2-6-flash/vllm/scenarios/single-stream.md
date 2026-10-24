@@ -29,6 +29,26 @@ An earlier series on the same setup at a 49,152 window measured 114.7 and 114.4 
 **Quadrupling the served window changed single-stream throughput by 0.3 %** — see
 [the window finding](../README.md#a-token-gets-cheaper-as-the-window-grows).
 
+## Decode rate, measured separately
+
+`v1` reports output tokens over a 40 s window, which folds one prefill into every
+answer. A streaming request separates the two: completion tokens after the first,
+divided by `duration − TTFT`, counted from `usage`. Measured 2026-10-24 against the
+engine directly, this model alone on both cards, 1500 completion tokens per run.
+
+| | tokens | TTFT | Decode |
+|---|---|---|---|
+| run 1 | 1500 | 0.87 s | **118.4 tok/s** |
+| run 2 | 1500 | 0.05 s | **118.7 tok/s** |
+
+**118.4 tok/s, against 113.9–114.7 in the `v1` column — within 4 %.** At 67 tokens per
+answer this setup already spends most of a 40 s window generating rather than
+prefilling, so the two measurements nearly agree. That is the opposite end of the same
+effect that puts DeepSeek-0731 26 % apart.
+
+**The fastest decode measured on this machine**, ahead of MiniMax-M2.5 by 1.5 % and of
+the dense Qwen3.8-27B by a factor of 2.4.
+
 ## Reading
 
 **114.3 output tok/s against 75.4 for the production model, and it is thinking while it

@@ -36,6 +36,30 @@ truncated thinking, not a finished reply.
 | GPU utilisation | 46 % · 45 % | 45 % · 44 % |
 | Time to listening | ~9 s | 13.4 s |
 
+## Decode rate, measured separately
+
+`v1` reports output tokens over a 40 s window, which folds one prefill into every
+answer. A streaming request separates the two: completion tokens after the first,
+divided by `duration − TTFT`, counted from `usage`. Measured 2026-10-24 against the
+engine directly, this model alone on both cards, 1500 completion tokens per run.
+
+| | tokens | TTFT | Decode |
+|---|---|---|---|
+| run 1 | 1500 | 0.57 s | **82.1 tok/s** |
+| run 2 | 1500 | 0.25 s | **83.6 tok/s** |
+
+**82.1–83.6 tok/s, against 86.6–88.5 in the `v1` column.** The same inversion as on
+MiniMax-M2.5 and the same cause: decode slows as the KV cache grows, and the `v1` answers
+here are 182 tokens against the 1500 measured for this row.
+
+**llama.cpp's layer split costs nothing measurable in single-stream decode.** The engine
+uses the two cards in turn rather than together, which
+[pins GPU utilisation in the forties](../README.md) and
+[costs a factor of 17 in latency under load](../../../README.md) — but with one request
+in flight there is nothing to overlap, and this setup decodes faster than
+DeepSeek-0731 under SGLang. The llama.cpp penalty on this machine is a concurrency
+penalty, not a per-token one.
+
 ## Reading
 
 **A higher bit depth costs 2.1 % of output throughput here.** Q6_K_XL carries 6.9 % more

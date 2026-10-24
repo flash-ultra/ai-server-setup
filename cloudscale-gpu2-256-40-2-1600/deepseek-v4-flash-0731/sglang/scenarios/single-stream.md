@@ -27,6 +27,27 @@ scaling factors, the only admissible setting.
 Run 2 was measured on 2026-09-22 against a freshly started server on the same
 configuration, 23 days after run 1.
 
+## Decode rate, measured separately
+
+`v1` reports output tokens over a 40 s window, which folds one prefill into every
+answer. A streaming request separates the two: completion tokens after the first,
+divided by `duration − TTFT`, counted from `usage`. Measured 2026-10-24 against the
+engine directly, this model alone on both cards, 1500 completion tokens per run.
+
+| | tokens | TTFT | Decode |
+|---|---|---|---|
+| run 1 | 1500 | 0.19 s | **95.0 tok/s** |
+| run 2 | 1500 | 0.13 s | **95.1 tok/s** |
+
+**95.0 tok/s, against 75.3–75.5 in the `v1` column above — 26 % apart.** This setup
+answers in 35 tokens, so inside a 40 s window it pays the pinned prompt roughly every
+half second and the window figure is dominated by prefill. It is the largest gap of any
+model on this machine, and it is a property of the answer length, not of the engine.
+
+**Use the `v1` column for "how much comes out of a 40 s window at this answer length"
+and this one for "how fast does a token arrive".** They answer different questions and
+here they differ by a quarter.
+
 ## Reading
 
 **0.47 s median for a complete answer** is the number that matters for interactive use.
