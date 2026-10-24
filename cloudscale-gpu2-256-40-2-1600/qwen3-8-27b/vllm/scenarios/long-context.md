@@ -63,11 +63,12 @@ at every depth. The cost of long context in this setup is entirely in prefill.
 | 180,000 | 4207 | **7133** | 0.59 |
 | 240,000 | 3796 | not measured | — |
 
-**A steady 0.6× across the range**, the same ratio as
-[single-stream decode](single-stream.md#against-deepseek-v4-flash-0731). Prefill is
-compute-bound rather than bandwidth-bound, so the consistency across two different
-bottlenecks is worth noting: on this hardware the dense 27 B model is about 60 % of the
-284 B sparse one in both phases.
+**A steady 0.6× across the range**, varying by only four points between 64k and 180k.
+Prefill is compute-bound, and this is a prefill statement only: DeepSeek has no
+separately measured decode rate on these two cards, so nothing here says the same ratio
+holds while generating. Qwen's own decode is
+[49.5 tok/s](single-stream.md#decode-rate-measured-separately), with no counterpart to
+divide it by.
 
 **Both recover 3 of 3 wherever they were both tested**, so depth capability does not
 separate them — only speed does, and only above the depth DeepSeek was taken to does

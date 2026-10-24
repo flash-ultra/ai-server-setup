@@ -49,13 +49,18 @@ ran 2026-10-24, both arms, and DeepSeek is ahead in every cell:
 | [Output tok/s](vllm/scenarios/concurrent-load.md) | 1821.0 | **3583.8** | 718.0 | **1173.2–1182.6** |
 | Latency p50 | 34.89 s | **27.58 s** | 19.94 s | **7.95–7.96 s** |
 
-**The handicap is a steady 0.6× and it is architectural, not a tuning gap.**
-[Single-stream decode](vllm/scenarios/single-stream.md) 45.3 against 75.3–75.5 tok/s,
-[prefill](vllm/scenarios/long-context.md) 4207 against 7133 tok/s at 180k — the same
-ratio in the bandwidth-bound and the compute-bound phase. A dense 27 B model reads all
-25.9 GiB of its per-card weights for every token; a 284 B mixture-of-experts reads a
-fraction of itself. **Parameter count does not predict serving speed; active parameter
-count does**, and here the small model is the slow one.
+**On prefill the handicap is a steady 0.6×**:
+[5131 / 4343 / 4207 tok/s](vllm/scenarios/long-context.md) against 8227 / 7480 / 7133 at
+64k, 128k and 180k. A dense 27 B model reads all 25.9 GiB of its per-card weights for
+every token; a 284 B mixture-of-experts reads a fraction of itself. **Parameter count
+does not predict serving speed; active parameter count does**, and here the small model
+is the slow one.
+
+**Decode measured properly is 49.5 tok/s**, identical in both thinking arms over four
+runs — see
+[single stream](vllm/scenarios/single-stream.md#decode-rate-measured-separately).
+DeepSeek has no separate decode figure on these two cards, so the 0.6× is about prefill
+only.
 
 **Where it is not behind is depth.** 3 of 3 needles at 64k, 128k, 180k **and 240k** —
 the deepest verified retrieval in this repository, since nothing else here was taken
