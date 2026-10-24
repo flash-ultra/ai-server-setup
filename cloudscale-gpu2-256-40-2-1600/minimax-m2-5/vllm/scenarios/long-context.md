@@ -62,12 +62,3 @@ So the streaming path breaks somewhere else, most likely at the ~70 s mark under
 180k-token prefill. That is unresolved. Until it is, **`--scenario longctx` cannot be
 trusted for this engine and model combination**, and its needle row should be verified
 non-streaming before publication.
-
-## Not measured
-
-- **The root cause in `bench.py`.** Whether other `longctx` rows in this repository are
-  affected has not been checked.
-- **Needle recovery below full length.** Only 180k was tested.
-- **Prefill throughput without prefix caching interference.** The verification run
-  returned in 4.1 s because the prompt was already cached from the harness run; only the
-  69.8 s figure describes a cold prefill.

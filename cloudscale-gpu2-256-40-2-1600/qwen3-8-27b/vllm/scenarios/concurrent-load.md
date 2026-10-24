@@ -17,6 +17,9 @@ was [verified to work](../README.md#thinking-is-on-by-default-and-two-of-four-sw
 before the run. The embedding model stayed loaded; see
 [single stream](single-stream.md#method).
 
+**One run per arm.** DeepSeek's ladder states a ≤ 5 % run-to-run spread from three
+runs; this is a single pass per arm.
+
 ## Result, thinking on (default)
 
 <!-- protocol v1 · max_tokens 512 · 40 s/level · 3 warmup requests discarded · counted via usage fields -->
@@ -110,11 +113,3 @@ a second handicap on top, because prefill is also slower — see
 **This is the cost side of the [quality result](quality.md).** The same two setups, the
 same two days: Qwen answers better and DeepSeek answers faster, and neither margin is
 small enough to ignore or large enough to settle the question alone.
-
-## Not measured
-
-- **A second run of either arm.** DeepSeek's ladder has a stated ≤ 5 % run-to-run
-  spread from three runs; this has one run per arm and no spread is known.
-- **Beyond 256.** The thinking-on arm was still climbing. `--levels 256,384,512` would
-  settle where it turns over, as it did for DeepSeek.
-- **Without the embedding co-tenant.** A larger KV pool may move the top of the ladder.

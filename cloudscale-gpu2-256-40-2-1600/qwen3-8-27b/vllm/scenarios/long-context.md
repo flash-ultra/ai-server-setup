@@ -22,6 +22,8 @@ so the prefill figures are directly comparable. The fourth exists because this w
 Against the engine on `127.0.0.1:8001` directly, embedding model resident — see
 [single stream](single-stream.md#method).
 
+**One run per depth.** DeepSeek has two runs at 180,000, 4 % apart.
+
 ## Result
 
 <!-- protocol v1 · max_tokens 512 · 40 s/level · 3 warmup requests discarded · counted via usage fields -->
@@ -70,14 +72,3 @@ bottlenecks is worth noting: on this hardware the dense 27 B model is about 60 %
 **Both recover 3 of 3 wherever they were both tested**, so depth capability does not
 separate them — only speed does, and only above the depth DeepSeek was taken to does
 Qwen have the field to itself.
-
-## Not measured
-
-- **The full 262,144-token window.** 240,000 leaves room for the answer; the last
-  22,000 tokens were not tested and the KV arithmetic says 5.78 such requests fit in
-  parallel.
-- **A second run at any depth.** DeepSeek has two runs at 180,000, 4 % apart. This is
-  one run per depth.
-- **Needles at more than three positions**, or a harder retrieval task than an exact
-  code match. 3 of 3 on an exact string is the weakest form of this test.
-- **Concurrent long-context requests.** Everything above is one request at a time.

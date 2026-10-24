@@ -159,14 +159,3 @@ IFEval thinking-on. The only surviving exception is the 1 of 200 in the row abov
 **Every number on this page and on the DeepSeek page has been checked this way**, which
 is not the same as having been measured under the pinned parameter — it is what can
 honestly be said about runs that predate it.
-
-## Not measured
-
-- **Anything beyond 200 samples.** stderr sits near 0.02, so differences under ~5 points
-  are not resolvable at this size. Most of the margins against DeepSeek are under that.
-- **Vision benchmarks.** `mmmu` and `mathvista` ship with `inspect_evals` and are the
-  obvious next run, because native vision is this model's other argument and it is
-  entirely unquantified.
-- **Agentic benchmarks.** `swe_bench` and the tool-use evals need a sandbox; nothing was
-  run. The `qwen3_coder` parser was verified by hand, not by a benchmark.
-- **`reasoning_effort` between the two ends.** Only `none` and the default were run.

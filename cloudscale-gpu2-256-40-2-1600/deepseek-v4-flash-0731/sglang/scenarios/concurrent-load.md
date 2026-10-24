@@ -173,14 +173,3 @@ mix reproduced exactly. Do not read a single mixed row as a number.
 **Neither card saturates.** 91–99 %, and the pair diverges by up to 22 points (91/69 % at
 concurrency 32 in run 2). MiniMax held 100/100 at every level. Whether that gap is
 recoverable was not investigated.
-
-## Not measured
-
-- **Levels above 512.** Run 3 stopped there and the curve was still rising at 98 % GPU.
-  Where it turns over is unknown, and so is whether latency stays usable past 15.7 s p50.
-- **Thinking on above 256, and a second run of either new arm.** Runs 3 and 4 are single
-  measurements; runs 1 and 2 establish that this ladder reproduces to 5 %, which is
-  weaker evidence than repeating them would be.
-- **`reasoning_effort` between the two arms.** `v1` pins `low` in the
-  [reasoning scenario](reasoning-cost.md) and offers no flag to vary it, so the middle of
-  the range is unmeasured here.

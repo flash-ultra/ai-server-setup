@@ -41,10 +41,3 @@ switched off.
 which is discussed in [concurrent load](concurrent-load.md) — the short version is that
 a model with 4 B active parameters does too little work per forward pass to keep the card
 saturated between steps.
-
-## Not measured
-
-- Time to first token. The protocol's single-stream scenario reports end-to-end latency;
-  TTFT would need the streaming path
-- Generation speed with the trace off, in isolation. It appears only inside the reasoning
-  scenario, at concurrency 8 and 32

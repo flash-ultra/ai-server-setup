@@ -53,8 +53,3 @@ machine under llama.cpp with `-sm layer` leaves one card idle half the time, bec
 sits inside the 1.96 s. The separate decode rate was not measured with a streaming tool,
 so there is no equivalent of the kit-style TTFT/decode split available on the
 [older machine's NVFP4 run](../../../../cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/vllm-b12x/scenarios/single-stream.md).
-
-## Not measured
-
-- **Decode rate with prefill excluded.** Needs a streaming client; `v1` does not produce it.
-- **Variance.** One run.

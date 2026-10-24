@@ -50,18 +50,3 @@ why the single-GPU advice does not transfer.
 **8192 is also unstable.** A spread of ± 97 against ± 0.05 for the default — the large
 ubatch does not just lose throughput, it makes the number unreliable. Leave
 `-b 2048 -ub 512` alone.
-
-## Not measured
-
-- **1M context end to end — duration, stability, VRAM.** Measured only to 128k. The
-  decay curve extrapolates to well over an hour of prefill, against
-  [7:51 min on SGLang](../../sglang/scenarios/long-context.md). Nobody will close this
-  gap: the stack was retired on 2026-08-16 and its weights deleted.
-
-The depth-related knobs that were dropped when the series was cut short — KV-cache
-dtypes at depth, `-ts` balance — are listed as
-[not planned](../README.md#not-planned).
-
-Worth knowing before running the full context: a 32-bit overflow at very long context
-when `n_kv × n_ubatch` crosses 2³² was reported in llama.cpp as #24643, #24718 and
-#24912, and fixed in #24706, #24776 and #24945.

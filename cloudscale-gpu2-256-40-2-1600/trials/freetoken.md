@@ -148,18 +148,3 @@ run one model runs two, at 38 and 140+ tok/s, without interference.
 The sensible split is the opposite of the obvious one: **the large model on FreeToken for
 chat**, and a fast, full-context model on the free card for agent work. Not the other way
 round — 32k of context is not enough for agentic use.
-
-## Not planned
-
-- **FreeToken as a replacement for SGLang.** Half the speed, a quarter of the concurrency,
-  one GPU.
-- **MiniMax-M3 through FreeToken.** Technically the only route to that model on this
-  machine, but 226 GiB of download for a setup whose context has to be capped at 32k.
-
-## Not measured
-
-- **Where the OOM boundary actually is.** 32,768 runs, 215,000 killed it; the space
-  between was not searched. Each attempt costs a six-minute restart.
-- **`max_running_req=4`.** Not varied, no concurrency series.
-- **`hybrid` on an NVFP4 checkpoint.** The profile promises the CPU path there; on FP8 it
-  was unavailable.

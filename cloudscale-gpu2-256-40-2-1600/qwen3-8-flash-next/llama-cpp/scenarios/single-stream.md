@@ -62,11 +62,3 @@ configuration — 39–47 % across all of them.
 
 **0 % reasoning is "not reported".** llama.cpp omits the field. ~190 tokens for a
 three-sentence summary is not a model that skipped thinking.
-
-## Not measured
-
-- **Decode rate with prefill excluded.**
-- **Variance.** One run per configuration.
-- **Quality difference between Q5 and Q6.** Only throughput was compared. Whether the
-  extra bit depth changes answers was not tested, and it is the reason to prefer Q6 —
-  the throughput argument alone does not justify a re-download.

@@ -139,23 +139,3 @@ All three are documented with their failure modes in the
   `MiMoV2ForCausalLM`, which in vLLM's registry is text-only; the engine resolves
   `MiMoV2OmniForCausalLM` from the vision and audio configs in the same file. Reading the
   registry before downloading predicts the wrong class.
-
-## Still open
-
-- **The last 33,000 tokens to 262,144.** The engine estimates 198,208 against the 196,608
-  configured. Whether trimming CUDA graph sizes reaches DeepSeek's window was not tried —
-  [details](vllm/README.md#still-open).
-- **Why prefill falls with depth** — 7,436 tok/s at 44,000 against 3,070 at 180,000, where
-  DeepSeek stays nearly flat. Two points from two configurations is not a curve.
-- **KV offload to host RAM.** 230 GB sits idle and this build exposes
-  `--kv-offloading-size`. Less urgent now that the window is 4× larger; the only local
-  reference point for PCIe streaming is the
-  [FreeToken trial](../trials/freetoken.md), where it cost about half the throughput.
-- **Audio.** The encoder loads. Nothing was sent.
-- **Vision on real images and documents**, as against synthetic geometry.
-- **Levels above 256**, where the ladder was still climbing.
-- **Quality with thinking off.** The whole battery ran thinking on.
-- **Coherence across a long session.** Every quality item here is a single question
-  answered in isolation. Nothing in protocol `v1` covers whether a model holds context
-  and earlier decisions over a working session — not here and not for any other model in
-  this repository.

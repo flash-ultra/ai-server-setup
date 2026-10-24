@@ -152,13 +152,3 @@ points to within 12 %, which is weaker evidence than two full runs.
 **The mix stays cheaper than uniform traffic.** On B, 1.15 against 1.88 answers/s while
 output tokens per second rise from 339.5 to 536.2. Same effect as on A: with the engine
 as the bottleneck, longer requests are comparatively cheap.
-
-## Not measured
-
-- **Levels above 256.**
-- **A second run of configuration B.** The variance figure quoted above is from A.
-- **Slot counts above 6.** At Q6 the KV pool for a seventh slot no longer fits beside
-  the weights; at a lower quantisation it would.
-- **Whether the ceiling is the scheduler or the layer split.** Both ladders flatten near
-  1,400 output tok/s at ~42 % GPU. Separating the two would need a configuration where
-  the cards work simultaneously, which `-sm row` does not permit here.

@@ -54,7 +54,6 @@ unauthenticated inference endpoint on every interface the host has — bind it t
 or VPN address instead, and check what is actually reachable rather than assuming the
 host firewall covers it.
 
-
 Point `-m` at the **first** shard; llama.cpp finds the rest of the split itself. The
 `mmproj-*.gguf` files in the same repository are for vision input and are not used here.
 
@@ -97,12 +96,3 @@ hide behind, and still a third at 32.
 
 **MTP extends the range that scales.** Without it, throughput plateaus between 16 and 32
 (608.7 → 612.5). With it, the same step gains 31 % (625.3 → 816.9).
-
-## Still open
-
-- `--spec-draft-n-max` is at 2, the value the model card suggests. 1 and 3 were not tried
-- Slot count. 16 was chosen so all three models on this machine share one configuration;
-  this model had 42 GB of card left and would carry more
-- Where exactly llama.cpp loses the time. The engine comparison establishes *that* the
-  batching is the cause — same model, same card, 100 % under vLLM against 32 % here —
-  but not which part of the scheduler, which would need a profile rather than a sweep

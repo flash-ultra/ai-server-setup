@@ -266,22 +266,3 @@ request, so 30 parallel agent runs are 30.
 The practical consequence: **human users do not reach the ceiling.** It starts to matter
 when batch work arrives — indexing a corpus, an offline evaluation, overnight processing.
 Until then the shipped configuration is not a compromise, it is the right band.
-
-## Not measured
-
-- Repeat measurements at the peak. Every cell of the configuration sweep is a single
-  40 s window, and 19.65 against 19.32 sits inside the known 6 % spread — the optimum is
-  "between 768 and 1024", not 768
-- Stability of `max-running-requests 1024` under sustained load. It completed every
-  sweep level, but its neighbour at 768 crashes the scheduler outright, so a config
-  change would need a long run before anyone trusts it
-- Whether the `768` crash is specific to 192 requests per rank or to some other property
-  of that size. Only 64, 128, 192 and 256 per rank were tried, and only 192 failed
-- Draft acceptance under the mixed traffic — the mix was measured end to end, but
-  per-request acceptance was not recorded, so the assumed link between prompt
-  uniformity and acceptance remains untested
-- Sustained load beyond 40 s per level, which is where memory pressure and cache
-  eviction would appear
-
-The effect of thinking on cost per answer is measured separately in
-[reasoning-cost.md](reasoning-cost.md).

@@ -42,7 +42,6 @@ unauthenticated inference endpoint on every interface the host has — bind it t
 or VPN address instead, and check what is actually reachable rather than assuming the
 host firewall covers it.
 
-
 ## Pinned values
 
 | Setting | Value | Failure mode otherwise |
@@ -50,10 +49,3 @@ host firewall covers it.
 | Reasoning control | `reasoning_effort` | the chat template has no thinking switch; `thinking` and `enable_thinking` are both accepted and do nothing |
 | `-c` / `-np` | 32,768 / 16 | kept identical to the other two models on this machine so the comparison holds one configuration; this model has 44 GB of card left and would carry more |
 | Engine | llama.cpp only | `muse-glimmer` is unknown to the SGLang and vLLM images on this machine |
-
-## Still open
-
-- Speculative decoding — `meta-models/Muse-Glimmer-30B-assistant` exists but was never
-  converted to GGUF or tried
-- A newer SGLang or vLLM that knows the architecture, which would make this model part of
-  the [engine comparison](../../gemma-4-26b-a4b/engine-comparison.md)

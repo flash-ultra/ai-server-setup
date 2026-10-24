@@ -53,9 +53,3 @@ same cards [cannot switch thinking off](../../../minimax-m2-5/README.md#model-sp
 — no key moves it. Comparing its 4.25 answers/s at concurrency 32 against 11.90 here
 compares a thinking model with a non-thinking one. Against the `reasoning_effort=low` row,
 3.65, MiniMax is ahead.
-
-## Not measured
-
-- **`reasoning_effort` above `low`.** The protocol pins `low`; higher settings were not tried.
-- **Quality difference.** The whole point of thinking, and not measurable here.
-- **Concurrency other than 8 and 32.**

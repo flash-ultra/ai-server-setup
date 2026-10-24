@@ -22,6 +22,9 @@ throughput was not isolated.
 false` takes `reasoning_tokens` from 93 to 0. See the
 [field-name trap](../README.md#the-reasoning-text-is-in-reasoning-not-reasoning_content).
 
+**One run per arm.** The setups compared against here state two- or three-run
+spreads; this does not.
+
 ## Result
 
 <!-- protocol v1 · max_tokens 512 · 40 s/level · 3 warmup requests discarded · counted via usage fields -->
@@ -73,11 +76,3 @@ count does.
 The latency gap is wider than the throughput gap because the answers differ in length —
 53 tokens against 35. Per token the difference is 2.4× / (53/35) ≈ 1.6×, close to the
 0.60× on throughput.
-
-## Not measured
-
-- **A second run.** Every other single-stream figure in this repository is a two-run
-  spread; this is one run per arm, so nothing is known about variance here.
-- **Decode rate isolated from prefill.** Would need a fixed-length generation with the
-  prompt held out of the window.
-- **Without the embedding co-tenant.** `0.90` alone may differ.

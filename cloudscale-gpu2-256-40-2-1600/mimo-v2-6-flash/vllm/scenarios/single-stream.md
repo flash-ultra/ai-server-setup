@@ -49,8 +49,3 @@ against 1.70 here, which is the reminder that utilisation is not throughput.
 290 for DeepSeek with thinking on. The field is populated at all only because
 `--reasoning-parser mimo` is configured; without it the thinking block is not separated
 out and the split cannot be read.
-
-## Not measured
-
-- **Decode rate with prefill excluded.** `v1` does not produce it.
-- **A cold second run.** Both runs went against the same server process.

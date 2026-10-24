@@ -47,10 +47,3 @@ generating.
 
 **`reasoning_effort` is inert on this checkpoint.** 422 against 429 tokens. Only the
 chat-template switch works.
-
-## Not measured
-
-- Answer quality without thinking
-- Whether a shorter prompt would move this model into the regime where thinking-off pays
-  — the protocol prompt is fixed at ~1000 tokens, and that is what makes prefill dominant
-  here

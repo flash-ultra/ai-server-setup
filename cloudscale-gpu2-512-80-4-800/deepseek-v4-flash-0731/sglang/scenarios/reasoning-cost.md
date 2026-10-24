@@ -81,13 +81,3 @@ For workloads that do not need deliberation — classification, extraction,
 reformulation, routing — clients should send `chat_template_kwargs: {"thinking": false}`
 per request. On this measurement that is 3.5× the answers per second at a quarter of
 the latency, without changing the server configuration.
-
-## Not measured
-
-- Answer quality with thinking off. Only length and throughput were measured; whether
-  the shorter answers are as good is a separate question and needs a task-specific
-  evaluation, not a load test.
-- Whether a raised `max_tokens` recovers full-length answers with thinking on, and
-  what that costs in latency
-- The same comparison under the [mixed prompt traffic](concurrent-load.md#prompt-mix),
-  where reasoning share may differ by request shape

@@ -70,10 +70,3 @@ level. Holding the card full matters more than per-token speed once the queue is
 
 **A realistic prompt mix costs 18 %** — the largest of the three, 1.30 down to 1.07
 answers per second, and the only one where p50 also worsens.
-
-## Not measured
-
-- Speculative decoding for this model. `meta-models/Muse-Glimmer-30B-assistant` exists
-  as a draft checkpoint but is not in the GGUF package used here, so MTP was never on
-- Concurrency above 32
-- Sustained load beyond 40 s per level

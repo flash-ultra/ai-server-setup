@@ -68,12 +68,3 @@ model heavy enough per token hides the gaps this scheduler leaves.
 actually improves slightly because the mix contains shorter requests. Total tokens per
 second fall much further (−63 %) for the same reason — that spread is an artefact of the
 mix, not a performance signal.
-
-## Not measured
-
-- Concurrency above 32 with a slot count to match. 16 slots was chosen to fit the same
-  configuration on all three models; this model had 42 GB of card left and would carry
-  more
-- Whether the utilisation curve recovers without MTP at levels above 32 — the control
-  run covers the same 1–32 range
-- Sustained load beyond 40 s per level

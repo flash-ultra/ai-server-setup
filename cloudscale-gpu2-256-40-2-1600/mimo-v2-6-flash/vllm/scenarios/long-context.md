@@ -53,11 +53,3 @@ attention or the smaller KV pool is unmeasured.
 
 **Both cards saturated throughout.** Prefill is the compute-heavy phase and the one where
 tensor parallelism pays.
-
-## Not measured
-
-- **Depths between 44,000 and 180,000.** The curve is anchored at two points from two
-  different configurations, which is not a curve.
-- **Anything past 196,608**, the served window. The engine estimates the ceiling at
-  198,208.
-- **Warm prefill.** This was the first long request the server saw.

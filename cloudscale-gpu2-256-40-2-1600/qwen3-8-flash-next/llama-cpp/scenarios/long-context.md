@@ -40,13 +40,3 @@ this directory where the second card contributes meaningfully.
 **2.5× GLM-5.3-Flash on the same engine**, 1343 against ~530 tok/s — and still a fifth of
 [DeepSeek-0731](../../../deepseek-v4-flash-0731/sglang/scenarios/long-context.md) at 6823.
 Two minutes to first token against twenty-six seconds for the same prompt.
-
-## Not measured
-
-- **The full 262,144 context.**
-- **A second run.** Prefill here is a single measurement.
-- **Configuration B.** The current configuration runs UD-Q6_K_XL across six slots. A
-  needle test does not carry over untested: each slot holds 262,144 tokens as before,
-  but the pool is six times larger and the quantisation differs. Re-running this
-  scenario on B is the open item with the shortest path — one `--scenario longctx`
-  invocation against the running server.

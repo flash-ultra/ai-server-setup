@@ -43,7 +43,6 @@ unauthenticated inference endpoint on every interface the host has — bind it t
 or VPN address instead, and check what is actually reachable rather than assuming the
 host firewall covers it.
 
-
 ## Pinned values
 
 | Setting | Value | Failure mode otherwise |
@@ -52,9 +51,3 @@ host firewall covers it.
 | `-np` | 16 | `-c` ÷ `-np` is the per-slot budget and must exceed prompt + `max_tokens`; at 32 slots each gets 1024 tokens and the protocol prompt no longer fits |
 | Thinking switch | `enable_thinking` | the protocol default `thinking` is accepted and ignored |
 | Sampling | `1.0 / 0.95 / 64` | checkpoint calibration; not varied |
-
-## Still open
-
-- Whether more slots move the stall between 8 and 16 concurrent. With 15 GB of card left
-  the room for a larger `-c` is limited, which is the constraint that set `-np 16`
-- `--spec-draft-n-max` other than 2

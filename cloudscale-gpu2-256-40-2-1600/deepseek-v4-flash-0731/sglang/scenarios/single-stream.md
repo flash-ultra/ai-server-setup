@@ -45,7 +45,3 @@ The total column is also the only one that moved between runs — 2.3 % against 
 output — which fits prefill being the variable part.
 The 0 % reasoning share is real here and verified against the `reasoning_effort=low` rows
 in [reasoning cost](reasoning-cost.md).
-
-## Not measured
-
-- **Decode rate with prefill excluded.** `v1` does not produce it.

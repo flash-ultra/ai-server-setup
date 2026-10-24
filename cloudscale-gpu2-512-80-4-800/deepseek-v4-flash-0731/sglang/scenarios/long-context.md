@@ -74,11 +74,3 @@ llama.cpp was never run at full length; its
 [long-context scenario](../../llama-cpp/scenarios/long-context.md) stops at 128k, where
 prompt processing had already fallen to 736 tok/s. Extrapolating that curve to 1M
 suggests well over an hour of prefill, against the 7:51 measured here.
-
-## Not measured
-
-- Warm run against the same context to quantify the prefix-cache benefit
-- Intermediate depths (256k, 512k) to map the prefill decay curve
-- Whether `SGLANG_SM120_INDEXER_SPLIT` is actually engaging at this length
-- Concurrent long-context requests — the reference recipe advises keeping concurrency
-  at or below 32 for cold large contexts

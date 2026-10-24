@@ -83,9 +83,3 @@ think".
 
 **Context is 196,608, not 262,144.** `max_position_embeddings` of the checkpoint. A
 gateway that advertises more will produce `ContextWindowExceededError` mid-session.
-
-## Still open
-
-- **No quality measurement.** The reason the model was tried at all.
-- **Eagle3 speculative decoding untested.** vLLM registers the architecture; whether a
-  draft checkpoint exists for M2.5 was not checked.

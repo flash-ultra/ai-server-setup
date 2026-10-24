@@ -60,11 +60,3 @@ point, it is the same one with a short preamble.
 those 21 characters are worth 43 % of the answer rate is a quality question this scenario
 cannot answer. The [quality battery](../../README.md#quality-checks-outside-the-protocol) was run
 with thinking on.
-
-## Not measured
-
-- **`reasoning_effort` above `low`.** The protocol pins `low`.
-- **`reasoning_effort: "none"`** as a scenario arm, although it was verified to work as a
-  switch. The scenario uses `enable_thinking`.
-- **Concurrency other than 8 and 32.**
-- **Quality with thinking off.** Every quality result in this directory is thinking on.

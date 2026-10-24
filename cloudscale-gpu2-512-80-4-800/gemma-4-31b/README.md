@@ -41,18 +41,3 @@ default `thinking` is accepted and ignored, and `reasoning_effort` is inert.
 second do not move at all, and utilisation drops to 13 %. With a ~1000-token prompt and a
 36-token answer the request is prefill-bound. The identical switch is worth 2.6× on the
 sparse sibling — the saving only materialises where decode was the limit.
-
-## Still open
-
-- [The stall between 8 and 16 concurrent](llama-cpp/scenarios/concurrent-load.md#not-measured)
-  — throughput flat at 230–238 output tok/s while latency goes from 16 s to 41 s; whether
-  more slots move it was not tried
-- Whether the engine comparison run for the sparse sibling reproduces here. Only
-  llama.cpp was measured for this model
-
-### Not planned
-
-- **SGLang and vLLM for this model.** The
-  [engine comparison](../gemma-4-26b-a4b/engine-comparison.md) was run on the sparse
-  variant, which is the one worth serving; repeating it here would measure a model
-  nobody would deploy on this hardware

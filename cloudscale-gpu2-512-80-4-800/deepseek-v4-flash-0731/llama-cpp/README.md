@@ -195,34 +195,6 @@ instead of refining the slower one.
 
 ---
 
-## Still open
-
-Nothing, any more. Both remaining gaps were closed by decision rather than by
-measurement, when the stack stopped being a fallback:
-
-- ~~`--spec-draft-n-max` 1 vs 3~~ — would tune a stack nothing runs on
-- ~~1M context end to end~~ — same, and it would cost a 161 GB download first
-
-They are described in the scenario files as
-[not measured](scenarios/single-stream.md#not-measured), which stays true. What changed
-is that nobody is going to measure them.
-
-### Not planned
-
-Dropped for the reason given above: they move single-digit percentages against a gap
-of a factor 3 to 55.
-
-- `--threads` (default 80) against smaller values
-- KV-cache dtypes `-ctk` / `-ctv`
-- `-ts` balance (VRAM is unevenly distributed at 41–47 GiB)
-- `-np` above 8 — whether more slots move the TTFT cliff at concurrency 32, or only
-  spread the same starved compute across more queues
-
-These are listed so nobody re-derives them as fresh ideas. If this setup ever returns
-to production, they are the place to start.
-
----
-
 ## What this setup is still good for
 
 The properties that made it attractive still hold and are worth remembering for the

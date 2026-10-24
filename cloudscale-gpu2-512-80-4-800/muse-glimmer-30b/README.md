@@ -44,17 +44,3 @@ and `reasoning_effort` is inert.
 
 **No speculative decoding.** `meta-models/Muse-Glimmer-30B-assistant` exists as a draft
 checkpoint but is not part of the GGUF package used here.
-
-## Still open
-
-- [Speculation](llama-cpp/scenarios/concurrent-load.md#not-measured) — the draft
-  checkpoint exists and was never converted or tried
-- [`reasoning_effort` beyond `low`](llama-cpp/scenarios/reasoning-cost.md#not-measured)
-- Whether the missing template switch is an omission in this GGUF conversion or upstream
-
-### Not planned
-
-- **Vision.** The model is multimodal and `bench.py` is text-only; the `mmproj` weights
-  were deliberately left undownloaded
-- **SGLang and vLLM.** Neither engine version on this machine knows the `muse-glimmer`
-  architecture — llama.cpp is currently the only option, which is itself the finding

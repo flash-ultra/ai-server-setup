@@ -53,12 +53,3 @@ relationship is exactly reversed.
 12× token reduction with **no** change in answers per second, because its bottleneck is
 prefill rather than decode. Thinking-off is a decode-side saving; it only shows up where
 decode was the limit.
-
-## Not measured
-
-- **Answer quality without thinking.** Characters per answer rise, which says nothing
-  about whether the answers are as good. This is the same open question the DeepSeek-V4
-  series carries, and it needs a task-specific evaluation rather than a throughput run
-- Intermediate settings — the template exposes on and off, and nothing was tried between
-- Whether the truncation at `max_tokens` 512 would disappear at a larger budget, and what
-  that would do to the comparison

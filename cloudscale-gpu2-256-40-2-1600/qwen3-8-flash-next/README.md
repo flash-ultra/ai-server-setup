@@ -123,15 +123,3 @@ a larger per-slot budget loads without an error.
 **Reasoning share reads 0 %.** llama.cpp does not send
 `completion_tokens_details.reasoning_tokens`. It means "not reported" — 182 tokens for a
 three-sentence summary says otherwise.
-
-## Still open
-
-- **Whether thinking can be switched off.** Not probed; no key verified, so no
-  `reasoning` scenario. The Qwen model card documents `enable_thinking`,
-  `preserve_thinking` and `reasoning_effort`, but whether llama.cpp forwards them was not
-  tested. This is the cheapest remaining experiment and the one with the most upside:
-  thinking off would remove most of the answer-length gap against DeepSeek-0731.
-- **Quality.** No comparison against the other models on real work, and none between Q5
-  and Q6.
-- **Long context on six slots.** The 3-of-3 needle result at 180k was measured at one
-  slot on Q5.

@@ -48,20 +48,3 @@ llama.cpp with `--jinja` served it on. Any cross-engine number has to pin the st
 
 **llama.cpp reports no `reasoning_tokens`.** The reasoning-share column reads 0 % in every
 llama.cpp table here and means "not reported", never "did not think".
-
-## Still open
-
-- [Answer quality with thinking off](llama-cpp/scenarios/reasoning-cost.md#not-measured) —
-  the 2.6× is throughput; whether the answers hold up needs a task-specific evaluation
-- [A stock SGLang build](engine-comparison.md#not-measured) — the image used carries 33
-  DeepSeek-V4 patches, and its share of the gap to vLLM is unknown
-- [Concurrency above 32](engine-comparison.md#not-measured) — vLLM had not flattened
-- Vision. The checkpoint is multimodal, `bench.py` is text-only, and the `mmproj` weights
-  were deliberately not downloaded
-
-### Not planned
-
-- **Tuning llama.cpp further for this model.** The engine comparison shows the gap is
-  structural rather than a slot-count question; effort belongs on vLLM instead
-- **Quantised variants.** BF16 fits one card with 42 GB to spare, so there is nothing to
-  buy with a quant here

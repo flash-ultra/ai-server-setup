@@ -150,14 +150,3 @@ twice without incident.
 The kit documents this configuration as
 `MNBT=512 MAXLEN=1048576` for long context and marks it "capacity-verified; **load-tested
 only on short prompts**". This is what load-testing it finds.
-
-## Not measured
-
-- `--max-num-seqs` above 64. It is the leading explanation for both the dip at 64 and the
-  unsaturated cards, and varying it is the one experiment that would turn the reading
-  above into a finding. Each attempt costs an 18-minute restart
-- Whether a value between 512 and 2048 keeps the larger KV pool without crossing the
-  workspace lock. Only the two endpoints were run
-- Concurrency above 256, and sustained load beyond the 40 s window at any level
-- A third run of the ladder. Two runs establish that the middle of the curve is noisy;
-  they do not pin down its true shape

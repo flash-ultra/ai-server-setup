@@ -115,28 +115,3 @@ SM120 — use 7.
 - [HF discussion #22](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731/discussions/22) — community results on the same GPU configuration
 
 Setup-specific sources are listed in the respective setup README.
-
-## Still open
-
-The questions that would change a decision. Each is owned by the document that would
-answer it.
-
-- [DSpark correctness under bursty load](sglang/README.md#still-open) — five cold
-  starts, to rule out silent draft corruption with more than a single-run confidence
-- [Prefill decay between 128k and 1M](sglang/scenarios/long-context.md#not-measured) —
-  only the two endpoints are measured, the curve between them is guessed
-- [Prefix-cache benefit on a warm 1M context](sglang/scenarios/long-context.md#not-measured)
-  — decides whether the 7:51 min cold prefill is a one-off or a per-query cost
-- [Answer quality with thinking off](sglang/scenarios/reasoning-cost.md#not-measured) —
-  the 8.75× cost saving is measured, but only length and throughput; whether those
-  answers are as good needs a task-specific evaluation
-- [Stability of the faster configuration](sglang/scenarios/concurrent-load.md#not-measured)
-  — `--max-running-requests 1024` measures 74 % better but sits next to a setting that
-  hard-crashes; repeat and sustained-load runs decide whether it can be adopted
-- ~~llama.cpp at full context~~ — dropped. The stack is no longer deployed and its
-  weights are gone, so closing this gap would mean re-downloading 161 GB to finish
-  measuring a setup nothing runs on
-
-Smaller gaps, and the knobs deliberately dropped when the llama.cpp series was cut
-short, are listed in the [SGLang](sglang/README.md#still-open) and
-[llama.cpp](llama-cpp/README.md#not-planned) setup READMEs.

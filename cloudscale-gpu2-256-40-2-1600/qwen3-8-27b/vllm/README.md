@@ -138,21 +138,3 @@ Here the capability is in the weights that were loaded anyway.
 | [quality](scenarios/quality.md) | measured — `q1`, both arms |
 
 **The only setup in this repository with a complete series under both protocols.**
-
-## Still open
-
-- **Every `v1` figure here is a single run.** DeepSeek's series states a ≤ 5 %
-  run-to-run spread from three runs; nothing is known about variance in this one. That
-  is the cheapest gap to close and it bounds how hard any of the comparisons can be
-  pushed.
-- **The thinking-on ladder had not flattened at 256**, gaining 16–18 % over 128. The
-  protocol stops there; `--levels 256,384,512` would find the real ceiling, as it did
-  for DeepSeek.
-- **Single-card operation.** 51.8 GiB of weights fit on one 95.6 GiB card, which no other
-  large model here manages. What that costs in tokens per second, and what the freed card
-  could then host, is unmeasured — and it is the question that would change the machine's
-  capacity plan.
-- **Vision quality.** It answers correctly on an ad-hoc test image. No benchmark was run.
-- **The last 22,000 tokens of the window.** Retrieval is verified to 240,000 of 262,144.
-- **Whether the embedding co-tenant costs throughput.** Every number here was measured
-  at `0.82` with it resident. The comparison setups had the cards to themselves.

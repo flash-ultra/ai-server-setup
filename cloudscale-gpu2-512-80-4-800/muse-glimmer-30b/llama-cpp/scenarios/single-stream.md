@@ -33,8 +33,3 @@ the Gemma checkpoints; the rest is a dense 30 B forward pass.
 **97 % utilisation, and it stays there.** Unlike both Gemma runs, this model holds
 92–99 % across the whole concurrency sweep — the observation that made it the control for
 llama.cpp's idle time on the other two.
-
-## Not measured
-
-- Time to first token
-- The same figure with a draft model, which exists upstream but not in this GGUF package

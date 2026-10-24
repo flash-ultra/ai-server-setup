@@ -120,18 +120,3 @@ this setup does not think unless asked. `reasoning_effort=low` is what turns it 
 litellm gateway with `--reasoning-parser deepseek-v4` the field is populated. A 0 % in
 these tables means "thinking was off", verified against the `reasoning_effort=low` rows —
 not "not reported".
-
-## Still open
-
-- **Speculative decoding not configured.** DSpark runs on the
-  [four-card setup](../../cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/sglang/README.md)
-  and nothing here uses it. That setup measures 131.2 tok/s single-stream against 75.3
-  here — a gap currently attributed to card count, though speculation is an untested part
-  of it. The cheapest remaining experiment with real upside.
-- **`--mem-fraction-static` never swept.** 0.93 was carried over from the NVFP4 setup;
-  `0.85` is known to fail. Where the floor actually sits decides whether anything can run
-  beside this model — see the [setup README](sglang/README.md#still-open).
-- **Levels above 512**, where the ladder was still climbing.
-- **The full 1M context.** The pool holds 1,382,912 tokens, but `--context-length` is
-  262,144, so reaching it needs a restart rather than a longer prompt.
-- **No quality measurement**, in either thinking arm.

@@ -20,6 +20,8 @@ thinking off changes nothing". Verified before the run: `enable_thinking: false`
 
 Against the engine on `127.0.0.1:8001` directly, embedding model resident.
 
+**One run per cell.**
+
 ## Result
 
 <!-- protocol v1 · max_tokens 512 · 40 s/level · 3 warmup requests discarded · counted via usage fields · thinking key: enable_thinking -->
@@ -55,14 +57,3 @@ it produced *more*, while producing 3.7× fewer tokens. A stream-delta count tha
 **Both cards hold 100 % in all six rows**, including the thinking-off rows at
 concurrency 8 where only 4.72 answers per second are coming out. Utilisation says
 nothing about headroom on this setup.
-
-## Not measured
-
-- **`reasoning_effort` values other than `low`.** `medium` and `high` were not run, so
-  the dial is characterised at one position.
-- **Whether the reduced thinking at `low` costs quality.** The
-  [`q1` runs](quality.md) used the default and the off arm; the middle setting has no
-  quality number against it. That is the measurement that would make the dial usable as
-  a policy rather than a curiosity.
-- **Concurrency above 32**, which is where the arms diverge most in the
-  [full ladder](concurrent-load.md).

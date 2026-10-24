@@ -36,11 +36,3 @@ Both services sit behind one port, because the gateway expects a single upstream
 `api-router.py` dispatches on the request path — anything containing `/embeddings` goes
 to 8002, everything else to 8001 — and runs as a systemd unit with `Restart=always`, so
 the split survives a reboot like the two containers do.
-
-## Not measured
-
-- **Throughput and latency under concurrency.** The 0.03 s figure is one call with three
-  short inputs through the router.
-- **Behaviour when both services are loaded at once.** The chat model's KV pool and this
-  model's allocation are static, so they should not contend for memory — but no test ran
-  generation and embedding under simultaneous load.

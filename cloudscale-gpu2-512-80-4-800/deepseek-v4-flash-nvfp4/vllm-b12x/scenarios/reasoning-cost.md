@@ -72,15 +72,3 @@ off. The 0731 comparison had 96 % of its tokens inside the thinking block.
 
 **So the server default is already the cheap mode.** The expensive mode has to be asked
 for by name, and asking for the cheap one explicitly is a no-op.
-
-## Not measured
-
-- Whether `reasoning_effort` at `medium` or `high` produces better answers for its cost.
-  Only `low` was run, and only against the default
-- Answer quality in any variant. The table measures length and throughput; that
-  `reasoning_effort: low` adds no visible detail is an observation about one prompt at one
-  answer length, not an evaluation
-- Whether `reasoning_content` is populated in the response body even though
-  `reasoning_tokens` is not. The parser is configured, so the text may well be split
-  correctly while only the usage accounting is missing — a single non-streaming request
-  with a thinking-heavy prompt would settle it

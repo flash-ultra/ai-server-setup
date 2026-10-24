@@ -163,26 +163,3 @@ There is no `--restart unless-stopped` in the kit's script. On this machine that
 alone: an engine that dies from the workspace lock would be restarted into the same
 configuration and die again, so an automatic restart would convert a visible failure into
 a loop.
-
-## Still open
-
-- [`--max-num-seqs` above 64](scenarios/concurrent-load.md#not-measured) — the leading
-  explanation for both the throughput dip at concurrency 64 and cards that never pass 87 %.
-  The one experiment that would turn a reading into a finding
-- [A batch budget between 512 and 2048](scenarios/concurrent-load.md#not-measured) —
-  whether the 56 % larger KV pool is reachable without crossing the workspace lock
-- [Long context](#scenarios) — the pool was sized for 262,144 and nothing longer than
-  ~1200 tokens was ever sent. The kit's 1M claim is capacity-verified only, and the
-  configuration it needs is the one that fails under load
-- [Why the pool is 11 % below the reference](#the-kv-pool-is-set-by-the-batch-budget-not-by-vram)
-- [Whether `reasoning_content` is populated](scenarios/reasoning-cost.md#not-measured)
-  even though `reasoning_tokens` is not
-
-### Not planned
-
-- **MTP off as a control on this machine.** The kit publishes +38 % from speculation and
-  this machine reproduces the "on" half of that comparison closely, so the remaining value
-  is confirmation rather than decision-making — at the price of a 19-minute restart plus a
-  second one to get back. Dropped deliberately, not overlooked
-- **MARLIN path.** Slower by the kit's own numbers (~64 tok/s single-stream against 159)
-  and its MTP is broken. Nothing to decide

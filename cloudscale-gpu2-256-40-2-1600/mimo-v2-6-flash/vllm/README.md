@@ -162,19 +162,3 @@ have reported "disabling thinking changes nothing", which is the false negative 
 | [concurrent load](scenarios/concurrent-load.md) | measured |
 | [long context](scenarios/long-context.md) | measured at 180,000 tokens |
 | [reasoning cost](scenarios/reasoning-cost.md) | measured — the key was verified first |
-
-## Still open
-
-- **The last 33,000 tokens.** The engine estimates 198,208 and the configuration stops at
-  196,608. Whether anything between there and 262,144 is reachable by trimming CUDA graph
-  sizes or `--max-num-batched-tokens` was not tried.
-- **The safety margin at `0.98`.** One percentage point of headroom was given up for the
-  window. No out-of-memory event was observed across the full ladder and a 180,000-token
-  prefill, but the machine was not run at `0.98` for days.
-- **Audio.** The model accepts it and the engine loads the encoder. Nothing was sent.
-- **Images.** Same: the capability is loaded, no image was measured.
-- **CPU offload.** This build exposes `--cpu-offload-gb`, `--kv-offloading-size` and
-  `--kv-offloading-backend`. With 230 GB of host RAM idle, offloading KV is the obvious
-  route to a larger context. Untested, and the only local reference point for PCIe
-  streaming is the [FreeToken trial](../../trials/freetoken.md), where it cost about half
-  the throughput.

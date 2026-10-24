@@ -74,9 +74,3 @@ flattens is unmeasured.
 MiMo served a fifth of DeepSeek's context, which made the batch comparison unfair. It now
 serves 196,608 — the same as MiniMax, three quarters of DeepSeek — at the same throughput
 it had at 49,152. The ranking above does not depend on a smaller window.
-
-## Not measured
-
-- **Levels above 256**, where the curve was still rising.
-- **A second full run.** The partial earlier run covers levels 1–64 only.
-- **The mixed-traffic arm** beyond the uniform row.

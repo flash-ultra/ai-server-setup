@@ -45,12 +45,3 @@ template; with it, the measurement says the same thing.
 **Utilisation stays at 88–97 % in every variant**, including the ones that shorten the
 output. The card keeps working regardless of how much of the generation is trace, which
 is consistent with this model running without speculative decoding.
-
-## Not measured
-
-- `reasoning_effort` at settings other than `low` — the protocol tests one step, and
-  whether `medium` or a disable value exists on this checkpoint was not explored
-- Answer quality at reduced effort. Characters per answer rise; whether the answers hold
-  up is a separate question
-- Whether the missing template switch is an omission in this GGUF conversion or in the
-  upstream checkpoint

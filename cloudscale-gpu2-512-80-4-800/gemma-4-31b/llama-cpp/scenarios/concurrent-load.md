@@ -54,10 +54,3 @@ directory for choosing a sparse model when a single card has to serve load.
 
 **A realistic prompt mix costs 13 %.** Answers per second 0.80 → 0.70. The much larger
 drop in total tokens per second is an artefact of the mix containing shorter prompts.
-
-## Not measured
-
-- Concurrency above 32, and whether more slots would move the stall point
-- The same sweep without MTP at levels above 1 — the control run in the setup README
-  covers this model's sibling, not this one
-- Sustained load beyond 40 s per level

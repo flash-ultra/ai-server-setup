@@ -54,14 +54,3 @@ MiniMax under vLLM reported
 Under SGLang the streaming path returns the answer intact. **That narrows the open
 `bench.py` bug to the vLLM combination** rather than to the scenario or to long prompts in
 general — which was not knowable from a single engine.
-
-## Not measured
-
-- **The full 1M context.** `max_total_num_tokens` is 1,382,912, so one 1M request fits the
-  pool arithmetically, but `--context-length` is set to 262,144 — reaching it needs a
-  restart, not just a longer prompt. Concurrency would drop to one. Untested.
-- **Between 180k and 262,144**, the actual served ceiling. The curve is mapped only to
-  180k, and whether it stays flat to the top of the served window is unknown.
-- **Warm prefill.** Every run here was the first request at its depth. What a repeated
-  query against the same context costs — the prefix-cache benefit — is unmeasured, and it
-  decides whether the 25 s is a one-off or a per-query cost.

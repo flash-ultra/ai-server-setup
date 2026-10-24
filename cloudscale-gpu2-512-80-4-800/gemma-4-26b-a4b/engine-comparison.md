@@ -110,14 +110,3 @@ throughput difference was the trace, not the engine.
 written into the output header, so the state is pinned rather than inherited. The rule
 generalises: **anything an engine defaults to is a variable in a cross-engine comparison
 until it is set explicitly.**
-
-## Not measured
-
-- A stock SGLang build. The image here is the DSv4 fork with 33 patches; how much of the
-  gap to vLLM belongs to the fork is unknown
-- Concurrency above 32, where vLLM had not flattened and llama.cpp had long since
-- The same comparison with thinking on. Every number here is thinking-off; the
-  [model's own scenarios](llama-cpp/scenarios/concurrent-load.md) cover thinking-on but
-  only on llama.cpp
-- Whether more slots would move llama.cpp's stall point. 16 slots was chosen to fit one
-  configuration across three models, and `-c` ÷ `-np` had to stay above the prompt length

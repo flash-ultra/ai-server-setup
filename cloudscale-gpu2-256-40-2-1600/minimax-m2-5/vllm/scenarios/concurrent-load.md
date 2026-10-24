@@ -110,9 +110,3 @@ larger answers. Total tok/s drops further because the reasoning share differs pe
 **Both cards sit at 100 % at every level in both runs.** No divergence between the pair,
 no unsaturated levels. On the older machine the same measurement peaked at 87 % with the
 two cards up to a factor of two apart.
-
-## Not measured
-
-- **Levels above 256.**
-- **Effect of `--max-num-seqs`.** Not swept; 32 was chosen, not derived.
-- **A third run.** Two points bound a spread, they do not describe a distribution.

@@ -46,12 +46,3 @@ the defaults of the release.
 | [concurrent load](scenarios/concurrent-load.md) | measured |
 | [long context](scenarios/long-context.md) | measured, with a harness correction |
 | reasoning cost | **not measured** — no key disables thinking, [why](../README.md#model-specific-gotchas) |
-
-## Still open
-
-- **`--max-num-seqs 32` was not swept.** It was chosen, not derived. The concurrency
-  ladder runs past it to 256 without a dip, so it is not obviously wrong, but no
-  configuration sweep was done.
-- **Speculative decoding untried.** vLLM registers `Eagle3MiniMaxM2ForCausalLM`.
-- **KV cache left at default dtype.** fp8 was not tested; there was no memory pressure
-  that would have motivated it.

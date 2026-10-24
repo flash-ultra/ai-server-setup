@@ -74,14 +74,3 @@ per step. The spec config draws **two** (`num_speculative_tokens: 2`), so the di
 the step count, not the draft count: `1 + 708/(1096/2)` = 2.29, where the script prints
 1.65. The reference run's per-position rates confirm the corrected form —
 `1 + 0.727 + 0.432` = 2.16 is the same quantity, computed the same way.
-
-## Not measured
-
-- Whether the 64.6 % acceptance holds on prompt shapes other than prose. The kit reports
-  58 % on diverse text against 94 % on a repeat-this-sentence prompt, so the figure is
-  known to be text-dependent and this measurement uses a single prose prompt
-- Answer quality against the BF16 checkpoint. Only speed was measured; whether the
-  NVFP4 quantisation costs accuracy on this hardware is untested here
-- MTP off as a control on this machine. The kit publishes 108.8 tok/s without
-  speculation against 150.6 with it (+38 %); reproducing that split would cost an
-  18-minute restart and was not run

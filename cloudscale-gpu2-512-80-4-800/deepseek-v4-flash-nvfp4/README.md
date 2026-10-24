@@ -125,22 +125,3 @@ reported 1.65 where the correct figure is 2.29 — the reference run's per-posit
   — checkpoint and model card
 - [`deepseek-ai/DeepSeek-V4-Flash`](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash)
   — base model
-
-## Still open
-
-Each question is owned by the document that would answer it.
-
-- [`--max-num-seqs` above 64](vllm-b12x/scenarios/concurrent-load.md#not-measured) — the
-  single experiment that would explain the dip at concurrency 64, the 74 % spread and two
-  cards that never saturate. Everything about the load picture is provisional until it runs
-- [A batch budget between 512 and 2048](vllm-b12x/scenarios/concurrent-load.md#not-measured)
-  — whether the larger KV pool is reachable without the workspace-lock crash
-- [Long context at all](vllm-b12x/README.md#still-open) — the kit's 1M claim is
-  capacity-verified only, and the configuration it needs is the one that fails under load.
-  This is the largest untouched area
-- [Answer quality under NVFP4](vllm-b12x/scenarios/single-stream.md#not-measured) — only
-  speed was measured; whether the quantisation costs accuracy is untested
-- [Why the KV pool is 11 % below the reference](vllm-b12x/README.md#the-kv-pool-is-set-by-the-batch-budget-not-by-vram)
-
-Smaller gaps and the knobs deliberately dropped are in the
-[setup README](vllm-b12x/README.md#still-open).

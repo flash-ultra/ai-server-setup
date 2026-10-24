@@ -56,13 +56,3 @@ table above is what is bought with it — and for IFEval the answer is a lot.
 **Which arm to run is therefore a workload decision, not a default.** Short factual
 turns at high concurrency: off. Agent loops that must honour a format and a plan:
 on, and accept a quarter of the throughput.
-
-## Not measured
-
-- **Anything beyond 200 samples.** stderr sits near 0.02; differences under ~5 points
-  between models are not resolvable at this size.
-- **`reasoning_effort` above `low`.** The protocol pins `low`.
-- **Agentic benchmarks.** `swe_bench` and the tool-use evals ship with
-  `inspect_evals` and need a sandbox; nothing was run.
-- **Vision benchmarks.** `mmmu` and `mathvista` ship with `inspect_evals` but do not
-  apply here — DeepSeek-0731 has no vision tower.

@@ -34,8 +34,3 @@ rises, down to 33 % at 32 — see [concurrent load](concurrent-load.md).
 
 **438 tokens per answer against a 512 budget**, with thinking on. Most of that is trace;
 [reasoning cost](reasoning-cost.md) separates the two.
-
-## Not measured
-
-- Time to first token — the protocol's single-stream scenario reports end-to-end latency
-- The same figure without MTP. The [control run](../README.md) covers the sparse sibling

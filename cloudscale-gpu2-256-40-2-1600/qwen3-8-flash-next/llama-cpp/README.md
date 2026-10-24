@@ -121,16 +121,3 @@ the latter the container exits immediately with
 | [concurrent load](scenarios/concurrent-load.md) | measured on A (two runs) and B, plus a slot sweep |
 | [long context](scenarios/long-context.md) | measured on A only |
 | reasoning cost | **not measured** — no thinking key verified, and an unverified key produces a false negative |
-
-## Still open
-
-- **`GGML_CUDA_FA_ALL_QUANTS` is off** in this build, so a quantised KV cache is not
-  available. It roughly doubles build time and was not needed here.
-- **Long context on configuration B.** The 3-of-3 needle result at 180k was measured on
-  A. Six slots change the KV layout, so it does not carry over untested.
-- **Where the 34.6 GiB live.** Rebuilding with a verbose load log, or a build that prints
-  per-buffer allocation, would settle it.
-- **What sets the ~1,400 output tok/s ceiling.** Both configurations flatten there at
-  about 42 % GPU, so it is not the slot count — that was measured, not assumed. Whether
-  it is llama.cpp's scheduler or the layer split itself cannot be separated on these
-  cards, because `-sm row` does not load.

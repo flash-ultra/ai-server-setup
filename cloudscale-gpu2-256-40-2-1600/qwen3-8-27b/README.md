@@ -98,25 +98,3 @@ which breaks the documented way of checking which arm you are on.
 
 **The only setup here complete under both `v1` and `q1`** — which is what makes the
 trade it offers legible at all.
-
-## Open questions that would change a decision
-
-Owned one level down, in [`vllm/README.md`](vllm/README.md#still-open) — summarised here,
-not duplicated:
-
-- **Variance.** Every `v1` figure here is one run; the comparison setups state spreads
-  from two or three. Nothing in the tables above should be pushed harder than that.
-- **Where the thinking-on ladder turns over.** It was still gaining 16–18 % at the
-  protocol's top level.
-- **Single-card operation**, which no other large model here can do. It would free a
-  whole card and change the machine's capacity plan.
-- **Vision quality.** Native images are a main argument for this model and nothing was
-  benchmarked.
-
-### Not planned
-
-- **A quantised variant.** It fits at BF16 with 14 GiB per card to spare, so quantisation
-  would trade measurable quality for headroom nothing currently needs. Revisit only if a
-  third service has to fit.
-- **Comparison against the `trials/` numbers.** Different protocol, by the rule that
-  [applies to that directory](../trials/README.md).

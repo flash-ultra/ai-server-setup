@@ -26,12 +26,3 @@ cosine similarity **0.850**, against **0.406** for an unrelated sentence. Three 
 ## Setup
 
 [vLLM 0.28.0, `--runner pooling`](vllm/) — one container, no separate inference stack.
-
-## Not measured
-
-- **Retrieval quality.** No MTEB run, no benchmark of any kind. "The strongest that
-  fits" is an argument from the model card, not from a measurement on this machine.
-- **Throughput.** No `v1` series. `v1` measures generation and does not apply unchanged
-  to an embedding endpoint; what the right protocol would be is itself undecided.
-- **Whether 4096 dimensions are worth their storage cost downstream.** The checkpoint
-  supports Matryoshka truncation to shorter vectors and nothing was compared.
