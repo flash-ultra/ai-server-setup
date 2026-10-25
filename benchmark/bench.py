@@ -17,7 +17,7 @@ Usage:
 Requires only the standard library. Targets any OpenAI-compatible /v1/chat/completions.
 """
 
-import argparse, json, random, statistics, subprocess, sys, threading, time
+import argparse, json, os, random, statistics, subprocess, sys, threading, time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
@@ -98,6 +98,10 @@ class GpuSampler:
 
 
 # ---------------------------------------------------------------- request
+# An engine that requires a key reads it from the environment, so it stays out of
+# the process list and the shell history. Unset means no Authorization header.
+API_KEY = os.environ.get("BENCH_API_KEY", "")
+
 def request(url, model, prompt, extra=None, max_tokens=MAX_TOKENS, timeout=3600, stream=False):
     """One completion. Returns usage-based metrics, or None on failure."""
     body = {"model": model, "messages": [{"role": "user", "content": prompt}],
@@ -108,9 +112,12 @@ def request(url, model, prompt, extra=None, max_tokens=MAX_TOKENS, timeout=3600,
         body.update(extra)
     if stream:
         body["stream"] = True
+    headers = {"Content-Type": "application/json"}
+    if API_KEY:
+        headers["Authorization"] = "Bearer " + API_KEY
     req = urllib.request.Request(url + "/v1/chat/completions",
                                  data=json.dumps(body).encode(),
-                                 headers={"Content-Type": "application/json"})
+                                 headers=headers)
     t0 = time.time()
     try:
         if stream:

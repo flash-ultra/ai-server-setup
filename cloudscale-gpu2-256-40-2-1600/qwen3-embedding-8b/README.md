@@ -2,7 +2,10 @@
 
 An embedding model sharing both cards with
 [Qwen3.8-27B](../qwen3-8-27b/) on
-[cloudscale `GPU2-256-40-2-1600`](../README.md). Set up 2026-10-24.
+[cloudscale `GPU2-256-40-2-1600`](../README.md). Set up 2026-10-24, **replaced on
+2026-10-25 by [Qwen3-Embedding-4B](../qwen3-embedding-4b/)** when the chat model
+changed and left 6.5 GiB per card instead of 14.1. The dimension went 4096 → 2560
+with it, which is an index rebuild rather than a setting.
 
 | | |
 |---|---|

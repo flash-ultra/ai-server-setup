@@ -31,6 +31,7 @@ disagree in ways that are worth seeing.
 
 | Model | Setup | Prefill tok/s at 180k | Decode tok/s at 1500 | `v1` window tok/s | Latency p50 |
 |---|---|---|---|---|---|
+| [DeepSeek-V4.1-Flash-1017](deepseek-v4-1-flash-1017/) · EXL3 3 bpw · images | vLLM + EXL3 plugin | **11,386** | 114.2–128.4 | **136.5** | 1.19 s |
 | [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) | SGLang + SM120 patchset | **7,133** | 95.0–95.1 | 75.3–75.5 | **0.47 s** |
 | [Qwen3.8-27B](qwen3-8-27b/) · BF16 · images | vLLM 0.28.0 | **4,207** | 48.6–49.0 | 51.9 on · 45.3 off | 3.84 s · 1.13 s |
 | [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) · images | vLLM, vendor image | **3,070** | **118.4–118.7** | 113.9–114.7 | 0.56–0.57 s |
@@ -41,14 +42,22 @@ disagree in ways that are worth seeing.
 
 | rank | by prefill | by decode |
 |---|---|---|
-| 1 | DeepSeek-0731 · 7,133 | MiMo · 118.4 |
-| 2 | Qwen3.8-27B · 4,207 | MiniMax · 116.6 |
-| 3 | MiMo · 3,070 | DeepSeek-0731 · 95.0 |
-| 4 | MiniMax · 2,580 | Qwen3.8-Flash-Next · 82.1 |
-| 5 | Qwen3.8-Flash-Next · 1,343 | Qwen3.8-27B · 48.6 |
+| 1 | DeepSeek-V4.1 EXL3 · 11,386 | MiMo · 118.4 |
+| 2 | DeepSeek-0731 · 7,133 | MiniMax · 116.6 |
+| 3 | Qwen3.8-27B · 4,207 | DeepSeek-V4.1 EXL3 · 114.2 |
+| 4 | MiMo · 3,070 | DeepSeek-0731 · 95.0 |
+| 5 | MiniMax · 2,580 | Qwen3.8-Flash-Next · 82.1 |
+| 6 | Qwen3.8-Flash-Next · 1,343 | Qwen3.8-27B · 48.6 |
 
-DeepSeek prefills 2.8× faster than MiniMax and decodes 0.8× as fast. Qwen3.8-27B is
-second on prefill and last on decode. **Which end matters is the workload**: long
+DeepSeek-0731 prefills 2.8× faster than MiniMax and decodes 0.8× as fast. Qwen3.8-27B is
+third on prefill and last on decode.
+
+**One row is near the top of both columns**, which until now nothing was:
+DeepSeek-V4.1-Flash at EXL3 3 bpw leads prefill by 1.6× and sits third on decode, 3.6 %
+behind the leader. It is also the only row here whose two decode runs disagree by more
+than 0.5 % — 114.2 against 128.4, a 12 % spread caused by
+[speculative decoding](deepseek-v4-1-flash-1017/vllm-exl3/scenarios/single-stream.md#decode-rate-measured-separately),
+where how many drafted tokens survive depends on what is being written. **Which end matters is the workload**: long
 documents, large agent contexts and RAG are prefill-bound; chat and long generated
 answers are decode-bound. A single "tokens per second" figure hides this completely.
 
@@ -93,8 +102,15 @@ field reports; see the caveat below the table.
 | [Qwen3.8-Flash-Next](qwen3-8-flash-next/) Q6 | not established | **1,390** | 7.47 | 186 | 133.9 s |
 | [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) | **off** | **1,159–1,183** | 32.10–32.65 | 35 | 7.96 s |
 | [Qwen3.8-27B](qwen3-8-27b/) | **off** | **718** | 13.45 | 53 | 19.94 s |
+| [DeepSeek-V4.1-Flash-1017](deepseek-v4-1-flash-1017/) EXL3 · **8 slots** | **on** | 1,296 | 7.88 | 165 | 105.62 s |
 
 All rows 2 cards; llama.cpp by layer split, everything else tensor-parallel.
+
+**The last row is sorted out of position on purpose.** It ran at the pack's default
+`--max-num-seqs 8` against vLLM's default of 256 and SGLang's dynamic pool, so past
+concurrency 8 it measures a queue rather than a batch — GPU utilisation *falls* from
+96–98 % at one request to 81–87 % at 256, which is the signature. Its place in this
+table says what that configuration does, not what the model can do.
 
 **The sort order is partly "who talks longest".** Tokens per answer spans 35 to 327 — a
 factor of nine, driven by the thinking state. MiMo is third on tokens per second and
@@ -114,36 +130,43 @@ figure.
 ## Quality
 
 Throughput is the whole of the table above and says nothing about whether the answers
-are right. Two models have been measured under protocol
-[`q1`](../benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai), both arms
-each, on the same day and against the engine directly:
+are right. Four models have been measured under protocol
+[`q1`](../benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai), against the
+engine directly:
 
 | Model | Arms | Result with thinking on |
 |---|---|---|
-| [Qwen3.8-27B](qwen3-8-27b/vllm/scenarios/quality.md) | both | 27 B dense BF16 — **first in four of five** |
-| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/sglang/scenarios/quality.md) | both | 284 B MoE FP8 — first on domain knowledge, second elsewhere |
+| [DeepSeek-V4.1-Flash-1017](deepseek-v4-1-flash-1017/vllm-exl3/scenarios/quality.md) | **one** — on | 763 B MoE at 3 bpw — **first in three of five**, 164 of 164 on HumanEval |
+| [Qwen3.8-27B](qwen3-8-27b/vllm/scenarios/quality.md) | both | 27 B dense BF16 — first in two, never worse than second |
+| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/sglang/scenarios/quality.md) | both | 284 B MoE FP8 — third or fourth in four of five |
 | [MiniMax-M2.5-NVFP4](minimax-m2-5/vllm/scenarios/quality.md) | **one** — no switch exists | 116 B MoE — last in three of five |
 
-| Benchmark | Qwen 27 B | DeepSeek 284 B | MiniMax 116 B |
-|---|---|---|---|
-| GSM8K | **0.990** | 0.970 | 0.985 |
-| MMLU-Pro | 0.850 | **0.870** | 0.825 |
-| HumanEval | **0.982** | 0.963 | 0.970 |
-| IFEval `prompt_strict` | **0.920** | 0.895 | 0.855 |
-| IFEval `inst_strict` | **0.943** | 0.928 | 0.909 |
+| Benchmark | DSV4.1 763 B | Qwen 27 B | DeepSeek 284 B | MiniMax 116 B |
+|---|---|---|---|---|
+| GSM8K | 0.970 | **0.990** | 0.970 | 0.985 |
+| MMLU-Pro | **0.880** | 0.850 | 0.870 | 0.825 |
+| HumanEval | **1.000** | 0.982 | 0.963 | 0.970 |
+| IFEval `prompt_strict` | **0.955** | 0.920 | 0.895 | 0.855 |
+| IFEval `inst_strict` | **0.969** | 0.943 | 0.928 | 0.909 |
 
-**Exactly one margin in that table clears its error bar.** Qwen beats MiniMax on IFEval
-`prompt_strict` by 6.5 points against a two-standard-error band of 6.3 — it clears by
-0.2, which is as marginal as a result can be while still counting. Everything else here,
-including Qwen's 4-of-5 lead over DeepSeek, sits inside the noise that 200 samples
-leaves.
+**Six pairwise margins clear two standard errors, and every one is instruction
+following or code.** Five belong to the top row — DeepSeek-V4.1 over MiniMax by 10.0
+points of IFEval `prompt_strict` against a band of 5.8, by 6.0 of `inst_strict` against
+3.9 and by 3.0 of HumanEval against 2.6; over DeepSeek-0731 by 6.0 against 5.3 and 4.1
+against 3.9. The sixth is Qwen over MiniMax on `prompt_strict`, 6.5 against 6.3. Nothing
+in the knowledge or arithmetic columns separates any pair.
 
-**So the finding is narrow and worth stating narrowly.** On following a written
-instruction exactly, a 27 B dense model at full precision measurably beats a 116 B MoE
-on this hardware. Everywhere else the three are tied, which is itself the useful result:
-**parameter count buys nothing measurable in answer quality across this field**, while
-it [costs a factor of 2.4 in decode speed](#per-stream-one-request-at-a-time) between
-the fastest and the slowest of the three.
+**The two extremes of parameter count cannot be told apart.** 763 B at three bits
+against 27 B dense at BF16, five benchmarks, not one margin clearing its band in either
+direction — the closest is HumanEval at +1.8 against 2.0. That is the third pairing here
+to land there, across a 28× spread: **parameter count buys nothing measurable in answer
+quality under `q1`.**
+
+**What it costs is visible one table up** — among the three models measured before
+today, [a factor of 2.4 in decode speed](#per-stream-one-request-at-a-time) between the
+fastest and the slowest. The top row is the first here that does not pay it: first on
+prefill and first on three quality columns at once, because quantisation rather than
+parameter count is what it spends.
 
 The side-by-side table lives in the
 [first of those two files](qwen3-8-27b/vllm/scenarios/quality.md#against-deepseek-v4-flash-0731)
@@ -158,11 +181,11 @@ same model scored 0.755 with a token cap of 8,192 and 0.850 at 50,000, purely be
 38 of 200 answers were cut off and graded wrong. That is now
 [pinned in the protocol](../benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai).
 
-**One model is now in both tables, and it comes first in one and last in the other.**
-Qwen3.8-27B has a complete `v1` series and a complete `q1` series; DeepSeek-0731 has
-`v1` and `q1`; every other row here has throughput only. That the two orderings are
-reversed for the one model measured both ways is the reason neither table ranks anything
-on its own.
+**Four models now carry both a `v1` and a `q1` series, and the two protocols no longer
+agree on anything.** Qwen3.8-27B is first on quality counted by direction and last on
+decode; MiniMax is second on decode and last on quality; DeepSeek-V4.1 is first on
+prefill and first on three quality columns. Only the last of those is near the top of
+both, and it is the newest row. Neither table ranks anything on its own.
 
 ## Trials
 
@@ -193,7 +216,18 @@ The binding constraint is weights, not KV cache. Measured per card against the
 | GLM-5.3-Flash NVFP4 | 90.7 GiB | **no** — nothing left for KV |
 | Qwen3.8-27B **BF16** | 25.9 GiB | yes — **and on a single card**, 51.8 GiB of 95.6 |
 | Qwen3-Embedding-8B BF16 | 7.1 GiB | yes, [beside the row above](qwen3-embedding-8b/) |
+| Qwen3-Embedding-4B BF16 | 3.7 GiB | yes, [beside a 320k chat model](qwen3-embedding-4b/) |
 | Qwen3.5-397B-A17B NVFP4 | 117.0 GiB | **no** — exceeds both cards combined |
+
+**One checkpoint does not belong in that table at all.**
+[DeepSeek-V4.1-Flash at EXL3 3 bpw](deepseek-v4-1-flash-1017/) is 315 GiB on disk, which
+by the table's convention would be 157 GiB per card and impossible. It runs, because
+most of the pack never reaches the cards: the Engram tables and the coldest 5,296
+experts stay in pinned host RAM and are read over PCIe, and the host side is what the
+machine's 251 GiB of RAM is actually for — 230 GiB in operation. On the cards it
+occupies 87,627 MiB including a 2 GiB KV reservation. **Disk size stops predicting
+card residency once a checkpoint is built to stream**, and this is the first one here
+that is.
 
 The two GGUF rows are the checkpoint size divided by two cards, like every other row.
 What llama.cpp actually places on the cards is
@@ -270,8 +304,10 @@ per second llama.cpp is ahead here. An earlier version of this page reported a
 "factor of 5 in throughput" from the answers-per-second column alone; that reading was
 wrong, and the single-slot configuration it was measured on made it worse.
 
-**Every multimodal model that fits on these two cards runs only under llama.cpp.** That is
-what images cost here.
+**That images only run under llama.cpp here was true when it was written and is not any
+more.** Qwen3.8-27B, MiMo-V2.6-Flash and DeepSeek-V4.1-Flash all serve images under
+vLLM on these cards. The llama.cpp penalty below stands; it is no longer the price of
+vision.
 
 ```
 prefill, tokens per second        0                              10500

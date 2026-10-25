@@ -22,6 +22,7 @@ Which model has been measured on which machine, and with what result.
 
 | Model | cloudscale `GPU2-512-80-4-800` | cloudscale `GPU2-256-40-2-1600` |
 |---|---|---|
+| **DeepSeek-V4.1-Flash-1017** · 763 B, 6/384 experts, **EXL3 3 bpw**, 2 cards | — | [vLLM + EXL3 plugin, pack's own recipe](cloudscale-gpu2-256-40-2-1600/deepseek-v4-1-flash-1017/) — **11,386 prefill tok/s at 180k**, the fastest here by 1.6× · decode 114.2–128.4 · **136.5 tok/s** single stream, p50 1.19 s · **3/3 needles at 960,000 tokens**, four times the next deepest · **1.000 on HumanEval** and first in three of five under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) · **images** · 8 engine slots by default, so its concurrency row measures a queue |
 | **Qwen3.8-27B** · dense **BF16**, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/qwen3-8-27b/) — thinking **on**: **1,821 output tok/s** @ C=256, 9.43 answers/s at 193 tokens · thinking **off**: **718 tok/s**, 13.45 answers/s at 53 tokens · 3/3 needles to **240k**, the deepest here · **0.6× DeepSeek on prefill**; decode 49.5 tok/s, both arms · best quality measured under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) · **images**, native · full precision |
 | **MiMo-V2.6-Flash-RL** · FP8, 2 cards | — | [vLLM, vendor image](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/) — **3,129 output tok/s** @ C=256 · **46.05 answers/s** at p50 5.74 s · thinking **on** · **images** · 100 % on both cards at every level · 196,608 context, 3/3 needles at 180k |
 | **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — **2,947–3,126 output tok/s** @ C=256 · 9.65–9.75 answers/s · decode 116.6 · **thinking cannot be switched off**, probed not assumed · quality under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai): last of three in three benchmarks, behind a 27 B dense model in all five |
@@ -35,12 +36,19 @@ Which model has been measured on which machine, and with what result.
 A model measured on several machines keeps one row and gains a column per machine, so
 the cross-hardware comparison lives here rather than in the directory tree.
 
-**Three models on the two-card machine now carry both a `v1` and a `q1` series, and the
-two protocols order them in reverse.** Qwen3.8-27B has the best answers and the slowest
-decode; MiniMax decodes 2.4× faster and comes last in three of five benchmarks. Across
-those three — 27 B dense, 116 B MoE, 284 B MoE — **parameter count buys nothing
-measurable in quality**: only one margin in the whole comparison clears two standard
-errors. It does cost a factor of 2.4 in decode speed.
+**Four models on the two-card machine now carry both a `v1` and a `q1` series, and for
+three of them the two protocols order them in reverse.** Qwen3.8-27B has the best
+answers of those three and the slowest decode; MiniMax decodes 2.4× faster and comes
+last in three of five benchmarks. Across 27 B dense, 116 B MoE and 284 B MoE,
+**parameter count buys nothing measurable in quality** while costing a factor of 2.4 in
+decode speed.
+
+**The fourth breaks the pattern, and quantisation is why.** DeepSeek-V4.1-Flash at three
+bits per weight leads prefill by 1.6× and is first in three of five quality columns at
+the same time — the first row here that is near the top of both protocols. It still does
+not separate from a 27 B dense model on quality: across a 28× parameter spread not one
+margin clears two standard errors in either direction. What three bits bought was the
+speed, not the answers.
 
 **The peak column is a pointer, not a ranking.** These rows do not share a workload: the
 DeepSeek and the two llama.cpp-only rows ran with thinking on, the Gemma-4-26B-A4B row

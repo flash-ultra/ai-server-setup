@@ -17,8 +17,10 @@ say so.
 ```
 
 Standard library only, no dependencies. Targets any OpenAI-compatible
-`/v1/chat/completions`. Output is Markdown tables that go straight into a scenario
-document, prefixed with a comment recording the protocol version.
+`/v1/chat/completions`. An engine that enforces a key reads it from `BENCH_API_KEY`
+in the environment, which keeps it out of the process list and the shell history;
+unset, no `Authorization` header is sent. Output is Markdown tables that go straight
+into a scenario document, prefixed with a comment recording the protocol version.
 
 ## What is fixed
 
