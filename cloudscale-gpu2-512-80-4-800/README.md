@@ -14,7 +14,59 @@ was measured on this machine.
 | Driver | 595.71.05, compute capability 12.0 (sm120) |
 | Interconnect | PCIe Gen 5 ×16, **no NVLink**, P2P working across all four cards |
 
-## Models tested
+## November 2026: the machine is back
+
+Re-provisioned on 2026-11-06 with the same four cards and a fresh Ubuntu 26.04 image. What
+changed against the August table above, and everything measured from here on, is on this
+page and in the model directories below; the hardware findings further down still hold.
+
+| | August 2026 | November 2026 |
+|---|---|---|
+| GPU | 4× RTX PRO 6000 Blackwell Max-Q, 97,887 MiB each | same — **95.6 GiB usable per card**, 382 GiB combined, 300 W per card (325 max) |
+| RAM / vCPU | 512 GB, 80 | 503 GB, 64 (AMD EPYC, no AVX-512, 4 NUMA nodes) |
+| Storage | 800 GB scratch + 200 GB system | 787 GB ephemeral disk at `/opt/llm` + 200 GB system; `/tmp` a 252 GB tmpfs |
+| OS / kernel | Ubuntu 26.04 | Ubuntu 26.04, kernel 7.0.0-43 |
+| Driver | 595.71.05 | **615.71.09**, open modules prebuilt by Ubuntu; CUDA 13.4, nvcc 13.4 |
+| Interconnect | PCIe Gen 5 ×16, no NVLink, P2P | same, `nvidia-smi topo -p2p r` OK between all four |
+| Engines | Docker + SGLang patchset, llama.cpp, vLLM | Docker 29 with nvidia-container-toolkit 1.20 (images on the ephemeral disk), `uv`, native llama.cpp b12167, Strata 0.2.11 |
+| Network | Tailscale | public IPv4/IPv6, ufw with only 22/tcp open; model ports stay on `127.0.0.1` |
+
+### Models measured, November 2026
+
+| Model | Setup | Status |
+|---|---|---|
+| [Qwen3.8-Flash-Next](qwen3-8-flash-next/) · IQ3_S GSQ-RCO and Q8_0 | [Strata 0.2.11, four-card layer split, 8 slots](qwen3-8-flash-next/strata/) | measured 2026-11-06 — **225 / 187 output tok/s single stream** (IQ3_S / Q8_0, the fastest in this repository), decode 222–254, **prefill 21,873 / 17,757 tok/s at 250k** (3/3 needles), 645 / 564 tok/s at C=8, queueing above 8 slots; cards at 20–34 % on the single stream · [`q1`](qwen3-8-flash-next/strata/scenarios/quality.md) IQ3_S: HumanEval 0.988 both arms, IFEval 0.910 on, MMLU-Pro 0.820 / 0.860 |
+| [Qwen3.8-Flash-Next](qwen3-8-flash-next/) · FP8 | [vLLM 0.33.0, TP=4, Docker](qwen3-8-flash-next/vllm/) | measured 2026-11-06 — `v1`, both thinking arms, full ladder · **2,275 output tok/s at C=256**, 110 single stream (**175 with the MTP draft**), decode 115 (163–192 with draft) · prefill 7.6–7.8 k tok/s, 3/3 needles at 250k · KV pool 3.6 M tokens · [`q1`](qwen3-8-flash-next/vllm/scenarios/quality.md) both arms incl. **HumanEval 0.976** (Docker sandbox), IFEval 0.930, MMLU-Pro 0.885 / 0.860 — equal to the IQ3_S Strata run on Rocky 2× RTX PRO 4500 |
+
+## Test list, November 2026
+
+The two-card cloudscale machine ([`GPU2-256-40-2-1600`](../../dist/cloudscale-gpu2-256-40-2-1600/README.md), the same RTX PRO 6000 twice instead of four times) has already measured MiMo-V2.6-Flash-RL, DeepSeek-V4.1-Flash-1017 as EXL3 and Qwen3.8-Flash-Next as UD-Q6_K_XL under the same protocols; those are the reference columns for the rows below.
+
+Requested 2026-11-06, each with throughput under protocol
+[`v1`](../../dist/benchmark/README.md) and quality under `q1`
+(GSM8K, MMLU-Pro, IFEval, both thinking arms where the model has a switch; HumanEval
+becomes possible here because Docker gives Inspect a sandbox). Sizes are the sum of the
+published `.safetensors`; the budget is 382 GiB minus KV cache, activations and graphs,
+so **roughly 280 GB of weights is the practical ceiling at TP=4.**
+
+| # | Model | Published weights | Fits? | Engine to try first | Notes |
+|---|---|---|---|---|---|
+| 1 | [Qwen3.8-Flash-Next-FP8](https://huggingface.co/Qwen/Qwen3.8-Flash-Next-FP8) · 125B-A6B + 51B n-gram + 4B MTP | 186 GB FP8 | **yes**, 47 GB/card | vLLM ≥ 0.32 (`Qwen4Exp`), SGLang ≥ 0.5.22 | the model that runs as IQ3_S under Strata on Rocky 2× RTX PRO 4500 (141 tok/s single stream, MMLU-Pro 0.895): first FP8 numbers and a `q1` on the 3-bit question. BF16 (360 GB) does not fit. The requested `Qwen3.8-Flash-Nextest` does not exist on the Hub (404 with the token) — read as Flash-Next |
+| 2 | [MiMo-V2.6-Flash-RL](https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Flash-RL) · 309B-A15B, 1M context, text + image + video + audio, MTP drafter | 178 GB FP8 | **yes**, 45 GB/card | vLLM ≥ 0.32 (MiMo-V2.6 FP8 KV fix), SGLang ≥ 0.5.21; the card's own image is `vllm/vllm-openai:mimov25-cu129` | from the [mimo-v26 collection](https://huggingface.co/collections/XiaomiMiMo/mimo-v26): `-MOPD` is the same size (distilled variant), `-Pro-RL` is 573 GB and out, `-Distill-Qwen-9B` (19 GB, dense) fits one card and is a cheap extra |
+| 3 | [GLM-5.3-Flash](https://huggingface.co/zai-org/GLM-5.3-Flash) · 320B-A18B, hybrid sparse + linear attention, mHC | 328 GB FP8 | **borderline**: 82 GB/card, ~13 GB left for KV | [`nvidia/GLM-5.3-Flash-NVFP4`](https://huggingface.co/nvidia/GLM-5.3-Flash-NVFP4) (official ModelOpt, "NVIDIA Blackwell", **204 GB**, 51 GB/card) under vLLM `--tensor-parallel-size 4 --enable-expert-parallel --kv-cache-dtype fp8` or SGLang `--quantization modelopt_fp4 --tp-size 4` | the FP8 original only as a fit probe with FP8 KV (vLLM 0.33 default for this model) and a short context; NVFP4 is the serving candidate. MIT licence |
+| 4 | [MiniMax-M3.1-Flash](https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash) · 428B-A23B per card, MiniMax Sparse Attention, 1M context, text + image + video, DSpark draft head | 252 GB MXFP8 | **yes**, 63 GB/card | SGLang 0.5.23 (lists M3.1-Flash explicitly), then vLLM (`MiniMaxM3Sparse…` rows exist for M3 / M3-MXFP8, M3.1 not named) | the risk is MXFP8 and the MSA kernels on sm_120; vLLM 0.33 mentions a CUTLASS MSA decode kernel. Released 2026-11-05, so the engines are fresh |
+| 5 | [DeepSeek-V4.1-Flash-1017](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017) (the latest V4) | 510 GB FP8 | **no** | GGUF only: [`ISTA-DASLab/DeepSeek-V4.1-Flash-1017-GSQ-RCO-GGUF`](https://huggingface.co/ISTA-DASLab/DeepSeek-V4.1-Flash-1017-GSQ-RCO-GGUF) (the quant family Strata serves) or `unsloth/…-GGUF` under llama.cpp built with nvcc 13.4 | the FP8 path exists on sm_120 (SGLang 0.5.20: "DeepSeek-V4 on RTX PRO 6000"), but the weights are 130 GB over the budget. Optional regression: [DeepSeek-V4-Flash-0731](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash-0731) (167 GB FP8), measured on the predecessor at 6,454 tok/s C=768 with a patched SGLang — stock SGLang now |
+| 5c | DeepSeek-V4.1-Flash-1017 · **EXL3 3 bpw** | [`diffbot/DeepSeek-V4.1-Flash-EXL3-3bpw-2x-RTX-PRO-6000`](https://huggingface.co/diffbot/DeepSeek-V4.1-Flash-EXL3-3bpw-2x-RTX-PRO-6000), 315 GiB incl. DSpark drafter | yes | the pack's own vLLM + `vllm_exl3` recipe (sm120 kernels built in the image, no GPU needed for the build) | measured on the two-card cloudscale machine at 136.5 tok/s single stream and 11,386 tok/s prefill ([page](../../dist/cloudscale-gpu2-256-40-2-1600/deepseek-v4-1-flash-1017/README.md)); here first at TP=2 on two cards (same cards, direct replication), then TP=4 if the plugin takes it |
+| 6 | [Ling-3.1-flash-1019](https://huggingface.co/inclusionAI/Ling-3.1-flash-1019) · `BailingMoeV3` hybrid MoE, 572 B | 574 GB FP8 | **no** as published | GGUF by [bartowski](https://huggingface.co/bartowski/Ling-3.1-flash-1019-GGUF) under llama.cpp: **IQ4_XS 317 GB** (4.25 bpw, imatrix) leaves ~22 GB per card for KV; Q3_K_M 275 GB as the roomier fallback | added 2026-11-06 at the user's request; same engine build as DeepSeek, so it queues behind it |
+| 1b | Qwen3.8-Flash-Next · **Strata** | IQ3_S GSQ-RCO (54.8 + 28.8 GB), the Rocky 2× RTX PRO 4500 setup | yes | Strata v0.2.x, four-card layer split, up to 8 slots | engine comparison on the same machine: Strata with its MTP draft against vLLM FP8 |
+| 5b | DeepSeek-V4.1-Flash-1017 · **Strata** | [GSQ-RCO 2.25 bpw](https://huggingface.co/ISTA-DASLab/DeepSeek-V4.1-Flash-1017-GSQ-RCO-GGUF): 155 GB backbone + 111 GB Engram | yes: experts all resident, Engram in RAM | Strata `--family deepseek41`, DSpark drafter `--dspark auto`, `--parallel` up to 8 | the second DeepSeek path next to llama.cpp; `q1` on both to price the 2.25 bits |
+
+Order: 1 → 2 → 3 → 4 → 5 → 6, then the two Strata runs (1b, 5b), which need their own build and the cards to themselves. The first two are plain FP8 under engines that name them;
+the third and fourth depend on Blackwell kernels for NVFP4 and MXFP8; the fifth and sixth need a
+GGUF engine built on the machine. Engines go on as Docker images (`vllm/vllm-openai:v0.33.0`,
+CUDA 13.0 only; `lmsysorg/sglang:v0.5.23`) with `/opt/llm/hf` mounted, llama.cpp native.
+
+## Models tested, August 2026
 
 | Model | Cards | Setup | Output tok/s | Answers/s | At | Details |
 |---|---|---|---|---|---|---|
@@ -140,4 +192,4 @@ vCPUs, so there is little reason to carry a generic multi-arch binary.
 
 ---
 
-*Hardware as of August 2026 · driver 595.71.05 · Ubuntu 26.04*
+*Hardware as of August 2026 · driver 595.71.05 · Ubuntu 26.04 — back in service November 2026, driver 615.71.09, see the top of this page*

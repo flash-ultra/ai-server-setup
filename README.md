@@ -10,7 +10,7 @@ configuration.
 | Machine | GPUs | Status |
 |---|---|---|
 | [`cloudscale-gpu2-256-40-2-1600/`](cloudscale-gpu2-256-40-2-1600/) | 2× RTX PRO 6000 Blackwell Max-Q (sm120), no NVLink | current |
-| [`cloudscale-gpu2-512-80-4-800/`](cloudscale-gpu2-512-80-4-800/) | 4× RTX PRO 6000 Blackwell Max-Q (sm120), no NVLink | superseded |
+| [`cloudscale-gpu2-512-80-4-800/`](cloudscale-gpu2-512-80-4-800/) | 4× RTX PRO 6000 Blackwell Max-Q (sm120), no NVLink, P2P | **back in service since 2026-11-06** (Ubuntu 26.04, driver 615) |
 
 Hardware determines what runs at all — kernel support, parallelism options, context
 capacity — so it is the top level here. Findings that only hold for one machine live
@@ -26,7 +26,7 @@ Which model has been measured on which machine, and with what result.
 | **Qwen3.8-27B** · dense **BF16**, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/qwen3-8-27b/) — thinking **on**: **1,821 output tok/s** @ C=256, 9.43 answers/s at 193 tokens · thinking **off**: **718 tok/s**, 13.45 answers/s at 53 tokens · 3/3 needles to **240k**, the deepest here · **0.6× DeepSeek on prefill**; decode 49.5 tok/s, both arms · best quality measured under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) · **images**, native · full precision |
 | **MiMo-V2.6-Flash-RL** · FP8, 2 cards | — | [vLLM, vendor image](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/) — **3,129 output tok/s** @ C=256 · **46.05 answers/s** at p50 5.74 s · thinking **on** · **images** · 100 % on both cards at every level · 196,608 context, 3/3 needles at 180k |
 | **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — **2,947–3,126 output tok/s** @ C=256 · 9.65–9.75 answers/s · decode 116.6 · **thinking cannot be switched off**, probed not assumed · quality under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai): last of three in three benchmarks, behind a 27 B dense model in all five |
-| **Qwen3.8-Flash-Next** · 512 experts, 10 active, 2 cards | — | [llama.cpp master, Q6 on 6 slots](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — **1,390 output tok/s** @ C=256 · 7.47 answers/s · **images** · pinned in the forties by the layer split |
+| **Qwen3.8-Flash-Next** · 125 B, 512 experts, 10 active | [vLLM 0.33 FP8 TP=4](cloudscale-gpu2-512-80-4-800/qwen3-8-flash-next/vllm/) — **2,275 output tok/s** @ C=256 · 110 single stream, **175 with the MTP draft** · prefill 7.8k, 3/3 at 250k · [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) HumanEval 0.976, IFEval 0.930 · [Strata 0.2.11, IQ3_S / Q8_0, 8 slots](cloudscale-gpu2-512-80-4-800/qwen3-8-flash-next/strata/) — **225 / 187 tok/s single stream**, **21,873 / 17,757 prefill tok/s**, 645 / 564 @ C=8, queue above, cards at 20–34 % | [llama.cpp master, Q6 on 6 slots](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — **1,390 output tok/s** @ C=256 · 7.47 answers/s · **images** · pinned in the forties by the layer split |
 | **DeepSeek-V4-Flash-0731** · 284 B | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/), 4 cards — **6,454 output tok/s** @ C=768 · 19.65 req/s · full 1M context verified | [same image at TP=2](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/), 2 cards — thinking **off**: **1,159–1,183 output tok/s** @ C=256, 32.10–32.65 answers/s at 35 tokens · thinking **on**: **3,584 tok/s**, 10.97 answers/s at 327 tokens · extended to C=512: **1,436.5 tok/s** and still climbing · spread ≤ 5 % |
 | **DeepSeek-V4-Flash-NVFP4** · 2 cards, [different release](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/README.md#what-this-is-not-comparable-to) | [vLLM B12X SM120 kit](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/) — **404 output tok/s** @ C=256 · 9.97 answers/s · 159–163 tok/s decode with MTP · non-monotone under load | — |
 | **Gemma-4-26B-A4B** · sparse, 1 card | [llama.cpp · SGLang · vLLM](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/) — 31.88 answers/s @ C=32 (vLLM; **token throughput under load not recorded** for that engine) · [vLLM 5.9× llama.cpp under load](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/engine-comparison.md) | — |
@@ -272,7 +272,7 @@ and a **284 B mixture-of-experts** at FP8 that activates 6 of 256 experts per to
 284 B model prefills faster, by a steady factor at every depth measured:
 
 | | 27 B dense | 284 B MoE | ratio |
-|---|---|---|---|
+|---|---|---|
 | Prefill at 64k | 5131 tok/s | 8227 | 0.62 |
 | Prefill at 128k | 4343 tok/s | 7480 | 0.58 |
 | Prefill at 180k | 4207 tok/s | 7133 | 0.59 |
