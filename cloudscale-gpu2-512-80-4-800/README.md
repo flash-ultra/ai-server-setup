@@ -54,7 +54,6 @@ on top, **about 280 GB of weights is the practical ceiling at TP=4**.
 | [GLM-5.3-Flash](glm-5-3-flash/) | NVIDIA NVFP4 (204 GB); the FP8 original is 328 GB | vLLM 0.33 TP=4 + EP | measured |
 | [MiniMax-M3.1-Flash](minimax-m3-1-flash/) | MXFP8 attention + NVFP4 experts (252 GB) | vLLM 0.33; SGLang 0.5.23; SGLang `dev-minimax-m31-flash` | **does not run on sm120**: MiniMax's sparse-attention kernels exist for SM100/SM103 only |
 | DeepSeek-V4.1-Flash-1017 | the official FP8 is 510 GB and does not fit; [ISTA-DASLab GSQ-RCO 2.25 bpw](https://huggingface.co/ISTA-DASLab/DeepSeek-V4.1-Flash-1017-GSQ-RCO-GGUF), 155 GB plus a 111 GB Engram table kept in host RAM | the same files under Strata and under llama.cpp b12167 (`deepseek41`) | planned. The [EXL3 pack](../cloudscale-gpu2-256-40-2-1600/deepseek-v4-1-flash-1017/) is built for two cards and measured there |
-| Ling-3.1-flash-1019 | 572 B, FP8 574 GB does not fit; [bartowski](https://huggingface.co/bartowski/Ling-3.1-flash-1019-GGUF) IQ4_XS, 317 GB | llama.cpp b12167 (`bailingmoe3`) | planned |
 
 ## Models tested, August 2026
 
