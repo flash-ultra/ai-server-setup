@@ -28,7 +28,7 @@ Qwen3.8-Flash-Next — but the tokens are scratchpad.
 with 2–4 % thinking and almost triples the answer rate at C=8 (1.15 → 3.17/s). Neither
 `enable_thinking: false` nor `reasoning_effort: "none"` does anything: both are accepted
 and still produce 24–31 reasoning tokens, so the protocol's thinking-off arm does not
-exist for this model and `low` takes its place in [`q1`](vllm/scenarios/reasoning-cost.md).
+exist for this model and `low` takes its place in [`q1`](vllm/scenarios/quality.md).
 
 | | GLM-5.3-Flash NVFP4 | MiMo-V2.6-Flash-RL FP8 | Qwen3.8-Flash-Next FP8 |
 |---|---|---|---|
@@ -43,8 +43,13 @@ exist for this model and `low` takes its place in [`q1`](vllm/scenarios/reasonin
 **Prefill stays flat to 250k**, unlike MiMo's: the linear-attention layers carry most of
 the context, and a full 250,000-token prompt starts answering after 39 s against MiMo's 70.
 
+**Under `q1` it is level with Qwen3.8-Flash-Next at the default effort and buys no lead with
+its thinking**: MMLU-Pro 0.870, GSM8K 0.985, HumanEval 0.970, IFEval 0.880 against Qwen's 0.930.
+At `low` it keeps arithmetic and code (0.985, 0.939) and gives up 5–7 points on knowledge
+and instructions — [quality](vllm/scenarios/quality.md).
+
 ## Measurements
 
 | Setup | Scenarios |
 |---|---|
-| [`vllm/`](vllm/) | [single](vllm/scenarios/single-stream.md) · [concurrent](vllm/scenarios/concurrent-load.md) · [reasoning cost](vllm/scenarios/reasoning-cost.md) · [long context](vllm/scenarios/long-context.md) |
+| [`vllm/`](vllm/) | [single](vllm/scenarios/single-stream.md) · [concurrent](vllm/scenarios/concurrent-load.md) · [reasoning cost](vllm/scenarios/reasoning-cost.md) · [long context](vllm/scenarios/long-context.md) · [quality](vllm/scenarios/quality.md) |
