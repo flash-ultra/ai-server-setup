@@ -35,6 +35,10 @@ throughput column.** The EXL3 pack ships its own vLLM recipe with sm120 kernels 
 exactly two of these cards; Strata's DeepSeek path is a port of a single-GPU engine that
 splits layers across cards and runs them one after another.
 
+**Two engines on two cards each double that**: `--replicas 2` reaches 319 tok/s at C=8 and
+389 at C=32, the cards at 50 % — still a fifth of what vLLM serves with MiMo on these cards,
+and the configuration to use for more than one user.
+
 **The layer split has to be set by hand.** The engine's own placement put 1, 1, 13 and 25
 layers on the four cards, left two of them nearly empty and spilled 284 experts to the CPU;
 `DS4_SPLIT=10,10,10,10` puts every expert in VRAM and doubles the prefill — see

@@ -49,6 +49,14 @@ pipeline is as slow as its fullest stage. `DS4_SPLIT` is an environment variable
 engine (`src/dsv41/ds4_model.cu`), not a flag or a config key; it is set in the server's
 environment and inherited by the engine process.
 
+## Two engines instead of one
+
+`server.py --replicas 2` with `DS4_SPLIT=20,20` runs one engine on cards 0–1 and one on
+cards 2–3: 84.8 / 80.1 GB per card, every expert in VRAM, ready after 55 s. It doubles the
+throughput under load — 319 against 160 output tok/s at C=8 — and leaves the single stream
+where it was ([concurrent-load](scenarios/concurrent-load.md#two-replicas---replicas-2-one-engine-on-cards-01-and-one-on-23)).
+The quality run (`q1`) and the own evals ran in this configuration.
+
 ## Pinned values
 
 | Request | completion tokens on "17×23" |
