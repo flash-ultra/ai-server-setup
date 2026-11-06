@@ -71,7 +71,7 @@ Latency under agent traffic is set by the longest prompt in flight, not by the a
 
 Thinking on only, same protocol, the container restarted with
 `--speculative-config '{"method":"qwen4_exp_mtp","num_speculative_tokens":2}'`
-([single-stream](single-stream.md#with-the-mtp-head-speculative-config-qwen4_exp_mtp-2-draft-tokens)):
+([single-stream](single-stream.md#with-the-mtp-head---speculative-config-qwen4_exp_mtp-2-draft-tokens)):
 
 <!-- 2026-11-06T11:55:07+00:00 · vLLM 0.33.0 Docker TP=4 + MTP draft (qwen4_exp_mtp, 2 tokens) · concurrent-load · thinking ON (default) -->
 
