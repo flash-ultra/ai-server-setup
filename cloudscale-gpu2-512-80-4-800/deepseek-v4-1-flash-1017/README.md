@@ -44,8 +44,13 @@ layers on the four cards, left two of them nearly empty and spilled 284 experts 
 `DS4_SPLIT=10,10,10,10` puts every expert in VRAM and doubles the prefill — see
 [the setup](strata/README.md#the-automatic-layer-split-and-how-to-override-it).
 
+**And the best answers on this machine, with thinking.** Under `q1` it leads IFEval (0.965),
+MMLU-Pro (0.890) and HumanEval (0.994, 163 of 164) and every answer stopped on its own;
+without thinking it falls to the middle of the field, 8 points behind the 8-bit Qwen
+checkpoints on MMLU-Pro — [quality](strata/scenarios/quality.md).
+
 ## Measurements
 
 | Setup | Scenarios |
 |---|---|
-| [`strata/`](strata/) | [single](strata/scenarios/single-stream.md) · [concurrent](strata/scenarios/concurrent-load.md) · [reasoning cost](strata/scenarios/reasoning-cost.md) · [long context](strata/scenarios/long-context.md) |
+| [`strata/`](strata/) | [single](strata/scenarios/single-stream.md) · [concurrent](strata/scenarios/concurrent-load.md) · [reasoning cost](strata/scenarios/reasoning-cost.md) · [long context](strata/scenarios/long-context.md) · [quality](strata/scenarios/quality.md) |
