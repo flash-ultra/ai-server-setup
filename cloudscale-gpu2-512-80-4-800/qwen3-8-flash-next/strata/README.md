@@ -74,8 +74,8 @@ card**, ready after 95 s.
 | C=8 / C=16, thinking on | 564.2 / 582.7 | 645.5 / 722.1 | 0.87 / 0.81 |
 
 **The reference precision costs 13–19 % everywhere and still beats vLLM's FP8 with its MTP
-draft on the single stream (187 against 175) and at C=8 (564 against 517).** What the 3 bits
-cost in answers is the `q1` question, [below](scenarios/quality.md).
+draft on the single stream (187 against 175) and at C=8 (564 against 517).** What the 3 bits cost in answers: [5.5 points on MMLU-Pro
+without thinking, nothing visible elsewhere](scenarios/quality.md).
 
 ## Scenarios
 
@@ -85,4 +85,4 @@ cost in answers is the `q1` question, [below](scenarios/quality.md).
 | [concurrent-load](scenarios/concurrent-load.md) | measured — levels 1 / 4 / 8 / 16 (deviation: 8 slots): **645.5 tok/s at C=8**, 722 at 16, queueing above; ahead of vLLM to C=8, level at 16 |
 | [reasoning-cost](scenarios/reasoning-cost.md) | measured — thinking 2.5× in answers/s at C=8 |
 | [long-context](scenarios/long-context.md) | measured — **16,967 / 20,639 / 21,873 tok/s prefill** at 64k / 128k / 250k, 3 of 3 needles each |
-| [quality](scenarios/quality.md) | measured for IQ3_S — both arms, all cells `stop`: **HumanEval 0.988 / 0.988**, IFEval 0.910 on, MMLU-Pro 0.820 / 0.860; ten of twelve cells inside one standard error of the FP8 run on the same cards |
+| [quality](scenarios/quality.md) | measured for both packs — IQ3_S: HumanEval 0.988 / 0.988, IFEval 0.910 on, **MMLU-Pro 0.820** off; Q8_0: MMLU-Pro 0.875 / 0.875, IFEval **0.945** on, HumanEval 0.957 / 0.982. **The 3 bits cost 5.5 points on MMLU-Pro without thinking** and nothing visible elsewhere |
