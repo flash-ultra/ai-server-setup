@@ -41,8 +41,13 @@ layers attend globally, and their cost grows with the square of the context. A 2
 prompt waits 70 s for its first token. For long-document work this is the model's weak
 column; Qwen3.8-Flash-Next under Strata reads the same prompt in 11 s.
 
+**Under `q1` it trades knowledge for speed.** MMLU-Pro 0.775 without thinking against
+Qwen3.8-Flash-Next's 0.885 on the same cards; with thinking 0.850 (six answers at the cap)
+against 0.860, inside the error band. IFEval does not move with thinking (0.840 / 0.850),
+HumanEval 0.933 / 0.963 — [quality](vllm/scenarios/quality.md).
+
 ## Measurements
 
 | Setup | Scenarios |
 |---|---|
-| [`vllm/`](vllm/) | [single](vllm/scenarios/single-stream.md) · [concurrent](vllm/scenarios/concurrent-load.md) · [reasoning cost](vllm/scenarios/reasoning-cost.md) · [long context](vllm/scenarios/long-context.md) |
+| [`vllm/`](vllm/) | [single](vllm/scenarios/single-stream.md) · [concurrent](vllm/scenarios/concurrent-load.md) · [reasoning cost](vllm/scenarios/reasoning-cost.md) · [long context](vllm/scenarios/long-context.md) · [quality](vllm/scenarios/quality.md) |
