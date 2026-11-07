@@ -48,10 +48,10 @@ Five request shapes at concurrency 32, drawn at random per request.
 
 ## Reading
 
-**Throughput scales monotonically to 32 and had not flattened.** Output tokens rise
-190 → 368 → 500 → 625 → 817 across the sweep, and answers per second follow. The
-dense [Gemma-4-31B](../../../gemma-4-31b/llama-cpp/scenarios/concurrent-load.md) on the
-same card and configuration stalls between 8 and 16; this one does not.
+**Throughput scales up to the 16 slots and levels off there.** Over the real run time
+output tokens rise 181 → 348 → 436 → 548 → 561 across the sweep, and answers per second
+follow. The dense [Gemma-4-31B](../../../gemma-4-31b/llama-cpp/scenarios/concurrent-load.md)
+on the same card and configuration already falls back after 8; this one holds to 32.
 
 **Latency stays usable much longer.** p50 at 32 concurrent is 29.11 s against 113.78 s
 for the dense model — a 3.9× difference at the same load, on the same hardware, with the
@@ -63,7 +63,7 @@ DeepSeek-V4 holds 90–97 % on every level. Speculative decoding is not the reas
 falls the same way, 89 % to 58 %.
 
 The reason is llama.cpp's batching. The [engine comparison](../../engine-comparison.md)
-serves this same model on this same card under vLLM at **100 % on every level** and 5.9×
+serves this same model on this same card under vLLM at **100 % on every level** and 6.3×
 the answers per second — which rules out the model as the explanation, since it is the
 same model.
 
@@ -71,7 +71,7 @@ Two theories were tried and discarded on the way there: speculative decoding (re
 the control run above) and compute-per-token, on the grounds that a 4 B-active forward
 pass cannot fill a card (refuted by vLLM filling it with exactly that model). What the
 dense [Muse Glimmer](../../../muse-glimmer-30b/llama-cpp/scenarios/concurrent-load.md)
-run does show — 92 % utilisation and **less** throughput, 520.5 against 816.9 — is that a
+run does show — 92 % utilisation and **less** throughput, 312.2 against 561.3 — is that a
 model heavy enough per token hides the gaps this scheduler leaves.
 
 **A realistic prompt mix costs 5 %.** Answers per second drop from 1.60 to 1.52, and p50

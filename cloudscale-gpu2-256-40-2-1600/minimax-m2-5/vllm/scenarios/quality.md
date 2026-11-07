@@ -70,7 +70,7 @@ and it is the discipline the model card leads with.
 against DeepSeek's 0.870 at 284 B, and there it is still last.
 
 **Thinking is always on and always paid for.** The
-[concurrency ladder](concurrent-load.md) shows 258 tokens per answer at 9.65–9.75
-answers/s; there is no cheaper mode to fall back to for short factual turns. Against
+[concurrency ladder](concurrent-load.md) shows 258 tokens per answer at 4.39–4.46
+answers/s over the real run time; there is no cheaper mode to fall back to for short factual turns. Against
 DeepSeek-0731, which can switch, that is the structural difference rather than any
 single benchmark score.

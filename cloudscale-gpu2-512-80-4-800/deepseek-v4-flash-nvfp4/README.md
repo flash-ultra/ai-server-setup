@@ -28,8 +28,8 @@ machine, slightly better in each:
 | Draft acceptance | 58.0 % | **64.6 %** |
 | Mean acceptance length | 2.16 | **2.29** |
 
-Under load it reaches **9.97 answers/s at concurrency 256** (403.6 output tok/s, 12,513
-total) on two cards. Two findings qualify that number, and both are in
+Under load it reaches **6.0 answers/s at concurrency 256** over the real run time (244 output
+tok/s; 9.97 and 403.6 as measured, [why](../../benchmark/README.md#the-window-overstates-slow-answers)) on two cards. Two findings qualify that number, and both are in
 [concurrent load](vllm-b12x/scenarios/concurrent-load.md): the curve is **not monotone** —
 it dips at exactly `--max-num-seqs 64` — and the run-to-run spread in the middle of the
 ladder reaches **74 %**, so the ladder describes a range, not an operating point. Neither
@@ -56,9 +56,10 @@ The configs are architecturally identical — 43 layers, 256 experts, top-6,
 them, and MTP working here is not evidence that the 0731 entry's "DSpark only" is wrong.
 Treat every number in the two directories as belonging to separate models.
 
-One cross-setup comparison is worth stating, with that caveat attached: SGLang peaks at
-[11.30 req/s on four cards](../deepseek-v4-flash-0731/sglang/scenarios/concurrent-load.md#configuration-sweep-protocol-v1)
-against 9.97 here on two — **1.76× the requests per card**. Different release, different
+One cross-setup comparison is worth stating, with that caveat attached: SGLang reaches
+[8.3 req/s on four cards](../deepseek-v4-flash-0731/sglang/scenarios/concurrent-load.md#configuration-sweep-protocol-v1)
+at concurrency 256 in its shipped configuration against 6.0 here on two, both over the real
+run time — **1.45× the requests per card**. Different release, different
 quantisation, different engine, so this says the NVFP4 checkpoint gets useful throughput
 out of half the machine; it does not rank the engines.
 

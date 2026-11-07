@@ -59,7 +59,7 @@ Verified 2026-11-06 with `smoke.sh`:
 | Needles at 250k | **3 of 3** (window 262k) | — (window 131k) |
 | Start to ready | **151 s** | 308 s |
 
-**Under load this is a different machine: 2,275 output tok/s at 256 clients and a KV pool
+**Under load this is a different machine: 1,989 output tok/s at 256 clients and a KV pool
 for fourteen full-length conversations.** On the single stream the plain run loses to the
 two-card Strata setup, which drafts with the model's MTP head; with
 `--speculative-config qwen4_exp_mtp` vLLM drafts too and takes the single stream to

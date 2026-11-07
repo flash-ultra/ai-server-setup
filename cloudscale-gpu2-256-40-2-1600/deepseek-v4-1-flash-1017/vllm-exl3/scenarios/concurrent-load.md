@@ -54,9 +54,10 @@ Over the real run time — concurrency ÷ median latency, [why](../../../../benc
 
 ## Reading
 
-**The curve is monotone and the latency is the price.** Output throughput rises 9.2×
-from concurrency 1 to 256 while p50 rises 90×. Past the eight slots the engine is not
-batching harder, it is holding a queue — 256 requests through 8 slots at roughly 0.9 s
+**Past the eight slots the curve is flat and the latency is the price.** Over the real run
+time output holds at 254–265 tok/s from 8 to 64 and reaches 399 at 256, 2.8× the single
+stream, while p50 rises 90×. Past the eight slots the engine is not batching harder, it is
+holding a queue — 256 requests through 8 slots at roughly 0.9 s
 of service each is the 105 s median almost exactly.
 
 **GPU utilisation falls as concurrency rises**, 96–98 % at one request down to 81–87 %
@@ -77,22 +78,21 @@ With few slots, prompt-length variance costs more than it does with many.
 
 ## Against the rest of the machine
 
-At concurrency 256, thinking on, all two-card setups:
+At concurrency 256, thinking on, all two-card setups, rates over the real run time:
 
 | | Output tok/s | Answers/s | Tok/answer | p50 |
 |---|---|---|---|---|
-| [DeepSeek-0731](../../../deepseek-v4-flash-0731/) · SGLang | **3,584** | 10.97 | 327 | 27.58 s |
-| [MiMo](../../../mimo-v2-6-flash/) · vLLM | 3,129 | **46.05** | 68 | **5.74 s** |
-| [MiniMax](../../../minimax-m2-5/) · vLLM | 2,947–3,126 | 9.65–9.75 | 302–324 | 57.34 s |
-| [Qwen 27 B](../../../qwen3-8-27b/) · vLLM | 1,821 | 9.43 | 193 | 34.89 s |
-| **this setup** · 8 slots | 1,296 | 7.88 | 165 | 105.62 s |
+| [DeepSeek-0731](../../../deepseek-v4-flash-0731/) · SGLang | **3,032** | 9.28 | 327 | 27.58 s |
+| [MiMo](../../../mimo-v2-6-flash/) · vLLM | 3,030 | **44.6** | 68 | **5.74 s** |
+| [MiniMax](../../../minimax-m2-5/) · vLLM | 1,350–1,423 | 4.39–4.46 | 302–324 | 57.34 s |
+| [Qwen 27 B](../../../qwen3-8-27b/) · vLLM | 1,417 | 7.34 | 193 | 34.89 s |
+| **this setup** · 8 slots | 399 | 2.42 | 165 | 105.62 s |
 
 **Last on every column, and the slot count explains it rather than the model.** The
 machine's own
-[finding on server slots](../../../../README.md#more-server-slots-lower-latency-without-raising-the-ceiling)
-predicts exactly this shape: slot count sets how fast saturation is reached and leaves
-the ceiling alone, with the latency curves separating far more than the throughput ones.
-Here it is a factor of 18 in p50 against MiMo and a factor of 2.8 in tokens per second.
+[finding on server slots](../../../../README.md#more-server-slots-raise-the-ceiling-and-lower-latency)
+predicts this shape: a slot count below the load caps throughput and stretches latency.
+Here it is a factor of 18 in p50 against MiMo and a factor of 7.6 in tokens per second.
 
 The pack is built for a few long agentic sessions rather than for fan-out, and this is
 what that choice costs when the workload is the opposite.

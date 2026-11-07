@@ -16,17 +16,18 @@ that series is the reference column throughout.
 
 ## Verdict
 
-**The highest throughput measured on this machine: 3,740 output tok/s and 55 answers per
-second at 256 clients, with thinking on and a p50 under five seconds.** Thinking costs
-this model little — 68 tokens per answer, a fifth of them scratchpad — so its answers per
-second are three to five times those of Qwen3.8-Flash-Next at the same load.
+**The highest throughput measured on this machine: 3,650 output tok/s and 54 answers per
+second at 256 clients over the real run time, with thinking on and a p50 under five
+seconds.** Thinking costs this model little — 68 tokens per answer, a fifth of them
+scratchpad — so its answers per second are three to five and a half times those of
+Qwen3.8-Flash-Next at the same load.
 
 | | four cards | [two cards](../../cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/README.md) | four / two |
 |---|---|---|---|
 | Single stream, thinking on | **140.2 tok/s**, p50 0.48 s | 114.3 tok/s, p50 0.57 s | 1.23 |
 | Decode at 1,500 tokens | 143.3–143.5 tok/s | 118.4–118.7 tok/s | 1.21 |
-| C=256, thinking on | **3,739.6 tok/s · 54.98 answers/s**, p50 4.77 s | 3,128.9 tok/s · 46.05 answers/s, p50 5.74 s | 1.19 |
-| C=256, thinking off | **75.58 answers/s**, p50 3.44 s | — | |
+| C=256, thinking on, over the real run time | **3,650 tok/s · 53.7 answers/s**, p50 4.77 s | 3,030 tok/s · 44.6 answers/s, p50 5.74 s | 1.20 |
+| C=256, thinking off, over the real run time | **74.4 answers/s**, p50 3.44 s | — | |
 | Prefill | 6,104 / 4,865 / 3,561 tok/s at 64k / 128k / 250k | 3,070 tok/s at 180k | ≈ 1.4 |
 | Needles | 3 of 3 at 250k | 3 of 3 at 180k | |
 | KV pool | **4,294,730 tokens**, 16.4 full-length requests | 197,494 tokens, 1.0 | 21.7 |

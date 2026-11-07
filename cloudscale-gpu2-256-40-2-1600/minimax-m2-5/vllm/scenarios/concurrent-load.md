@@ -72,11 +72,11 @@ Over the real run time — concurrency ÷ median latency, [why](../../../../benc
 
 ```mermaid
 xychart-beta
-    title "Answers per second — two identical runs, same server process"
+    title "Answers per second over the real run time — two identical runs, same server process"
     x-axis "Concurrent requests (levels are evenly spaced, not linear)" [1, 8, 16, 32, 64, 128, 256]
-    y-axis "Answers/s" 0 --> 11
-    line "Run 1" [0.42, 1.93, 2.83, 4.25, 5.28, 6.88, 9.75]
-    line "Run 2" [0.45, 1.65, 2.52, 4.03, 4.80, 6.42, 9.65]
+    y-axis "Answers/s" 0 --> 5
+    line "Run 1" [0.42, 1.93, 2.66, 3.97, 4.30, 4.31, 4.46]
+    line "Run 2" [0.41, 1.52, 2.37, 3.69, 3.70, 3.75, 4.39]
 ```
 
 ```mermaid
@@ -102,8 +102,11 @@ seconds would put the trade on a single line and hide it.
 
 ## Reading
 
-**The ladder is monotone in both runs.** Every level improves on the one below it, all
-the way past `--max-num-seqs 32` to 256. The comparable NVFP4 run on the older machine
+**The ladder is monotone in both runs, and flat above `--max-num-seqs 32`.** Every level
+improves on the one below it, but over the real run time by less than 4 % from 64 to 256
+(4.30 → 4.46 answers/s in run 1): past 32 running sequences the rest queue, and the
+measured climb to 9.75 was the
+[measurement window](../../../../benchmark/README.md#the-window-overstates-slow-answers). The comparable NVFP4 run on the older machine
 was **not** monotone — it dipped at exactly its own `--max-num-seqs` value.
 
 **Run-to-run spread is small, and smallest where it matters.**
@@ -120,7 +123,8 @@ was **not** monotone — it dipped at exactly its own `--max-num-seqs` value.
 
 Worst case 17 % at concurrency 8; the peak reproduces to within 1 %. Against 74 % at one
 level on the older stack, this is a different regime — and it is what makes the headline
-number quotable. **Report the peak as 9.65–9.75 answers/s**, not as a single value.
+number quotable. **Report the peak as 4.39–4.46 answers/s** over the real run time (9.65–9.75 as
+measured), not as a single value.
 
 **The mixed-traffic result reproduces exactly.** 2.40 answers/s in both runs, output
 tok/s within 1 %. The uniform comparison at the same level moved 8 %, so the mix is the

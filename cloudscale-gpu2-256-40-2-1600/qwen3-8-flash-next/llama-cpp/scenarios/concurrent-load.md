@@ -117,23 +117,23 @@ Over the real run time — concurrency ÷ median latency, [why](../../../../benc
 
 Against run 1 of A, at the same levels:
 
-| Concurrent | Output tok/s | Latency p50 |
+| Concurrent | Output tok/s, over the real run time | Latency p50 |
 |---|---|---|
-| 1 | −3.6 % | −2.7 % |
-| 8 | **+73.1 %** | **−47.1 %** |
-| 16 | **+62.0 %** | **−61.1 %** |
-| 32 | +39.6 % | −50.7 % |
-| 64 | +27.8 % | −45.4 % |
-| 128 | +16.4 % | −50.5 % |
-| 256 | +6.8 % | −54.1 % |
+| 1 | −4.6 % | −2.7 % |
+| 8 | **+114 %** | **−47.1 %** |
+| 16 | **+128 %** | **−61.1 %** |
+| 32 | +100 % | −50.7 % |
+| 64 | +73 % | −45.4 % |
+| 128 | +104 % | −50.5 % |
+| 256 | +113 % | −54.1 % |
 
 ```mermaid
 xychart-beta
-    title "Output tokens per second — one slot against six"
+    title "Output tokens per second over the real run time — one slot against six"
     x-axis "Concurrent requests (levels are evenly spaced, not linear)" [1, 8, 16, 32, 64, 128, 256]
-    y-axis "Output tok/s" 0 --> 1500
-    line "A · 1 slot · Q5" [89.7, 121.0, 163.2, 246.6, 396.0, 691.5, 1301.8]
-    line "B · 6 slots · Q6" [86.5, 209.4, 264.4, 344.3, 505.9, 805.2, 1390.3]
+    y-axis "Output tok/s" 0 --> 400
+    line "A · 1 slot · Q5" [89.7, 91.5, 94.5, 108.5, 142.0, 152.3, 167.2]
+    line "B · 6 slots · Q6" [85.6, 196.0, 215.3, 217.0, 245.6, 310.1, 355.9]
 ```
 
 ```mermaid
@@ -164,14 +164,14 @@ the slot count rather than only at it.
 
 ## Reading
 
-**`--parallel` does not raise the ceiling. It decides how fast you reach it.** One slot
-and six converge at the top of the ladder: 1,301.8 against 1,390.3 output tok/s at 256
-concurrent requests, 6.8 % apart. Below that the gap is large — 73 % at eight concurrent
-— and it narrows monotonically as load grows. The engine saturates at roughly
-1,400 output tok/s either way.
+**`--parallel` raises the ceiling.** Over the real run time — concurrency ÷ median
+latency, an upper bound for a queue this deep — six slots deliver about twice the output of
+one at every level from eight up: 196 against 92 tok/s at eight, 356 against 167 at 256.
+The measured columns had the two converging near 1,400 tok/s at 256; at medians of 134 and
+292 s they count answers that finished long after the
+[40 s window](../../../../benchmark/README.md#the-window-overstates-slow-answers).
 
-**Latency is the column that improves everywhere.** Around −50 % at every level from 8
-upward, and it does not decay with load the way the throughput advantage does. For
+**Latency improves everywhere too.** Around −50 % at every level from 8 upward. For
 interactive and agent use this is the whole value of the change: p50 at eight concurrent
 requests goes from 14.70 s to 7.77 s, and at sixteen from 33.70 s to 13.10 s.
 

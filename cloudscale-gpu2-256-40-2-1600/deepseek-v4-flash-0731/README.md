@@ -19,40 +19,43 @@ this directory is a fresh `v1` series.
 
 ## Verdict
 
-**The most stable thing measured on this machine, and the one that delivers the most
-output tokens per second — with one caveat that decides how the number should be read.**
+**The most stable thing measured on this machine, and level with MiMo for the most output
+tokens per second — with one caveat that decides how the number should be read.**
 It is no longer the leader on answers per second or on latency:
-[MiMo-V2.6-Flash](../mimo-v2-6-flash/) delivers 46.05 answers/s at p50 5.74 s against
-32.58 at 7.96 s here, with thinking **on** against this setup's **off**.
+[MiMo-V2.6-Flash](../mimo-v2-6-flash/) delivers 44.6 answers/s at p50 5.74 s against
+32.2 at 7.96 s here, with thinking **on** against this setup's **off**. Load figures on this
+page are over the real run time
+([why](../../benchmark/README.md#the-window-overstates-slow-answers)).
 
 | | Measured, thinking **off** |
 |---|---|
-| Peak measured | **39.62 answers/s · 1,436.5 output tok/s at concurrency 512** |
-| Latency there | p50 **15.66 s**, both cards at 98 % |
-| At concurrency 256 | 32.10–32.65 answers/s · 1,159.9–1,182.6 output tok/s, p50 7.96 s, three runs |
+| Peak | **33.4 answers/s · 1,214 output tok/s at concurrency 384**, level from 256 to 512 |
+| Latency at 512 | p50 **15.66 s**, both cards at 98 % |
+| At concurrency 256 | 32.10–32.20 answers/s · 1,158–1,166 output tok/s, p50 7.96 s, three runs |
 | Single stream | 2.08–2.12 req/s, 75.3–75.5 tok/s, p50 **0.47 s**, two runs |
 | Prefill | 8227 tok/s at 64k · 7480 at 128k · 7133 at 180k |
 | Needles | 3 of 3 at 64k, 128k and 180k |
 | Run-to-run spread | **≤ 5 %** on the ladder, 0.3 % on single stream across 23 days |
 
-**The ladder had not flattened when it stopped.** 512 concurrent requests give 22 % more
-answers and 24 % more tokens than 256, at 98 % GPU. Anything quoted at 256 — including
-the machine and repository tables — is the protocol ceiling, not the machine's.
+**The ladder flattens at 256.** 384 and 512 concurrent requests give 32.7–33.4 answers/s
+against 32.1 at 256, at 98 % GPU. The measured figures had shown 22 % more answers at 512;
+that gain was the measurement window.
 
 | | Measured, thinking **on** |
 |---|---|
-| At concurrency 256 | 10.97 answers/s · **3,583.8 output tok/s**, p50 27.58 s |
+| At concurrency 256 | 9.28 answers/s · **3,032 output tok/s**, p50 27.58 s |
 | Tokens per answer | **327**, against 36 with thinking off |
 
 **Thinking is off by default in this setup.** Turning it on multiplies output tokens per
-second by 3.1 and divides answers per second by 3.0, because answers grow 9.1×. Both
+second by 2.6 and divides answers per second by 3.5, because answers grow 9.1×. Both
 tables above are the same server on the same day; neither is the model being faster.
 Which one applies depends on the workload, and **no comparison against another model is
 meaningful without naming the arm** — see
 [concurrent load](sglang/scenarios/concurrent-load.md#reading) and
 [reasoning cost](sglang/scenarios/reasoning-cost.md).
 
-Against [MiniMax-M2.5](../minimax-m2-5/) on the same cards, thinking on for both:
+Against [MiniMax-M2.5](../minimax-m2-5/) on the same cards, thinking on for both, as
+measured:
 
 | at concurrency 32 | Answers/s | Output tok/s | Tokens/answer |
 |---|---|---|---|

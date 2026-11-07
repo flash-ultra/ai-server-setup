@@ -53,7 +53,7 @@ environment and inherited by the engine process.
 
 `server.py --replicas 2` with `DS4_SPLIT=20,20` runs one engine on cards 0–1 and one on
 cards 2–3: 84.8 / 80.1 GB per card, every expert in VRAM, ready after 55 s. It doubles the
-throughput under load — 319 against 160 output tok/s at C=8 — and leaves the single stream
+throughput under load — 302 against 151 output tok/s at C=8 over the real run time — and leaves the single stream
 where it was ([concurrent-load](scenarios/concurrent-load.md#two-replicas---replicas-2-one-engine-on-cards-01-and-one-on-23)).
 The quality run (`q1`) and the own evals ran in this configuration.
 

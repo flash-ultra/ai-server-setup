@@ -91,18 +91,19 @@ what this column tracks, not parameter count.
 ### Under load — concurrency 256
 
 The top of the protocol ladder. Sorted by output tokens per second, which is what the
-field reports; see the caveat below the table.
+field reports; see the caveat below the table. Rates over the real run time
+([why](../benchmark/README.md#the-window-overstates-slow-answers)).
 
 | Model | Thinking | Output tok/s | Answers/s | Tok/answer | Latency p50 |
 |---|---|---|---|---|---|
-| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) | **on** | **3,584** | 10.97 | 327 | 27.58 s |
-| [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) | **on** | **3,129** | **46.05** | 68 | **5.74 s** |
-| [MiniMax-M2.5-NVFP4](minimax-m2-5/) | on, not switchable | **2,947–3,126** | 9.65–9.75 | 302–324 | 57.34–58.28 s |
-| [Qwen3.8-27B](qwen3-8-27b/) | **on** | **1,821** | 9.43 | 193 | 34.89 s |
-| [Qwen3.8-Flash-Next](qwen3-8-flash-next/) Q6 | not established | **1,390** | 7.47 | 186 | 133.9 s |
-| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) | **off** | **1,159–1,183** | 32.10–32.65 | 35 | 7.96 s |
-| [Qwen3.8-27B](qwen3-8-27b/) | **off** | **718** | 13.45 | 53 | 19.94 s |
-| [DeepSeek-V4.1-Flash-1017](deepseek-v4-1-flash-1017/) EXL3 · **8 slots** | **on** | 1,296 | 7.88 | 165 | 105.62 s |
+| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) | **on** | **3,032** | 9.28 | 327 | 27.58 s |
+| [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) | **on** | **3,030** | **44.60** | 68 | **5.74 s** |
+| [MiniMax-M2.5-NVFP4](minimax-m2-5/) | on, not switchable | **1,350–1,423** | 4.39–4.46 | 302–324 | 57.34–58.28 s |
+| [Qwen3.8-27B](qwen3-8-27b/) | **on** | **1,417** | 7.34 | 193 | 34.89 s |
+| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) | **off** | **1,158–1,166** | 32.10–32.20 | 35 | 7.96 s |
+| [Qwen3.8-27B](qwen3-8-27b/) | **off** | **685** | 12.84 | 53 | 19.94 s |
+| [Qwen3.8-Flash-Next](qwen3-8-flash-next/) Q6 | not established | **356** | 1.91 | 186 | 133.9 s |
+| [DeepSeek-V4.1-Flash-1017](deepseek-v4-1-flash-1017/) EXL3 · **8 slots** | **on** | 399 | 2.42 | 165 | 105.62 s |
 
 All rows 2 cards; llama.cpp by layer split, everything else tensor-parallel.
 
@@ -113,19 +114,20 @@ concurrency 8 it measures a queue rather than a batch — GPU utilisation *falls
 table says what that configuration does, not what the model can do.
 
 **The sort order is partly "who talks longest".** Tokens per answer spans 35 to 327 — a
-factor of nine, driven by the thinking state. MiMo is third on tokens per second and
-first on answers per second by 4.2×, which is the same fact read from the other side.
+factor of nine, driven by the thinking state. MiMo is level with the first row on tokens per second
+and ahead of every other thinking-on row on answers per second by 4.8× or more, which is the
+same fact read from the other side.
 Pick the column that matches the workload: answers/s for many short requests, tok/s for
 long generated text.
 
 **Compare only within a thinking arm.** DeepSeek-0731 appears twice, measured the same
-day: 3.1× apart on tokens per second and 3.0× apart on answers per second, in opposite
-directions. It tops this table and comes last in it.
+day: 2.6× apart on tokens per second and 3.5× apart on answers per second, in opposite
+directions.
 
-**256 is the protocol ceiling, not the machine's.** DeepSeek with thinking off reaches
-39.62 answers/s and 1,436.5 tok/s at concurrency 512 and was still climbing; MiMo and
-Qwen's thinking-on arm were also still climbing at 256. Nothing here is a saturation
-figure.
+**256 is the protocol ceiling, and only some models reach theirs before it.** MiMo was still
+climbing at 256. Qwen3.8-27B with thinking on is flat from 128 on (7.35 → 7.34 answers/s),
+and DeepSeek with thinking off holds 32–33 answers/s from 256 to 512 — the 22 % gain the
+measured figures showed at 512 came from the measurement window.
 
 ## Quality
 
@@ -288,21 +290,21 @@ phase that escapes it. It is the engine, not the architecture, and not the confi
 either: the range holds across two quantisations and slot counts of 1, 4 and 6.
 
 Consequence for planning: any model that only runs under llama.cpp on this machine pays
-**in latency, not in token throughput**. Measured at concurrency 256 against
-DeepSeek-V4-Flash-0731 under SGLang on the same cards:
+**in latency and in token throughput**. Measured at concurrency 256 against
+DeepSeek-V4-Flash-0731 under SGLang on the same cards, rates over the real run time:
 
 | | llama.cpp · Qwen3.8-Flash-Next | SGLang · DSv4-0731 |
 |---|---|---|
-| Output tok/s | **1,390.3** | 1,173.2 |
-| Answers/s | 7.47 | **32.58** |
+| Output tok/s | 356 | **1,158** |
+| Answers/s | 1.91 | **32.16** |
 | Tokens per answer | 186 | 35 |
 | Latency p50 | 133.9 s | **7.96 s** |
 
-The factor of 17 in latency is the cost. The factor of 4.4 in answers per second is
-mostly answer length — the two setups do not produce comparable replies — and in tokens
-per second llama.cpp is ahead here. An earlier version of this page reported a
-"factor of 5 in throughput" from the answers-per-second column alone; that reading was
-wrong, and the single-slot configuration it was measured on made it worse.
+The factor of 17 in latency is the larger cost, and it comes with 3.3× fewer output tokens
+per second. The factor of 17 in answers per second is partly answer length — the two setups
+do not produce comparable replies. An earlier version of this page put llama.cpp ahead on
+tokens per second; that came from the measured columns, which at a 134 s median count
+answers that finished long after the 40 s window and overstate this row 3.9×.
 
 **That images only run under llama.cpp here was true when it was written and is not any
 more.** Qwen3.8-27B, MiMo-V2.6-Flash and DeepSeek-V4.1-Flash all serve images under

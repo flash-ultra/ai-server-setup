@@ -13,15 +13,16 @@ Reflection's Beam-1.0 on all four cards of [this machine](../README.md), measure
 
 ## Verdict
 
-**The second-highest load throughput on this machine, from the second-largest model.** 3,472
-output tok/s and 14.9 answers per second at 256 clients, behind only MiMo (3,740); per
+**The second-highest load throughput on this machine, from the second-largest model.** 2,972
+output tok/s and 12.8 answers per second at 256 clients over the real run time, behind only
+MiMo (3,650); per
 answer it thinks for 247 tokens, a fifth of them visible. One client gets 98 tok/s, and
 decode does not move with context.
 
 | Thinking on (default) | Beam-1.0 NVFP4 | DeepSeek-V4.1 EXL3 | MiMo-V2.6-Flash FP8 | GLM-5.3-Flash NVFP4 |
 |---|---|---|---|---|
 | Single stream | 98.2 tok/s | **153.2** | 140.2 | 103.5 |
-| C=256 | **3,472 tok/s · 14.9 answers/s** | 2,112 · 12.9 | 3,740 · 55.0 | 2,347 · 6.4 |
+| C=256, over the real run time | **2,972 tok/s · 12.8 answers/s** | 1,510 · 9.2 | 3,650 · 53.7 | 1,088 · 3.0 |
 | Tokens per answer | 247 | 170 | 68 | 376 |
 | Prefill 250k | 4,616 tok/s | **13,264** | 3,561 | 6,360 |
 | KV pool | 2,123,633 tokens | 4,538,321 | 4,294,730 | 4,291,550 |

@@ -17,15 +17,15 @@ reconfigured and re-measured 2026-09-21.
 ## Verdict
 
 **The only model measured here that fits, sees images, and is current.** What that costs
-against the production model is smaller than the first round suggested, and it is not a
-throughput cost at all.
+against the production model under full load: about a third of its output tokens per second
+and seventeen times its median latency.
 
 | | Measured on Q6, six slots |
 |---|---|
-| Peak under load | 7.47 answers/s · **1,390.3 output tok/s** at concurrency 256 |
+| Peak under load | 1.91 answers/s · **356 output tok/s** at concurrency 256, over the real run time ([why](../../benchmark/README.md#the-window-overstates-slow-answers)) |
 | Latency at that point | p50 133.9 s, p95 226.7 s |
 | Single stream | 86.6 tok/s output, p50 **2.01 s**, 182 tokens per answer |
-| At 8 concurrent | 209.4 output tok/s, p50 **7.8 s** |
+| At 8 concurrent | 196 output tok/s, p50 **7.8 s** |
 | Prefill, 180k tokens | 134.0 s, 1343 tok/s *(measured on Q5)* |
 | Needles at 180k | 3 of 3 *(measured on Q5)* |
 | **GPU utilisation** | **39–43 % at every level** (45–47 % on configuration A) |
@@ -36,38 +36,39 @@ at one request, 7.8 s at eight and 28.7 s at thirty-two.
 [DeepSeek-V4-Flash-0731](../deepseek-v4-flash-0731/) on the same cards sits at 2.9 s at
 thirty-two.
 
-### The throughput gap is an answer-length artefact
+### The throughput gap is real
 
-Against DeepSeek-0731 at concurrency 256, on the same two cards:
+Against DeepSeek-0731 at concurrency 256, on the same two cards, over the real run time:
 
 | | DSv4-0731 · SGLang | Qwen3.8-Flash-Next · llama.cpp |
 |---|---|---|
-| Answers/s | 32.58 | 7.47 |
-| **Output tok/s** | 1,173.2 | **1,390.3** |
+| Answers/s | **32.16** | 1.91 |
+| **Output tok/s** | **1,158** | 356 |
 | Tokens per answer | 35 | 186 |
 | Latency p50 | 7.96 s | 133.88 s |
 
-**In tokens per second this setup is 18 % ahead, not five times behind.** The 4.4× gap in
-answers per second is answer length: the 0731 setup runs with thinking off by default and
-replies in 35 tokens, this one writes 186. Requests per second is the wrong column for
-comparing these two, and the earlier "factor of five in throughput" reading came from it.
+**In tokens per second this setup is 3.3× behind.** An earlier version of this page put it
+18 % ahead; that came from the measured columns, which at a 134 s median count answers that
+finished long after the 40 s window. The 17× gap in answers per second is partly answer
+length: the 0731 setup runs with thinking off by default and replies in 35 tokens, this one
+writes 186.
 
-**Latency remains the real difference** — 133.9 s against 7.96 s at 256, a factor of 17.
-That one is not an artefact.
+**Latency is the larger difference** — 133.9 s against 7.96 s at 256, a factor of 17.
 
 ## Six slots, not one
 
 The first round served the full 262,144 context in a single slot. Six slots of the same
-size fit beside the Q6 weights, and they change the picture below saturation:
+size fit beside the Q6 weights, and they change the picture at every level from 8 up
+(output over the real run time):
 
 | Concurrent | 1 slot | 6 slots | p50, 1 slot | p50, 6 slots |
 |---|---|---|---|---|
-| 8 | 121.0 tok/s | **209.4** | 14.70 s | **7.77 s** |
-| 16 | 163.2 | **264.4** | 33.70 s | **13.10 s** |
-| 256 | 1,301.8 | 1,390.3 | 291.82 s | **133.88 s** |
+| 8 | 91.5 tok/s | **196.0** | 14.70 s | **7.77 s** |
+| 16 | 94.5 | **215.3** | 33.70 s | **13.10 s** |
+| 256 | 167.2 | **355.9** | 291.82 s | **133.88 s** |
 
-`--parallel` does not raise the ceiling — both configurations flatten near 1,400 output
-tok/s — but it halves latency at every level from 8 upward. Details and the slot sweep
+`--parallel` raises the ceiling: six slots deliver about twice the output of one at every
+level from 8 upward, and halve the latency there. Details and the slot sweep
 are in [concurrent load](llama-cpp/scenarios/concurrent-load.md).
 
 ## Q6 costs 2.1 %

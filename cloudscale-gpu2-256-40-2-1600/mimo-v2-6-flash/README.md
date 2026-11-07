@@ -18,17 +18,18 @@ NVLink. Tested 2026-10-13.
 ## Verdict
 
 **It delivers more answers per second, at lower latency, than anything else measured on
-this machine — and it does it with thinking on.** 46.05 answers/s at p50 5.74 s against
-32.58 at 7.96 s for DeepSeek-0731 with thinking off, and 10.97 at 27.58 s for the same
-setup with thinking on. One setup, [vLLM with the vendor image at TP=2](vllm/) — no fork,
+this machine — and it does it with thinking on.** 44.6 answers/s at p50 5.74 s against
+32.2 at 7.96 s for DeepSeek-0731 with thinking off, and 9.3 at 27.58 s for the same
+setup with thinking on, all over the real run time
+([why](../../benchmark/README.md#the-window-overstates-slow-answers)). One setup, [vLLM with the vendor image at TP=2](vllm/) — no fork,
 no patchset. What it does not take is output tokens per second, where DeepSeek's thinking
-arm stays ahead at 3,584, and prefill depth, where DeepSeek fills the same 180,000 tokens
+arm is level with it at 3,032, and prefill depth, where DeepSeek fills the same 180,000 tokens
 2.3× faster.
 
 | | Measured |
 |---|---|
 | Single stream | 114.3 output tok/s, p50 0.57 s, two runs 0.7 % apart |
-| Peak under load | **46.05 answers/s at concurrency 256** (3,128.9 output tok/s), p50 5.74 s |
+| Peak under load | **44.6 answers/s at concurrency 256** over the real run time (3,030 output tok/s), p50 5.74 s |
 | Prefill, 180,000 tokens | 58.6 s, 3,070 tok/s |
 | GPU utilisation | **100 % on both cards at every level of the ladder** |
 | Needles at 180,000 tokens | 3 of 3 |
@@ -58,19 +59,19 @@ At concurrency 256, with every row's thinking state stated:
 | | MiMo-V2.6-Flash | [DeepSeek-0731](../deepseek-v4-flash-0731/) | DeepSeek-0731 | [MiniMax-M2.5](../minimax-m2-5/) |
 |---|---|---|---|---|
 | Thinking | **on** | **on** | off (default) | on, not switchable |
-| Answers/s | **46.05** | 10.97 | 32.58 | 9.75 |
-| Output tok/s | 3,128.9 | **3,583.8** | 1,173.2 | 2,947.3 |
+| Answers/s, over the real run time | **44.6** | 9.28 | 32.16 | 4.46 |
+| Output tok/s, over the real run time | **3,030** | **3,032** | 1,158 | 1,350 |
 | Latency p50 | **5.74 s** | 27.58 s | 7.96 s | 57.34 s |
 | Tokens/answer | 68 | 327 | 35 | 258 |
 | Context served | 196,608 | 262,144 | 262,144 | 196,608 |
 | Prefill at 180k | 3,070 tok/s | 7,133 tok/s | 7,133 tok/s | 2,580 tok/s |
 
-**Against the like-for-like arm it is 4.2× the answers at a fifth of the latency.**
-DeepSeek keeps the output-tokens-per-second column, and the tokens-per-answer column says
+**Against the like-for-like arm it is 4.8× the answers at a fifth of the latency.**
+DeepSeek ties it on output tokens per second, and the tokens-per-answer column says
 why: 327 against 68, four fifths of it scratchpad. More tokens per second is not more
 work done.
 
-**It also beats DeepSeek's thinking-*off* arm while thinking** — 46.05 against 32.58
+**It also beats DeepSeek's thinking-*off* arm while thinking** — 44.6 against 32.2
 answers/s, 5.74 s against 7.96 s. That is the comparison that settles whether the gap is
 an artefact of the thinking state. It is not.
 

@@ -41,7 +41,7 @@ The on-arm MMLU-Pro is a floor: with all six truncated answers right it would be
 ‡ six of 200 at the 32,768 cap · † two of 200 at the 50,000 cap
 
 **Without thinking MiMo trails by 11 points on MMLU-Pro; with thinking it closes to within
-one standard error.** The short reasoning that buys its 55 answers per second
+one standard error.** The short reasoning that buys its 54 answers per second
 ([concurrent-load](concurrent-load.md)) costs it on stored knowledge, and thinking is how it
 pays that back. On instruction following thinking does nothing for MiMo (0.840 → 0.850)
 where it lifts Qwen by ten points. Code and arithmetic are level within the error bands.

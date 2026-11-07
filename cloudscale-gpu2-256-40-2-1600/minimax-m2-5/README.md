@@ -21,17 +21,18 @@ NVLink. Tested 2026-08-30.
 **The only large model here that runs on a completely unpatched engine.** One setup,
 [vLLM 0.28.0 at TP=2](vllm/), no fork, no kernel patchset, no community image. It was the
 fastest thing on this machine when it was measured; [MiMo-V2.6-Flash](../mimo-v2-6-flash/)
-has since passed it on every column — 4.7× the answers per second at a tenth of the
+has since passed it on every column — 10× the answers per second at a tenth of the
 latency — and does so while also serving images.
 
 | | Measured |
 |---|---|
 | Single stream | 122.4 tok/s visible, 715.7 tok/s total, p50 1.96 s |
-| Peak under load | **9.65–9.75 answers/s at concurrency 256** (2947–3126 output tok/s), two runs |
+| Peak under load | **4.39–4.46 answers/s at concurrency 256** over the real run time (1,350–1,423 output tok/s), two runs, flat from 64 on |
 | Prefill, 180k tokens | 69.8 s, 2580 tok/s |
 | GPU utilisation | **100 % on both cards at every level** |
 
-The ladder is monotone from concurrency 1 to 256 in **both** runs — no dip, unlike the
+The ladder is monotone from concurrency 1 to 256 in **both** runs, flat above its 32
+running sequences ([why](../../benchmark/README.md#the-window-overstates-slow-answers)) — no dip, unlike the
 [NVFP4 DeepSeek run on the older machine](../../cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/README.md).
 Both cards sit at 100 % throughout, which is what distinguishes this from every
 llama.cpp path on this hardware. Run-to-run spread is at most 17 % and only 1 % at the

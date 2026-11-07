@@ -87,8 +87,8 @@ xychart-beta
 ## Reading
 
 **The curve is not monotone, and the dip sits exactly at `--max-num-seqs 64`.** Both runs
-lose throughput going from 32 to 64 concurrent requests — 3.42 → 1.88 and 4.08 → 3.27 —
-then recover at 128 and 256. A request ceiling that coincides with the level where
+lose throughput going from 32 to 64 concurrent requests — 3.35 → 1.39 and 3.83 → 3.14 over
+the real run time — then recover at 128 and 256. A request ceiling that coincides with the level where
 throughput falls is the obvious suspect: at 64 the scheduler is holding its maximum
 running set and has no free slot to admit a prefill chunk alongside decode, so prefill
 and decode alternate instead of overlapping. Above 64 the surplus requests queue outside
@@ -120,9 +120,10 @@ every level above 1, run 1 alternates. With `--tensor-parallel-size 2` both card
 same layers on split tensors and should move together, so the asymmetry points at
 scheduling or collective wait time rather than at load imbalance.
 
-**Two cards here reach 86 % of what four cards reach on the older release.** SGLang
-serving `DeepSeek-V4-Flash-0731` peaks at 11.30 req/s at concurrency 256 on all four
-cards; this stack reaches 9.97 on two, or **1.76× the requests per card**. The comparison
+**Two cards here reach 72 % of what four cards reach on the older release.** Over the real
+run time SGLang serving `DeepSeek-V4-Flash-0731` reaches 8.3 req/s at concurrency 256 in its
+shipped configuration on all four cards; this stack reaches 6.0 on two, or **1.45× the
+requests per card**. The comparison
 is worth stating and not worth over-reading: it is a different checkpoint release, a
 different quantisation and a different engine, so it does not say vLLM beats SGLang — it
 says this checkpoint on this kit gets useful throughput out of half the machine. The

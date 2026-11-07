@@ -15,12 +15,12 @@ three engines. Tested 2026-08-16.
 ## Verdict
 
 **vLLM for load, any of the three for a single user.** At concurrency 32 vLLM serves
-31.88 answers per second against SGLang's 21.55 and llama.cpp's 5.45 — with *better*
+31.1 answers per second against SGLang's 20.5 and llama.cpp's 4.9 — with *better*
 latency, not worse. At concurrency 1 the three are within 14 % of each other. The whole
 difference is batching; see [engine comparison](engine-comparison.md).
 
 **And prefer this model over the dense Gemma-4-31B on one card.** Same engine, same
-configuration, same card: 2.6× the output tokens at concurrency 32 and 3.9× better
+configuration, same card: 5.1× the output tokens at concurrency 32 and 3.9× better
 median latency, at a comparable parameter count.
 
 ## Measurements

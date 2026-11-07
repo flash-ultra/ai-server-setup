@@ -81,10 +81,10 @@ Over the real run time — concurrency ÷ median latency, [why](../../../../benc
 
 ## Reading it
 
-**2,275 output tok/s at C=256 with thinking on, still rising.** Every doubling of clients
-adds 30–40 % of throughput; the ladder has not flattened at 256, and the KV pool would
+**1,989 output tok/s at C=256 with thinking on, over the real run time, still rising.**
+Every doubling of clients adds 29–36 % of throughput; the ladder has not flattened at 256, and the KV pool would
 take seven times more. With thinking off the answers are 50 tokens, so the ladder is
-request-bound: 18.65 answers/s at C=256 (24 k total tok/s, most of it prompt).
+request-bound: 18.0 answers/s at C=256 (24 k total tok/s measured, most of it prompt).
 
 **The mixed run is the one that tells you about agents.** At C=32 the mix produces more
 output tokens per second than the uniform prompt (1,182 against 878) but answers at half
@@ -123,12 +123,13 @@ Over the real run time — concurrency ÷ median latency, [why](../../../../benc
 | 256 | 9.35 | 1,891 | 1.18× |
 
 **The draft pays for the first few clients and is neutral at saturation**: +58 % alone,
-+10–16 % up to C=128, nothing at C=256, where every step is already batch-bound. Serving
++9–16 % up to C=128 and 5 % less at C=256 over the real run time, where every step is
+already batch-bound. Serving
 agents or a handful of users: switch it on. Serving hundreds: it does not matter.
 
 ## Against the two-card machines
 
-| Output tok/s, thinking on | C=8 | C=16 | C=32 | C=256 |
+| Output tok/s as measured (`v1`), thinking on | C=8 | C=16 | C=32 | C=256 |
 |---|---|---|---|---|
 | **this**, vLLM FP8, 4× RTX PRO 6000 | 446.6 | 654.2 | 893.5 | **2274.9** |
 | Rocky 2× RTX PRO 4500, Strata IQ3_S, 2× RTX PRO 4500, 8 slots | 346.0 | 391.0 | queue | queue |

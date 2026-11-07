@@ -61,11 +61,12 @@ What this run adds is why they do not show here. A dense 30 B model does far mor
 per forward pass than one with 4 B active parameters — 28.6 tokens per second against
 190.1 — so the scheduler's idle windows are hidden behind compute rather than exposed by
 it. **High utilisation is not the same as high throughput:** the sparse model delivers
-816.9 output tokens per second at 49 % against this model's 520.5 at 92 %.
+561.3 output tokens per second at 49 % against this model's 312.2 at 92 %, both over the
+real run time.
 
-**Throughput scales monotonically and latency degrades gently.** 28.6 → 520.5 output
-tokens per second across the sweep, with p50 rising only from 14.9 s to 42.0 s — a
-2.8× latency cost for an 18× throughput gain.
+**Throughput scales monotonically and latency degrades gently.** Over the real run time
+27.4 → 312.2 output tokens per second across the sweep, with p50 rising only from 14.9 s
+to 42.0 s — a 2.8× latency cost for an 11× throughput gain.
 
 **Single-stream is the slowest of the three models measured here.** 28.6 tokens per
 second against 60.0 for the dense
@@ -74,8 +75,8 @@ the [MoE sibling](../../../gemma-4-26b-a4b/llama-cpp/scenarios/concurrent-load.m
 of that gap is the missing speculation — the Gemmas gain 37–49 % from MTP at low
 concurrency — and part is the dense 30 B architecture.
 
-**The order reverses under load.** At concurrency 32 this model delivers 520.5 output
-tokens per second against 310.2 for the dense Gemma, despite being slower at every low
+**The order reverses under load.** At concurrency 32 this model delivers 312.2 output
+tokens per second against 109.1 for the dense Gemma, despite being slower at every low
 level. Holding the card full matters more than per-token speed once the queue is deep.
 
 **A realistic prompt mix costs 18 %** — the largest of the three, 1.30 down to 1.07

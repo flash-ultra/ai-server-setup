@@ -45,8 +45,8 @@ ran 2026-10-24, both arms, and DeepSeek is ahead in every cell:
 
 | at concurrency 256 | this model **on** | DS **on** | this model **off** | DS **off** |
 |---|---|---|---|---|
-| [Answers/s](vllm/scenarios/concurrent-load.md) | 9.43 | **10.97** | 13.45 | **32.58–32.65** |
-| [Output tok/s](vllm/scenarios/concurrent-load.md) | 1821.0 | **3583.8** | 718.0 | **1173.2–1182.6** |
+| [Answers/s](vllm/scenarios/concurrent-load.md), over the real run time | 7.34 | **9.28** | 12.84 | **32.16–32.20** |
+| [Output tok/s](vllm/scenarios/concurrent-load.md), over the real run time | 1,417 | **3,032** | 685 | **1,158–1,166** |
 | Latency p50 | 34.89 s | **27.58 s** | 19.94 s | **7.95–7.96 s** |
 
 **On prefill the handicap is a steady 0.6×**:

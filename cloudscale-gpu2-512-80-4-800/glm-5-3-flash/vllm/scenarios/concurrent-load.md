@@ -43,8 +43,8 @@ Over the real run time — concurrency ÷ median latency, [why](../../../../benc
 ## Reading it
 
 **Above 64 clients the median answer takes longer than the 40-second measurement window**,
-so the answers counted at 128 and 256 are the ones that started in the warmup or early in
-the window; the answer rates there are a lower bound, and the latencies are what a client
-would see. The token rate climbs normally — 2,347 tok/s at 256, level with Qwen — but
+so the measured rates there count answers that finished long after it and overstate
+throughput up to 2.2×; the latencies are what a client would see. Over the real run time the
+token rate reaches 1,088 tok/s at 256, about half of Qwen's, at 3.0 answers per second, and
 each answer is 360–380 tokens of which five in six are thinking. At `reasoning_effort: "low"`
 the same cards answer 2.8× as often at C=8 ([reasoning cost](reasoning-cost.md)).

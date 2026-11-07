@@ -95,15 +95,14 @@ concurrency and climb into the nineties only under load; this one is bandwidth-s
 from the first request. The utilisation column therefore carries no information about
 headroom for this model — the throughput curve does.
 
-**The thinking-on ladder had not flattened at 256**, gaining 18 % in answers/s and 16 %
-in output tok/s over 128. The thinking-off ladder has nearly flattened: +6.7 % and
-+6.0 % on the same step. Anything quoted at 256 for the thinking-on arm is the protocol
-ceiling, not the machine's — the same caveat that applies to
-[DeepSeek](../../../deepseek-v4-flash-0731/sglang/scenarios/concurrent-load.md). Neither
-arm was taken past 256.
+**Both ladders have flattened by 256.** Over the real run time the thinking-on arm holds
+7.35 → 7.34 answers/s from 128 to 256 and the thinking-off arm gains 3 %; the 18 % the
+measured figures showed for thinking on was the
+[measurement window](../../../../benchmark/README.md#the-window-overstates-slow-answers).
+Neither arm was taken past 256.
 
-**The two arms cross, and which one leads depends on the column.** Thinking off gives
-1.43× the answers; thinking on gives 2.54× the output tokens. Tokens per answer is 193
+**The two arms cross, and which one leads depends on the column.** Over the real run time thinking
+off gives 1.75× the answers; thinking on gives 2.07× the output tokens. Tokens per answer is 193
 against 53. This is the same shape as every other reasoning model measured here, and it
 is why a row without a stated thinking arm cannot be compared to anything.
 
@@ -118,14 +117,14 @@ Same machine, same protocol, both arms stated —
 
 | at concurrency 256 | Qwen **on** | DS **on** | Qwen **off** | DS **off** |
 |---|---|---|---|---|
-| Answers/s | 9.43 | **10.97** | 13.45 | **32.58–32.65** |
-| Output tok/s | 1821.0 | **3583.8** | 718.0 | **1173.2–1182.6** |
+| Answers/s, over the real run time | 7.34 | **9.28** | 12.84 | **32.16–32.20** |
+| Output tok/s, over the real run time | 1,417 | **3,032** | 685 | **1,158–1,166** |
 | Latency p50 | 34.89 s | **27.58 s** | 19.94 s | **7.95–7.96 s** |
 | Tokens per answer | 193 | 327 | 53 | 35–36 |
 
-**DeepSeek wins every cell**, by 0.86× to 0.41× depending on arm and column. The widest
-gap is answers per second with thinking off — 13.45 against 32.6, a factor of 2.4 — and
-the narrowest is answers per second with thinking on, where the two are within 15 %.
+**DeepSeek wins every cell**, by 0.79× to 0.40× depending on arm and column. The widest
+gap is answers per second with thinking off — 12.8 against 32.2, a factor of 2.5 — and
+the narrowest is answers per second with thinking on, where the two are within 21 %.
 
 **The gap narrows as answers get longer**, which is the signature of the architectural
 difference rather than of tuning. Thinking-on answers are long enough that both setups

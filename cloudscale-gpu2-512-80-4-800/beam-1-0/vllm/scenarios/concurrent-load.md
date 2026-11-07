@@ -31,5 +31,6 @@ Over the real run time — concurrency ÷ median latency, [why](../../../../benc
 **Prompt mix at concurrency 32:** uniform 3.80 answers/s, 878.0 tok/s, p50 9.14 s · mixed 1.77 answers/s, 868.2 tok/s, p50 22.14 s.
 
 **From 64 to 128 clients the answer rate doubles at unchanged latency**, the same step MiMo
-showed on these cards under the same vLLM; from 128 to 256 it gains another 44 %. Cards at
+showed on these cards under the same vLLM; from 128 to 256 it gains another 38 % over the
+real run time. Cards at
 99–100 % from C=1 on.

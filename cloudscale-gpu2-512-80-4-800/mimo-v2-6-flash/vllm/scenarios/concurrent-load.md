@@ -77,13 +77,13 @@ Over the real run time — concurrency ÷ median latency, [why](../../../../benc
 ## Reading it
 
 **From 64 to 128 clients the answer rate doubles at unchanged latency**, in both arms
-(19.45 → 38.52 and 26.60 → 54.27, p50 3.3 → 3.4 s and 2.4 → 2.4 s). The ladder below 128 is
+(19.2 → 38.0 and 26.5 → 53.3 over the real run time, p50 3.3 → 3.4 s and 2.4 → 2.4 s). The ladder below 128 is
 not limited by the cards — they are at 100 % from 32 on — but by something that stops
 binding at 128; the size of vLLM's captured CUDA graphs or the default batch budget are
 the likely candidates. Untested. The two-card ladder rose smoothly through the same range.
 
 **At 256 the ladder still has not turned over**, as on two cards: p50 under five seconds
-with thinking on. Against the two-card machine at 256: 3,740 against 3,129 output tok/s,
-55.0 against 46.1 answers/s — 1.19×. Against Qwen3.8-Flash-Next FP8 on these cards:
-3,740 against 2,275 tok/s and 55 against 11 answers/s, because Qwen thinks for 160 tokens
+with thinking on. Against the two-card machine at 256, over the real run time: 3,650 against
+3,030 output tok/s, 53.7 against 44.6 answers/s — 1.20×. Against Qwen3.8-Flash-Next FP8 on
+these cards: 3,650 against 1,989 tok/s and 54 against 10 answers/s, because Qwen thinks for 160 tokens
 where MiMo thinks for 14.

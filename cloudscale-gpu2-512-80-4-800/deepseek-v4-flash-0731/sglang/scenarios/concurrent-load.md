@@ -127,9 +127,26 @@ container was stopped for every run so all four cards had symmetric free memory.
 | 768 | 64 | 768 | **crashed** | | | | |
 | 768 | 64 | 896 | **crashed** | | | | |
 
-Each cell is a single 40 s window. The 6 % run-to-run spread measured at concurrency 128
-applies here too, so 19.65 against 19.32 does not establish 768 as the exact optimum —
-only that the curve turns somewhere between 768 and 1024.
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| `max-running-requests` | `cuda-graph-max-bs` | Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|---|---|
+| 256 | 64 | 128 | 5.15 | 1,749 | 1.20× |
+| 256 | 64 | 256 | 8.33 | 2,762 | 1.36× |
+| 512 | 64 | 256 | 6.85 | 2,264 | 1.32× |
+| 512 | 64 | 384 | 9.49 | 3,081 | 1.35× |
+| 512 | 64 | 512 | 11.00 | 3,560 | 1.48× |
+| 512 | 128 | 256 | 6.03 | 1,974 | 1.36× |
+| 512 | 128 | 384 | 8.62 | 2,811 | 1.36× |
+| 512 | 128 | 512 | 10.15 | 3,250 | 1.52× |
+| 1024 | 64 | 512 | 8.17 | 2,706 | 1.60× |
+| 1024 | 64 | 768 | 11.26 | 3,698 | 1.74× |
+| **1024** | **64** | **1024** | **14.25** | **4,438** | 1.36× |
+| 768 | 64 | 640 | 9.67 | 2,865 | 1.08× |
+
+Each cell is a single 40 s window. Measured, 768 and 1024 looked level (19.65 against
+19.32 req/s); over the real run time 1024 is clearly ahead, 14.25 against 11.26, so the
+range measured shows no turning point.
 
 ### The flags trade against the same memory
 
@@ -166,25 +183,25 @@ already degraded.
 
 ## Reading
 
-**Throughput keeps scaling to 256 — the curve does not flatten.** From 128 to 256 both
-output and total tokens rise by 73 %, and answers per second nearly double. This
+**Throughput keeps scaling to 256 — the curve does not flatten.** From 128 to 256 answers
+per second nearly double over the real run time, 4.29 to 8.22, and output tokens with them. This
 contradicts the reference recipe for this image, which reports throughput regressing
 beyond concurrency 128.
 
 **And it keeps scaling past 256 — the limit was the configuration, not the hardware.**
-The [configuration sweep](#configuration-sweep-protocol-v1) reaches **19.65 req/s at
-concurrency 768** with `max-running-requests 1024`, against 11.30 for the shipped
-configuration at its own best level — **74 % more answers per second on the same cards**.
-The turning point lies between 768 and 1024.
+The [configuration sweep](#configuration-sweep-protocol-v1) reaches **14.3 req/s at
+concurrency 1024** with `max-running-requests 1024`, against 8.3 for the shipped
+configuration at its own best level — **71 % more answers per second on the same cards**,
+both over the real run time. No turning point within the range measured.
 
 **But the ceiling is a three-way trade, not a number.** Raising the request ceiling
 shrinks the KV pool; raising the graph budget shrinks it further; and a ceiling that the
 load does not fill costs throughput rather than adding it — `max-running-requests 1024`
-at concurrency 512 is worse than `512` at the same level (13.07 against 16.23 req/s).
+at concurrency 512 is worse than `512` at the same level (8.2 against 11.0 req/s).
 A larger `cuda-graph-max-bs` loses on every level measured.
 
 **The shipped configuration is not the throughput optimum, and it is not obviously the
-wrong choice either.** At concurrency 768 the median response time is 68 s. That is
+wrong choice either.** At concurrency 1024 the median response time is 72 s. That is
 batch territory; for interactive use the usable range stays where it was. Changing it
 would also mean living next to a configuration that hard-crashes, which is an argument
 for measuring stability before chasing the peak.
@@ -217,10 +234,10 @@ was is in the table below.
 
 ```mermaid
 xychart-beta
-    title "Best measured throughput at each load"
+    title "Best throughput at each load, over the real run time"
     x-axis "concurrent requests" [128, 256, 384, 512, 768, 1024]
-    y-axis "answers per second" 0 --> 21
-    line "best of any configuration" [6.20, 11.30, 12.80, 16.23, 19.65, 19.32]
+    y-axis "answers per second" 0 --> 16
+    line "best of any configuration" [5.15, 8.33, 9.49, 11.00, 11.26, 14.25]
 ```
 
 ```mermaid
@@ -242,11 +259,11 @@ Each configuration at its own best level — the number it reaches when the load
 fills its ceiling:
 
 ```
-req/s          0                    20      median response
+req/s          0                    15      median response
 
-cap 256   ship ███████████░░░░░░░░░░  11.30      31 s   at 256 concurrent
-cap 512        ████████████████░░░░░  16.23      47 s   at 512 concurrent
-cap 1024       ████████████████████░  19.65      68 s   at 768 concurrent
+cap 256   ship ████████████░░░░░░░░░   8.33      31 s   at 256 concurrent
+cap 512        ███████████████░░░░░░  11.00      47 s   at 512 concurrent
+cap 1024       ████████████████████░  14.25      72 s   at 1024 concurrent
 ```
 
 Throughput and response time move together, so the choice is a workload question, not a
@@ -255,9 +272,9 @@ better/worse question:
 | Offered load | Configuration | Why |
 |---|---|---|
 | up to ~64 | **shipped** | Cards already sit at 92 % utilisation and responses take 4–18 s. A higher ceiling changes nothing here except shrinking the KV pool |
-| 64 – 256 | **shipped** | At 256 the shipped ceiling gives 11.30 req/s against 9.05 for `cap 512`. A ceiling the load does not fill costs throughput |
-| 256 – 512 | `--max-running-requests 512` | 16.23 req/s, but median response time rises to 47 s |
-| 512 – 1024 | `--max-running-requests 1024` | 19.65 req/s at concurrency 768, the best measured value. The curve turns between 768 and 1024 |
+| 64 – 256 | **shipped** | At 256 the shipped ceiling gives 8.3 req/s against 6.9 for `cap 512`. A ceiling the load does not fill costs throughput |
+| 256 – 512 | `--max-running-requests 512` | 11.0 req/s, but median response time rises to 47 s |
+| 512 – 1024 | `--max-running-requests 1024` | 14.3 req/s at concurrency 1024, the best measured value, still rising there |
 | — | **never `768`** | [Crashes the scheduler](#max-running-requests-768-crashes-the-scheduler) |
 
 `--cuda-graph-max-bs` stays at 64 in every row: 128 loses on every level measured.

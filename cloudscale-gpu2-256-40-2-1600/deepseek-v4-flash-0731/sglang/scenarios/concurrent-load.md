@@ -156,30 +156,32 @@ mixed 2.40 · 1206.2 · 15.66 s.
 
 ```mermaid
 xychart-beta
-    title "Output tokens per second — thinking off against thinking on"
+    title "Output tokens per second over the real run time — thinking off against thinking on"
     x-axis "Concurrent requests (levels are evenly spaced, not linear)" [1, 8, 16, 32, 64, 128, 256]
-    y-axis "Output tok/s" 0 --> 3600
-    line "thinking off (run 1)" [76.1, 220.4, 306.0, 410.4, 626.7, 981.1, 1173.2]
-    line "thinking on (run 4)" [95.8, 450.8, 715.3, 1030.8, 1584.7, 2479.2, 3583.8]
+    y-axis "Output tok/s" 0 --> 3200
+    line "thinking off (run 1)" [76.1, 220.4, 306.0, 408.6, 621.7, 973.3, 1158]
+    line "thinking on (run 4)" [93.7, 433.7, 644.7, 977.0, 1464, 2137, 3032]
 ```
 
 ## Reading
 
-**The protocol ceiling is not the machine's ceiling.** Run 3 reaches 39.62 answers/s and
-1,436.5 output tok/s at 512 concurrent requests — 22 % and 24 % above the 256 figure that
-three other documents quote as the peak — with both cards at 98 % and p50 still at 15.7 s.
-The curve had not flattened when the sweep stopped. Everything above 512 is untested, and
-the 256 column of this run reproduces August to within 1.7 % after 23 days.
+**Past 256 this setup does not gain.** Run 3 measured 39.62 answers/s and 1,436.5 output
+tok/s at 512 concurrent requests — 22 % and 24 % above its 256 figure — but over the real run
+time it holds 32.1, 33.4 and 32.7 answers/s at 256, 384 and 512, with both cards at 98 %
+and p50 rising to 15.7 s: the gain was the
+[measurement window](../../../../benchmark/README.md#the-window-overstates-slow-answers).
+The 256 column of this run reproduces August to within 1.7 % after 23 days.
 
 **Thinking inverts the comparison.** Same model, same cards, same prompt: with thinking on
-the server delivers **3× the output tokens per second** and **3× fewer answers**. Answers
+the server delivers **2.6× the output tokens per second** and **3.5× fewer answers** over
+the real run time. Answers
 grow from 36 to 327 tokens, a factor of 9.1, which matches the 8.75× measured on the
 [four-card machine](../../../../cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/sglang/scenarios/reasoning-cost.md).
 
 | At concurrency 256 | Thinking off | Thinking on |
 |---|---|---|
-| Answers/s | 32.58 | 10.97 |
-| Output tok/s | 1,173.2 | **3,583.8** |
+| Answers/s, over the real run time | 32.16 | 9.28 |
+| Output tok/s, over the real run time | 1,158 | **3,032** |
 | Tokens per answer | 36 | 327 |
 | Latency p50 | 7.96 s | 27.58 s |
 | GPU | 99 % · 97 % | 97 % · 95 % |
@@ -189,7 +191,7 @@ different work, and **any table that ranks this setup against another has to sta
 arm it used.** Ranked by tokens this setup leads the machine with thinking on and trails
 with it off. It led on answers per second in both arms until
 [MiMo-V2.6-Flash](../../../mimo-v2-6-flash/vllm/scenarios/concurrent-load.md) was measured,
-which reaches 46.05 at this level with thinking on.
+which reaches 44.6 at this level with thinking on, over the real run time.
 
 **The most reproducible ladder measured on this machine.**
 

@@ -29,7 +29,7 @@ and working speculative decoding. In production since 2026-08-15.
 | Scenario | Headline |
 |---|---|
 | [Single stream](scenarios/single-stream.md) | 131.2 output tok/s · 665.2 total tok/s · TTFT 0.15 s |
-| [Concurrent load](scenarios/concurrent-load.md) | shipped ceiling peaks at C=256 · raising it reaches **19.65 req/s** at C=768 · 97 % GPU |
+| [Concurrent load](scenarios/concurrent-load.md) | shipped ceiling peaks at C=256 · raising it reaches **14.3 req/s** at C=1024 over the real run time · 97 % GPU |
 | [Long context](scenarios/long-context.md) | full 1M verified · prefill 470.7 s · **3/3 needles recovered** |
 | [Reasoning cost](scenarios/reasoning-cost.md) | thinking off = **3.5× answers/s**, 8.75× fewer tokens per answer |
 
@@ -136,7 +136,7 @@ running requests still stay on-graph at `--dp-size 4`. With `--dp-size 1` it wou
 need to be 64 global.
 
 `--max-running-requests 256` is a latency choice, not the throughput maximum. Raising it
-buys up to 74 % more answers per second — at loads this deployment does not currently
+buys up to 71 % more answers per second — at loads this deployment does not currently
 reach, and at the cost of median response time. Which ceiling suits which workload is
 worked out in
 [concurrent load](scenarios/concurrent-load.md#choosing-a-configuration-for-a-workload).

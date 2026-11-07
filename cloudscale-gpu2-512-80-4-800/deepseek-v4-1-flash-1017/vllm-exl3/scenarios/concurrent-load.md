@@ -66,18 +66,19 @@ Over the real run time — concurrency ÷ median latency, [why](../../../../benc
 
 ## Reading it
 
-**Four cards give this pack 1.6–2.3× under load**, against 1.19× for MiMo on the same
-step: 467 against 261 tok/s at C=8, 682 against 299 at C=16, 2,112 against 1,296 at C=256.
+**Four cards give this pack 1.8–3.8× under load**, against 1.2× for MiMo on the same
+step: 467 against 261 tok/s at C=8, 673 against 254 at C=16, 1,510 against 399 at C=256,
+all over the real run time.
 The two-card configuration runs 8 sequences by default and 32 at most; four cards hold the
-whole expert set in VRAM and admit 128. **C=32 and C=128 dip** (676 and 1,310 tok/s, the cards
-at 70–80 %, p95 four times p50): the drafter's verify batches and the NCCL all-reduce do not
-fill the cards at those sizes; one run per level, so the dips are worth re-measuring before
-they are read as a property.
+whole expert set in VRAM and admit 128. **C=32 does not gain over C=16** (677 against 673 tok/s, the
+cards at 68–72 %, p95 three times p50), and C=128 runs the cards at 77–81 %: the drafter's
+verify batches and the NCCL all-reduce do not fill the cards at those sizes; one run per level,
+so the flat spot is worth re-measuring before it is read as a property.
 
-| Output tok/s, thinking on | C=1 | C=8 | C=16 | C=256 |
+| Output tok/s over the real run time, thinking on | C=1 | C=8 | C=16 | C=256 |
 |---|---|---|---|---|
-| **DeepSeek EXL3, 4 cards** | 158.5 | 467.2 | 682.4 | 2111.8 |
-| DeepSeek EXL3, 2 cards | 140.7 | 261.0 | 299.4 | 1296.0 |
-| DeepSeek GSQ-RCO, Strata, 4 cards, 2 replicas | 109.2 | 319.0 | 338.6 | — |
-| Qwen3.8-Flash-Next FP8, vLLM, 4 cards | 110.3 | 446.6 | 654.2 | 2274.9 |
-| MiMo-V2.6-Flash-RL, vLLM, 4 cards | 139.3 | 465.2 | 660.6 | 3739.6 |
+| **DeepSeek EXL3, 4 cards** | 158.5 | 467.2 | 672.9 | 1,510 |
+| DeepSeek EXL3, 2 cards | 140.3 | 261.0 | 253.5 | 399 |
+| DeepSeek GSQ-RCO, Strata, 4 cards, 2 replicas | 106.7 | 302.1 | 282.3 | — |
+| Qwen3.8-Flash-Next FP8, vLLM, 4 cards | 110.3 | 446.6 | 651.4 | 1,989 |
+| MiMo-V2.6-Flash-RL, vLLM, 4 cards | 139.3 | 465.2 | 660.6 | 3,650 |

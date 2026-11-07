@@ -64,4 +64,5 @@ not fit. For more than one user, `--replicas 2` is the configuration to serve.
 **With one engine, eight slots buy 1.4× over one client.** The cards never pass 30 %, so this is the engine's
 limit: each slot advances its own ring through the pipeline, and the rings are not batched
 into one matrix product the way vLLM or Strata's Qwen engine batch them. For comparison at
-C=8 on the same cards: Strata Qwen IQ3_S 645.5, MiMo under vLLM 465.2, this 159.6.
+C=8 on the same cards, over the real run time: Strata Qwen IQ3_S 645.5, MiMo under vLLM 465.2,
+this 151.2.

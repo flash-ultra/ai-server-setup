@@ -14,7 +14,7 @@ Dense Gemma-4 on a single RTX PRO 6000 under llama.cpp. Tested 2026-08-16.
 ## Verdict
 
 **Choose the sparse sibling instead.** On the same card, engine and configuration,
-[Gemma-4-26B-A4B](../gemma-4-26b-a4b/) delivers 2.6× the output tokens at concurrency 32
+[Gemma-4-26B-A4B](../gemma-4-26b-a4b/) delivers 5.1× the output tokens at concurrency 32
 and 3.9× better median latency, at a comparable total parameter count. Nothing measured
 here favours the dense variant.
 

@@ -18,7 +18,7 @@ Tested 2026-08-16.
 **The slowest of the three single-card models for one user, and the most robust under
 load.** 28.6 output tokens per second at concurrency 1 against 190.1 for
 [Gemma-4-26B-A4B](../gemma-4-26b-a4b/) — but the ordering reverses nowhere: at
-concurrency 32 it reaches 520.5 against the sparse Gemma's 816.9. It stays behind
+concurrency 32 it reaches 312.2 against the sparse Gemma's 561.3. It stays behind
 throughout while holding the card at 92–99 %.
 
 That utilisation is what makes this model useful in this directory: it is the control

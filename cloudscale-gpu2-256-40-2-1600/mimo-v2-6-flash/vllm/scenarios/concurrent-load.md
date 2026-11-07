@@ -62,21 +62,21 @@ comparison against only one of its arms would be picking the convenient one:
 | at concurrency 256 | MiMo | [DeepSeek-0731](../../../deepseek-v4-flash-0731/sglang/scenarios/concurrent-load.md) | DeepSeek-0731 | [MiniMax-M2.5](../../../minimax-m2-5/vllm/scenarios/concurrent-load.md) |
 |---|---|---|---|---|
 | Thinking | **on** | **on** | off (default) | on, not switchable |
-| Answers/s | **46.05** | 10.97 | 32.58 | 9.75 |
-| Output tok/s | 3,128.9 | **3,583.8** | 1,173.2 | 2,947.3 |
+| Answers/s, over the real run time | **44.6** | 9.28 | 32.16 | 4.46 |
+| Output tok/s, over the real run time | **3,030** | **3,032** | 1,158 | 1,350 |
 | Latency p50 | **5.74 s** | 27.58 s | 7.96 s | 57.34 s |
 | Tokens/answer | 68 | 327 | 35 | 258 |
 | Context served | 196,608 | 262,144 | 262,144 | 196,608 |
 
-**Against the like-for-like arm — both thinking — it is 4.2× the answers at a fifth of the
-latency.** DeepSeek stays ahead on output tokens per second, and the tokens-per-answer
+**Against the like-for-like arm — both thinking — it is 4.8× the answers at a fifth of the
+latency.** DeepSeek ties it on output tokens per second, and the tokens-per-answer
 column says why: 327 against 68. It is not delivering more answers, it is writing five
 times as much per answer, four fifths of which is scratchpad the user never sees.
 
 **Both cards at 100 % from the first level to the last.** MiniMax-M2.5 is the only other
-setup here that does that — and it does it at a fifth of the answer rate. Saturation says
+setup here that does that — and it does it at a tenth of the answer rate. Saturation says
 the engine is never idling; it says nothing about how much work comes out. DeepSeek runs
-91–99 % and delivers 3.3× MiniMax's answers; llama.cpp pins in the forties.
+91–99 % and delivers 7.2× MiniMax's answers; llama.cpp pins in the forties.
 
 **The curve had not turned over at 256.** Answers per second rose monotonically through
 every level and the median response was still under six seconds at the top. Where it

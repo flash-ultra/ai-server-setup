@@ -9,9 +9,9 @@ DeepSeek engine.
 
 ## Verdict, EXL3 on four cards
 
-**The best DeepSeek setup measured, and close to the fastest model on this machine.** 153
-tok/s single stream, 467 / 682 tok/s at C=8 / 16 and **2,112 tok/s at C=256** — level with
-Qwen3.8-Flash-Next under vLLM — with every expert in VRAM, a 4.5 M-token KV pool, and a
+**The best DeepSeek setup measured, and the fastest single stream of the vLLM setups on this
+machine.** 153 tok/s single stream, 467 / 673 tok/s at C=8 / 16 and **1,510 tok/s at C=256**,
+three quarters of Qwen3.8-Flash-Next under vLLM (1,989) — with every expert in VRAM, a 4.5 M-token KV pool, and a
 million-token prompt read in 88 s with every needle found. The quality is the pack's, measured
 on two cards: MMLU-Pro 0.880, IFEval 0.955, **HumanEval 1.000** with thinking. All of it on
 NCCL, because this VM lacks the peer atomics the pack's own all-reduce kernels need
@@ -20,14 +20,14 @@ NCCL, because this VM lacks the peer atomics the pack's own all-reduce kernels n
 | | EXL3 3 bpw · 4 cards | EXL3 3 bpw · 2 cards | GSQ-RCO 2.25 bpw · Strata · 4 cards |
 |---|---|---|---|
 | Single stream, thinking on | **153.2 tok/s** | 136.5 | 111.8 |
-| C=8 / C=16 | **467 / 682 tok/s** | 261 / 299 | 160 / 182 (one engine), 319 / 339 (two) |
-| C=256 | **2,112 tok/s, 12.9 answers/s** | 1,296 | — |
+| C=8 / C=16 | **467 / 673 tok/s** | 261 / 254 | 151 / 154 (one engine), 302 / 282 (two) |
+| C=256 | **1,510 tok/s, 9.2 answers/s** | 399 | — |
 | Prefill 250k | **13,264 tok/s** | 11,386 (180k) | 4,159 |
 | Needles | 3 of 3 at **960k** | 3 of 3 at 960k | 3 of 3 at 250k |
 | `q1` thinking on: MMLU-Pro / IFEval / HumanEval | 0.880 / 0.955 / **1.000** (same pack, two cards) | | **0.890 / 0.965** / 0.994 |
 
-**Four cards scale this pack where they did not scale MiMo**: 1.6–2.3× the two-card
-throughput under load, against 1.19×, because the two-card setup runs at most 32 sequences
+**Four cards scale this pack where they did not scale MiMo**: 1.8–3.8× the two-card
+throughput under load, against 1.2×, because the two-card setup runs at most 32 sequences
 and keeps part of the experts in host RAM, while four cards hold all of them and admit 128.
 
 ## Verdict, GSQ-RCO under Strata
@@ -42,8 +42,8 @@ and keeps part of the experts in host RAM, while four cards hold all of them and
 
 **A fast single stream for a 763 B model, and almost nothing more under load.** 111.8 output
 tok/s for one client, decode a flat 110 tok/s even behind 64k of context, and every needle
-to 250k. With eight slots and sixteen clients it reaches 182 tok/s while the cards sit at
-20–30 %: the DeepSeek engine is built for one user at a time, unlike Strata's Qwen engine,
+to 250k. With eight slots it levels off at about 154 tok/s from four clients on, while the cards sit
+at 20–30 %: the DeepSeek engine is built for one user at a time, unlike Strata's Qwen engine,
 which reached 645 tok/s at eight clients on the same cards.
 
 | | DeepSeek-V4.1 GSQ-RCO 2.25 bpw · Strata · four cards | [DeepSeek-V4.1 EXL3 3 bpw · vLLM · two cards](../../cloudscale-gpu2-256-40-2-1600/deepseek-v4-1-flash-1017/README.md) |
@@ -52,15 +52,15 @@ which reached 645 tok/s at eight clients on the same cards.
 | Decode | 110 tok/s, flat | 114–128 tok/s |
 | Prefill | 4,079 / 4,321 / 4,159 tok/s at 64k / 128k / 250k | **11,386 tok/s at 180k** |
 | Needles | 3 of 3 at 250k | 3 of 3 at 960k |
-| Output at C=16, thinking on | 182.4 tok/s | — (8 engine slots by default) |
+| Output at C=16, thinking on | 153.7 tok/s | — (8 engine slots by default) |
 
 **Behind the EXL3 pack on every throughput column**, on two cards as on four: Strata's
 DeepSeek path is a port of a single-GPU engine that splits layers across cards and runs
 them one after another, where the pack's recipe runs TP and EP with batched kernels.
 
-**Two engines on two cards each double that**: `--replicas 2` reaches 319 tok/s at C=8 and
-389 at C=32, the cards at 50 % — still a fifth of what vLLM serves with MiMo on these cards,
-and the configuration to use for more than one user.
+**Two engines on two cards each double that**: `--replicas 2` reaches 302 tok/s at C=8 and
+holds about 290 above it, the cards at 50 % — a third of what vLLM serves with MiMo at C=32
+on these cards, and the configuration to use for more than one user.
 
 **The layer split has to be set by hand.** The engine's own placement put 1, 1, 13 and 25
 layers on the four cards, left two of them nearly empty and spilled 284 experts to the CPU;

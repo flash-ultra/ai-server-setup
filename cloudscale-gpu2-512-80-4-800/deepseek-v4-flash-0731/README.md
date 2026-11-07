@@ -31,14 +31,15 @@ removed from the machine on 2026-08-16.
 At 32 concurrent requests SGLang serves 3.2× the requests at 55× lower latency,
 running all four GPUs at 91–95 % utilisation versus llama.cpp's 20 %.
 
-Peak on the SGLang stack **as shipped**: 27,026 total tok/s at concurrency 256 — a
-pre-`v1` figure, so it compares to the numbers below on requests per second but not on
-tokens ([why](sglang/scenarios/concurrent-load.md#throughput)). That
+Peak on the SGLang stack **as shipped**: 11.12 req/s at concurrency 256, 8.2 over the real
+run time ([why](../../benchmark/README.md#the-window-overstates-slow-answers)) — a pre-`v1`
+figure, so it compares to the numbers below on requests per second but not on tokens
+([why](sglang/scenarios/concurrent-load.md#throughput)). That
 sweep was stopped by the configured request limit, not by the throughput curve
 flattening — and raising the limit confirmed it: a
 [configuration sweep](sglang/scenarios/concurrent-load.md#configuration-sweep-protocol-v1)
-reaches **74 % more answers per second** at concurrency 768 with
-`--max-running-requests 1024`. The shipped configuration is not the throughput optimum;
+reaches **71 % more answers per second** at concurrency 1024 with
+`--max-running-requests 1024`, over the real run time. The shipped configuration is not the throughput optimum;
 it is a latency choice. One neighbouring setting crashes the scheduler outright, so the
 faster configuration is a measured finding, not yet a recommendation.
 

@@ -63,9 +63,13 @@ Median latency at the same levels:
 | 8 | 0.64 s | 0.83 s | 1.81 s |
 | 32 | **1.03 s** | 1.56 s | **6.48 s** |
 
+Over the real run time — concurrency ÷ median latency,
+[why](../../benchmark/README.md#the-window-overstates-slow-answers) — the C=32 row reads
+**31.1** / 20.5 / 4.9 answers per second, and C=8 12.5 / 9.6 / 4.35.
+
 ## Reading
 
-**vLLM delivers 5.9× the answers per second of llama.cpp at concurrency 32 — and does it
+**vLLM delivers 6.3× the answers per second of llama.cpp at concurrency 32 — and does it
 with better latency, not worse.** 1.03 s against 6.48 s. This is not a throughput-latency
 trade; one engine is simply better at this workload on both axes at once.
 
@@ -87,7 +91,7 @@ time is the scheduler, and nothing else is left to blame.
 > 92 % on llama.cpp is consistent with it: a model heavy enough per token hides the gaps
 > the scheduler leaves.
 
-**SGLang sits between the two and closer to vLLM.** 21.55 against 31.88 answers per
+**SGLang sits between the two and closer to vLLM.** 20.5 against 31.1 answers per
 second, and its utilisation drifts down under load where vLLM's does not. The version
 here is the DeepSeek-V4 fork carrying 33 patches, not a stock build, which is a plausible
 part of the gap and was not isolated.

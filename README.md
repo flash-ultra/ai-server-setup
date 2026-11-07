@@ -22,23 +22,25 @@ Which model has been measured on which machine, and with what result.
 
 | Model | cloudscale `GPU2-512-80-4-800` | cloudscale `GPU2-256-40-2-1600` |
 |---|---|---|
-| **DeepSeek-V4.1-Flash-1017** · 763 B, 6/384 experts, **EXL3 3 bpw**; GSQ-RCO 2.25 bpw on 4 cards | [EXL3 pack recipe, TP4 + EP4](cloudscale-gpu2-512-80-4-800/deepseek-v4-1-flash-1017/vllm-exl3/) — **153 tok/s single stream, 2,112 tok/s at C=256**, prefill 13.3 k, 3/3 needles at 960k · [Strata DeepSeek engine, GSQ-RCO 2.25 bpw](cloudscale-gpu2-512-80-4-800/deepseek-v4-1-flash-1017/strata/) — 111.8 tok/s single stream, prefill 4.1 k tok/s, 182 tok/s at C=16: single-user engine | [vLLM + EXL3 plugin, pack's own recipe](cloudscale-gpu2-256-40-2-1600/deepseek-v4-1-flash-1017/) — **11,386 prefill tok/s at 180k**, the fastest here by 1.6× · decode 114.2–128.4 · **136.5 tok/s** single stream, p50 1.19 s · **3/3 needles at 960,000 tokens**, four times the next deepest · **1.000 on HumanEval** and first in three of five under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) · **images** · 8 engine slots by default, so its concurrency row measures a queue |
-| **Qwen3.8-27B** · dense **BF16**, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/qwen3-8-27b/) — thinking **on**: **1,821 output tok/s** @ C=256, 9.43 answers/s at 193 tokens · thinking **off**: **718 tok/s**, 13.45 answers/s at 53 tokens · 3/3 needles to **240k**, the deepest here · **0.6× DeepSeek on prefill**; decode 49.5 tok/s, both arms · best quality measured under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) · **images**, native · full precision |
-| **GLM-5.3-Flash** · 321 B, 18 B active, **NVFP4** | [vLLM 0.33, TP=4 + EP](cloudscale-gpu2-512-80-4-800/glm-5-3-flash/) — **2,347 output tok/s** @ C=256 but **6.4 answers/s**, 376 tokens per answer · thinking cannot be switched off, `low` cuts it to 52 tokens · prefill 6.4 k tok/s flat to 250k | — |
+| **DeepSeek-V4.1-Flash-1017** · 763 B, 6/384 experts, **EXL3 3 bpw**; GSQ-RCO 2.25 bpw on 4 cards | [EXL3 pack recipe, TP4 + EP4](cloudscale-gpu2-512-80-4-800/deepseek-v4-1-flash-1017/vllm-exl3/) — **153 tok/s single stream, 1,510 tok/s at C=256**, prefill 13.3 k, 3/3 needles at 960k · [Strata DeepSeek engine, GSQ-RCO 2.25 bpw](cloudscale-gpu2-512-80-4-800/deepseek-v4-1-flash-1017/strata/) — 111.8 tok/s single stream, prefill 4.1 k tok/s, about 154 tok/s from C=4 on: single-user engine | [vLLM + EXL3 plugin, pack's own recipe](cloudscale-gpu2-256-40-2-1600/deepseek-v4-1-flash-1017/) — **11,386 prefill tok/s at 180k**, the fastest here by 1.6× · decode 114.2–128.4 · **136.5 tok/s** single stream, p50 1.19 s · **3/3 needles at 960,000 tokens**, four times the next deepest · **1.000 on HumanEval** and first in three of five under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) · **images** · 8 engine slots by default, so its concurrency row measures a queue |
+| **Qwen3.8-27B** · dense **BF16**, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/qwen3-8-27b/) — thinking **on**: **1,417 output tok/s** @ C=256, 7.34 answers/s at 193 tokens · thinking **off**: **685 tok/s**, 12.84 answers/s at 53 tokens · 3/3 needles to **240k**, the deepest here · **0.6× DeepSeek on prefill**; decode 49.5 tok/s, both arms · best quality measured under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) · **images**, native · full precision |
+| **GLM-5.3-Flash** · 321 B, 18 B active, **NVFP4** | [vLLM 0.33, TP=4 + EP](cloudscale-gpu2-512-80-4-800/glm-5-3-flash/) — **1,088 output tok/s** @ C=256 at **3.0 answers/s**, 376 tokens per answer · thinking cannot be switched off, `low` cuts it to 52 tokens · prefill 6.4 k tok/s flat to 250k | — |
 | **MiniMax-M3.1-Flash** · MXFP8 + NVFP4 experts | [does not run on sm120](cloudscale-gpu2-512-80-4-800/minimax-m3-1-flash/) — vLLM 0.33 allocates the NVFP4 experts at 8 bit (OOM), SGLang's MSA decode indexer exists for SM100/SM103 only | — |
-| **Beam-1.0-501B-A23B** · NVFP4 | [vLLM 0.33, TP=4](cloudscale-gpu2-512-80-4-800/beam-1-0/) — **3,472 output tok/s**, 14.9 answers/s @ C=256 · 98 single stream · thinking always on · `q1` MMLU-Pro 0.890 | — |
-| **Nemotron-3-Super-120B-A12B** · NVFP4, one card per copy | [vLLM 0.33, DP=4](cloudscale-gpu2-512-80-4-800/nemotron-3-super/) — **2,592 output tok/s** @ C=256, 83 single stream · prefill 8 k tok/s on one card · 10.7 M cache tokens per card | — |
-| **MiMo-V2.6-Flash-RL** · FP8 | [vLLM 0.33, TP=4](cloudscale-gpu2-512-80-4-800/mimo-v2-6-flash/) — **3,740 output tok/s** @ C=256 · **55.0 answers/s** thinking on, 75.6 off · 140 tok/s single stream · 262k context, KV pool 4.3 M · prefill 3.6 k tok/s at 250k, 3/3 needles · `q1` MMLU-Pro 0.775 off, 0.850 on | [vLLM, vendor image](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/) — **3,129 output tok/s** @ C=256 · **46.05 answers/s** at p50 5.74 s · thinking **on** · **images** · 100 % on both cards at every level · 196,608 context, 3/3 needles at 180k |
-| **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — **2,947–3,126 output tok/s** @ C=256 · 9.65–9.75 answers/s · decode 116.6 · **thinking cannot be switched off**, probed not assumed · quality under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai): last of three in three benchmarks, behind a 27 B dense model in all five |
-| **Qwen3.8-Flash-Next** · 125 B, 512 experts, 10 active | [vLLM 0.33 FP8 TP=4](cloudscale-gpu2-512-80-4-800/qwen3-8-flash-next/vllm/) — **2,275 output tok/s** @ C=256 · 110 single stream, **175 with the MTP draft** · prefill 7.8k, 3/3 at 250k · [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) HumanEval 0.976, IFEval 0.930 · [Strata 0.2.11, IQ3_S / Q8_0, 8 slots](cloudscale-gpu2-512-80-4-800/qwen3-8-flash-next/strata/) — **225 / 187 tok/s single stream**, **21,873 / 17,757 prefill tok/s**, 645 / 564 @ C=8, queue above, cards at 20–34 % · [`q1`](cloudscale-gpu2-512-80-4-800/qwen3-8-flash-next/strata/scenarios/quality.md): 3 bits cost 5.5 points on MMLU-Pro without thinking, nothing elsewhere | [llama.cpp master, Q6 on 6 slots](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — **1,390 output tok/s** @ C=256 · 7.47 answers/s · **images** · pinned in the forties by the layer split |
-| **DeepSeek-V4-Flash-0731** · 284 B | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/), 4 cards — **6,454 output tok/s** @ C=768 · 19.65 req/s · full 1M context verified | [same image at TP=2](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/), 2 cards — thinking **off**: **1,159–1,183 output tok/s** @ C=256, 32.10–32.65 answers/s at 35 tokens · thinking **on**: **3,584 tok/s**, 10.97 answers/s at 327 tokens · extended to C=512: **1,436.5 tok/s** and still climbing · spread ≤ 5 % |
-| **DeepSeek-V4-Flash-NVFP4** · 2 cards, [different release](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/README.md#what-this-is-not-comparable-to) | [vLLM B12X SM120 kit](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/) — **404 output tok/s** @ C=256 · 9.97 answers/s · 159–163 tok/s decode with MTP · non-monotone under load | — |
-| **Gemma-4-26B-A4B** · sparse, 1 card | [llama.cpp · SGLang · vLLM](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/) — 31.88 answers/s @ C=32 (vLLM; **token throughput under load not recorded** for that engine) · [vLLM 5.9× llama.cpp under load](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/engine-comparison.md) | — |
-| **Gemma-4-31B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/gemma-4-31b/) — **310 output tok/s** @ C=32 · 0.80 answers/s · stalls past 8 concurrent | — |
-| **Muse-Glimmer-30B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/muse-glimmer-30b/) — **521 output tok/s** @ C=32 · 1.27 answers/s · only engine that knows the architecture | — |
+| **Beam-1.0-501B-A23B** · NVFP4 | [vLLM 0.33, TP=4](cloudscale-gpu2-512-80-4-800/beam-1-0/) — **2,972 output tok/s**, 12.8 answers/s @ C=256 · 98 single stream · thinking always on · `q1` MMLU-Pro 0.890 | — |
+| **Nemotron-3-Super-120B-A12B** · NVFP4, one card per copy | [vLLM 0.33, DP=4](cloudscale-gpu2-512-80-4-800/nemotron-3-super/) — **2,408 output tok/s** @ C=256, 83 single stream · prefill 8 k tok/s on one card · 10.7 M cache tokens per card | — |
+| **MiMo-V2.6-Flash-RL** · FP8 | [vLLM 0.33, TP=4](cloudscale-gpu2-512-80-4-800/mimo-v2-6-flash/) — **3,650 output tok/s** @ C=256 · **53.7 answers/s** thinking on, 74.4 off · 140 tok/s single stream · 262k context, KV pool 4.3 M · prefill 3.6 k tok/s at 250k, 3/3 needles · `q1` MMLU-Pro 0.775 off, 0.850 on | [vLLM, vendor image](cloudscale-gpu2-256-40-2-1600/mimo-v2-6-flash/) — **3,030 output tok/s** @ C=256 · **44.6 answers/s** at p50 5.74 s · thinking **on** · **images** · 100 % on both cards at every level · 196,608 context, 3/3 needles at 180k |
+| **MiniMax-M2.5-NVFP4** · 116 B, 8/256 experts, 2 cards | — | [vLLM 0.28.0, unpatched](cloudscale-gpu2-256-40-2-1600/minimax-m2-5/) — **1,350–1,423 output tok/s** @ C=256 · 4.39–4.46 answers/s, flat above its 32 sequences · decode 116.6 · **thinking cannot be switched off**, probed not assumed · quality under [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai): last of three in three benchmarks, behind a 27 B dense model in all five |
+| **Qwen3.8-Flash-Next** · 125 B, 512 experts, 10 active | [vLLM 0.33 FP8 TP=4](cloudscale-gpu2-512-80-4-800/qwen3-8-flash-next/vllm/) — **1,989 output tok/s** @ C=256 · 110 single stream, **175 with the MTP draft** · prefill 7.8k, 3/3 at 250k · [`q1`](benchmark/README.md#quality-protocol-q1-measured-with-inspect-ai) HumanEval 0.976, IFEval 0.930 · [Strata 0.2.11, IQ3_S / Q8_0, 8 slots](cloudscale-gpu2-512-80-4-800/qwen3-8-flash-next/strata/) — **225 / 187 tok/s single stream**, **21,873 / 17,757 prefill tok/s**, 645 / 564 @ C=8, queue above, cards at 20–34 % · [`q1`](cloudscale-gpu2-512-80-4-800/qwen3-8-flash-next/strata/scenarios/quality.md): 3 bits cost 5.5 points on MMLU-Pro without thinking, nothing elsewhere | [llama.cpp master, Q6 on 6 slots](cloudscale-gpu2-256-40-2-1600/qwen3-8-flash-next/) — **356 output tok/s** @ C=256 · 1.91 answers/s · **images** · pinned in the forties by the layer split |
+| **DeepSeek-V4-Flash-0731** · 284 B | [SGLang + SM120 patchset](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-0731/), 4 cards — **4,438 output tok/s** @ C=1024 · 14.3 req/s · full 1M context verified | [same image at TP=2](cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/), 2 cards — thinking **off**: **1,158–1,166 output tok/s** @ C=256, 32.10–32.20 answers/s at 35 tokens · thinking **on**: **3,032 tok/s**, 9.28 answers/s at 327 tokens · level from 256 to 512 · spread ≤ 5 % |
+| **DeepSeek-V4-Flash-NVFP4** · 2 cards, [different release](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/README.md#what-this-is-not-comparable-to) | [vLLM B12X SM120 kit](cloudscale-gpu2-512-80-4-800/deepseek-v4-flash-nvfp4/) — **244 output tok/s** @ C=256 · 6.02 answers/s · 159–163 tok/s decode with MTP · non-monotone under load | — |
+| **Gemma-4-26B-A4B** · sparse, 1 card | [llama.cpp · SGLang · vLLM](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/) — 31.1 answers/s @ C=32 (vLLM; **token throughput under load not recorded** for that engine) · [vLLM 6.3× llama.cpp under load](cloudscale-gpu2-512-80-4-800/gemma-4-26b-a4b/engine-comparison.md) | — |
+| **Gemma-4-31B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/gemma-4-31b/) — **198 output tok/s** @ C=8 · 0.50 answers/s · falls back past 8 concurrent | — |
+| **Muse-Glimmer-30B** · dense, 1 card | [llama.cpp](cloudscale-gpu2-512-80-4-800/muse-glimmer-30b/) — **312 output tok/s** @ C=32 · 0.76 answers/s · only engine that knows the architecture | — |
 
-A model measured on several machines keeps one row and gains a column per machine, so
-the cross-hardware comparison lives here rather than in the directory tree.
+Load figures are over the real run time
+([why](benchmark/README.md#the-window-overstates-slow-answers)). A model measured on several
+machines keeps one row and gains a column per machine, so the cross-hardware comparison
+lives here rather than in the directory tree.
 
 **Four models on the two-card machine now carry both a `v1` and a `q1` series, and for
 three of them the two protocols order them in reverse.** Qwen3.8-27B has the best
@@ -68,9 +70,9 @@ because answers per second is not comparable across these rows: tokens per answe
 35 to 327 here, a factor of nine, driven by thinking state rather than by speed.
 
 **The thinking state moves a row further than the hardware does.** DeepSeek-V4-Flash-0731
-on two cards, measured both ways on the same day, spans 1,173 to 3,584 output tokens per
-second — a 3.1× range from one request parameter. That is wider than the gap between any
-two models in this table. A figure without a stated thinking arm is not comparable to
+on two cards, measured both ways on the same day, spans 1,158 to 3,032 output tokens per
+second — a 2.6× range from one request parameter, more than separates MiMo from
+Qwen3.8-Flash-Next under vLLM on four cards (1.8×). A figure without a stated thinking arm is not comparable to
 anything, and neither column is wrong; they measure different work.
 
 ---
@@ -229,11 +231,13 @@ touching weights, quantisation or cards.
 
 ### The protocol ladder stops at 256, and models do not
 
-Concurrency 256 is where `v1` ends, not where a machine ends. Extended to 512, one setup
-here gained 22 % in answers per second and 24 % in tokens per second over its own 256
-figure, at 98 % GPU and with the curve still rising. Every peak in this repository is
-therefore "the best measured inside the protocol", and for a capacity decision the ladder
-has to be pushed until it turns over.
+Concurrency 256 is where `v1` ends, not where a machine ends. With its request ceiling
+raised, one setup here delivered 71 % more answers per second at 1,024 concurrent requests
+than its shipped configuration at its own best level, and was still rising. Every peak in
+this repository is therefore "the best measured inside the protocol", and for a capacity
+decision the ladder has to be pushed until it turns over — and read over the real run time:
+another setup looked 22 % faster at 512 than at 256 and is level once the
+[measurement window](benchmark/README.md#the-window-overstates-slow-answers) is taken out.
 
 ### A KV pool does not scale linearly, so do not extrapolate its size
 
@@ -260,14 +264,17 @@ shows in that engine's failure messages: 3.18 GiB needed at 131,072 but 4.59 GiB
 
 Measure at the size you intend to serve, or at two points that bracket it.
 
-### More server slots lower latency without raising the ceiling
+### More server slots raise the ceiling and lower latency
 
-Where an engine exposes a slot count, it decides how quickly the machine reaches
-saturation, not where saturation is. Measured on llama.cpp with one slot against six:
-73 % more output tokens per second at eight concurrent requests, 6.8 % at 256, and
-roughly half the median latency at every level from eight upward. The throughput curves
-converge; the latency curves do not. If the complaint is response time under moderate
-load, the slot count is the first thing to check — and it costs only KV memory.
+Where an engine exposes a slot count, it decides how much the machine delivers under load
+as well as how long each answer waits. Measured on llama.cpp with one slot against six:
+about twice the output tokens per second at every level from eight concurrent requests up,
+over the real run time, and roughly half the median latency. An earlier version of this
+section had the throughput curves converging at 256; at medians of two to five minutes the
+measured columns count answers that finished long after the
+[40 s window](benchmark/README.md#the-window-overstates-slow-answers). If the complaint is
+response time or throughput under moderate load, the slot count is the first thing to
+check — and it costs only KV memory.
 
 ### Active parameter count predicts prefill speed, not parameter count
 

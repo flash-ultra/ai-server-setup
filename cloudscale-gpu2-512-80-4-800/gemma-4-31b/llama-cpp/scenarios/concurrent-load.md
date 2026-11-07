@@ -43,8 +43,9 @@ Over the real run time — concurrency ÷ median latency, [why](../../../../benc
 
 ## Reading
 
-**Throughput stops scaling between 8 and 16 while latency more than doubles.** Output
-tokens go 238.3 → 230.0 — flat within noise — but p50 rises from 16.08 s to 40.57 s.
+**Throughput peaks at 8 and falls after it while latency more than doubles.** Over the
+real run time output tokens go 197.6 → 151.2 → 109.1 from 8 to 32, and p50 rises from
+16.08 s to 40.57 s at 16.
 Past that point the extra load buys nothing and costs everything; 16 concurrent requests
 is where this configuration stops being useful.
 
@@ -57,8 +58,8 @@ loses utilisation just as fast while still scaling.
 
 **The MoE sibling is faster on every axis.**
 [Gemma-4-26B-A4B](../../../gemma-4-26b-a4b/llama-cpp/scenarios/concurrent-load.md) on the
-same card, same engine, same configuration: 2.6× the output tokens at concurrency 32
-(816.9 against 310.2) and **3.9× better** median latency (29.11 s against 113.78 s), at
+same card, same engine, same configuration: 5.1× the output tokens at concurrency 32
+(561.3 against 109.1) and **3.9× better** median latency (29.11 s against 113.78 s), at
 a comparable total parameter count. Comparing the two is the clearest argument in this
 directory for choosing a sparse model when a single card has to serve load.
 

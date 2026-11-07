@@ -20,9 +20,10 @@ GB200 as tested.** FP4 GEMMs go through FlashInfer's `CutlassFp4GemmRunner`; not
 to be patched or built.
 
 **At its default effort it is the slowest model to answer on this machine**: 376 tokens
-per answer, 83 % of them thinking, so 0.28 answers/s alone and 6.4 at 256 clients with a
-p50 of 86 s. The token rate is ordinary — 2,347 output tok/s at C=256, level with
-Qwen3.8-Flash-Next — but the tokens are scratchpad.
+per answer, 83 % of them thinking, so 0.28 answers/s alone and 3.0 at 256 clients with a
+p50 of 86 s. The token rate is low as well — 1,088 output tok/s at C=256, about half of
+Qwen3.8-Flash-Next — and most of the tokens are scratchpad. Both over the real run time
+([why](../../benchmark/README.md#the-window-overstates-slow-answers)).
 
 **`reasoning_effort: "low"` is the switch that matters.** It cuts the answer to 52 tokens
 with 2–4 % thinking and almost triples the answer rate at C=8 (1.15 → 3.17/s). Neither

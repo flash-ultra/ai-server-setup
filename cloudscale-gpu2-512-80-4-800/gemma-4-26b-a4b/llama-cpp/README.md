@@ -92,7 +92,10 @@ rules out both the speculation theory and the compute-per-token theory that repl
 Two things the control does establish:
 
 **MTP pays at every level measured**, most at low concurrency where there is no batch to
-hide behind, and still a third at 32.
+hide behind.
 
-**MTP extends the range that scales.** Without it, throughput plateaus between 16 and 32
-(608.7 → 612.5). With it, the same step gains 31 % (625.3 → 816.9).
+**Neither run scales past the 16 slots.** Without MTP throughput plateaus between 16 and
+32 (608.7 → 612.5). With it the measured step gains 31 % (625.3 → 816.9), but over the real
+run time only 3 % (547.5 → 561.3): the extra came from the
+[measurement window](../../../benchmark/README.md#the-window-overstates-slow-answers), not
+from the draft.

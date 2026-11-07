@@ -37,4 +37,5 @@ in this setup changes it.
 **Throughput still grows, just slowly.** 85 → 316 output tok/s across the sweep is a
 3.7× gain for 32× the load. For comparison,
 [SGLang on the same hardware](../../sglang/scenarios/concurrent-load.md) delivers
-1571 output tok/s at concurrency 32 and keeps TTFT at 0.25 s.
+1,331 output tok/s at concurrency 32 over the real run time (1,571 as measured) and keeps
+TTFT at 0.25 s.
