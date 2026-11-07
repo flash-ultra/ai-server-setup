@@ -39,6 +39,7 @@ page and in the model directories below; the hardware findings further down stil
 | [DeepSeek-V4.1-Flash-1017](deepseek-v4-1-flash-1017/) · GSQ-RCO 2.25 bpw | [Strata 0.2.11, DeepSeek engine, `DS4_SPLIT=10,10,10,10`, 8 slots](deepseek-v4-1-flash-1017/strata/) | measured 2026-11-06 — **111.8 tok/s single stream**, decode 110 flat, prefill 4.1–4.3 k tok/s to 250k (3/3 needles); about 154 tok/s from C=4 on with one engine, **302 tok/s at C=8 with `--replicas 2`** · the DeepSeek engine does not batch · the automatic layer split leaves two cards empty, set `DS4_SPLIT` · [`q1`](deepseek-v4-1-flash-1017/strata/scenarios/quality.md) with thinking: **the best of the series** — IFEval 0.965, MMLU-Pro 0.890, HumanEval 0.994 |
 | [GLM-5.3-Flash](glm-5-3-flash/) · NVFP4 | [vLLM 0.33.0, TP=4 + EP, FP8 KV](glm-5-3-flash/vllm/) | measured 2026-11-06 — NVFP4 runs on sm120 with stock vLLM · **thinking cannot be switched off**, 376 tokens per answer at the default effort: 103.5 tok/s single stream, 1,088 tok/s and only **3.0 answers/s at C=256** (p50 86 s) · `reasoning_effort: low` cuts answers to 52 tokens, 2.8× the answer rate · decode 102 flat · prefill 6.4 k tok/s flat to 250k, 3/3 needles · [`q1`](glm-5-3-flash/vllm/scenarios/quality.md) low / max: MMLU-Pro 0.815 / 0.870, IFEval 0.810 / 0.880, HumanEval 0.939 / 0.970 |
 | [Beam-1.0-501B-A23B](beam-1-0/) · NVFP4 | [vLLM 0.33.0, TP=4, FP8 KV](beam-1-0/vllm/) | measured 2026-11-07 — 98 tok/s single stream, decode 97–99 flat · **2,972 tok/s, 12.8 answers/s at C=256**, second only to MiMo · prefill 4.6–5.2 k tok/s, 3/3 needles at 250k · thinking always on, the effort budget barely moves it · [`q1`](beam-1-0/vllm/scenarios/quality.md) MMLU-Pro 0.890, IFEval 0.910, HumanEval 0.951; minimal effort within one standard error |
+| [Hy3](hy3/) · FP8 | [vLLM 0.33.0, TP=4, FP8 KV](hy3/vllm/) | measured 2026-11-07 — 89.6 tok/s single stream, decode 85 flat · **2,254 tok/s, 4.4 answers/s at C=256**, every protocol answer at the 512-token cap at `reasoning_effort: high` · prefill 2.7 k falling to 1.8 k tok/s at 250k, 3/3 needles · KV pool 308 k tokens, 1.17 full-length requests · [`q1`](hy3/vllm/scenarios/quality.md) high / no_think: MMLU-Pro 0.880 / 0.795, IFEval 0.940 / 0.880, HumanEval 0.994 / 0.921 |
 | [Nemotron-3-Super-120B-A12B](nemotron-3-super/) · NVFP4 | [vLLM 0.33.0, four copies (DP=4)](nemotron-3-super/vllm/) | measured 2026-11-07 — 83 tok/s single stream, decode 87 flat to 64k · **2,408 tok/s at C=256**, still rising · prefill 8.0 k tok/s on one card, 3/3 needles at 250k · 10.7 M tokens of cache per card · [`q1`](nemotron-3-super/vllm/scenarios/quality.md) IFEval 0.910, HumanEval 0.982, MMLU-Pro 0.830 |
 | [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) · FP8 | [vLLM 0.33.0, TP=4, stock image](mimo-v2-6-flash/vllm/) | measured 2026-11-06 — **3,650 output tok/s and 53.7 answers/s at C=256** with thinking on, 74.4 answers/s off, p50 under 5 s · 140 tok/s single stream, decode 143 · prefill 6.1 k falling to 3.6 k tok/s at 250k, 3/3 needles · KV pool 4.3 M tokens · 1.20–1.23× the two-card machine · [`q1`](mimo-v2-6-flash/vllm/scenarios/quality.md): MMLU-Pro 0.775 / 0.850, IFEval 0.840 / 0.850, HumanEval 0.933 / 0.963 |
 | [Qwen3.8-Flash-Next](qwen3-8-flash-next/) · IQ3_S GSQ-RCO and Q8_0 | [Strata 0.2.11, four-card layer split, 8 slots](qwen3-8-flash-next/strata/) | measured 2026-11-06 — **225 / 187 output tok/s single stream** (IQ3_S / Q8_0, the fastest in this repository), decode 222–254, **prefill 21,873 / 17,757 tok/s at 250k** (3/3 needles), 645 / 564 tok/s at C=8, queueing above 8 slots; cards at 20–34 % on the single stream · [`q1`](qwen3-8-flash-next/strata/scenarios/quality.md) both packs: the 3-bit pack trails the 8-bit ones by 5.5 points on MMLU-Pro without thinking (0.820 vs 0.875) and nowhere else; Q8_0 IFEval 0.945 on, HumanEval 0.982 on |
@@ -58,6 +59,7 @@ figures over the real run time ([why](../benchmark/README.md#the-window-overstat
 | [DeepSeek-V4.1-Flash](deepseek-v4-1-flash-1017/vllm-exl3/) EXL3 3 bpw · vLLM, pack recipe | 153 | 1,510 tok/s at C=256 | 13,264 | 0.880 ¹ | 0.955 ¹ | **1.000** ¹ | **the best answers, at three quarters of Qwen's throughput** |
 | [DeepSeek-V4.1-Flash](deepseek-v4-1-flash-1017/strata/) 2.25 bpw · Strata | 112 | 302 tok/s at C=8 (2 replicas) | 4,159 | **0.890** | **0.965** | 0.994 | superseded by the EXL3 pack |
 | [Beam-1.0](beam-1-0/) NVFP4 · vLLM | 98 | 2,972 tok/s at C=256 | 4,616 | **0.890** | 0.910 | 0.951 | a crowd, with DeepSeek-level knowledge |
+| [Hy3](hy3/) FP8 · vLLM | 90 | 2,254 tok/s at C=256 | 1,763 | 0.880 | 0.940 | 0.994 | hard questions, given time |
 | [Nemotron-3-Super](nemotron-3-super/) NVFP4 · vLLM, 4 copies | 83 | 2,408 tok/s at C=256 | 6,597 (one card) | 0.830 | 0.910 | 0.982 | long contexts on one card per copy |
 | [MiniMax-M3.1-Flash](minimax-m3-1-flash/) | — | — | — | — | — | — | does not run on sm120 |
 
@@ -67,14 +69,17 @@ figures over the real run time ([why](../benchmark/README.md#the-window-overstat
 gives the best answers measured here at three quarters of the throughput of Qwen under vLLM,
 and reads a million tokens of context. Strata with Qwen stays the fastest for a handful of users and
 for long prompts up to 262k; MiMo under vLLM is the one to put in front of hundreds. GLM
-matches Qwen on quality and loses to it on every speed column.
+matches Qwen on quality and loses to it on every speed column. Hy3 answers at DeepSeek's level
+and is the slowest to get there: ten times the tokens with thinking, and a cache for barely one
+long document.
 
 ## Test list, November 2026
 
 Requested 2026-11-06, each with throughput under protocol [`v1`](../benchmark/README.md) and
 quality under `q1` (both thinking arms where the model has a switch; HumanEval runs in Inspect's
 Docker sandbox). Sizes are the sum of the published files; with KV cache, activations and graphs
-on top, **about 280 GB of weights is the practical ceiling at TP=4**.
+on top, **about 300 GB of weights is the practical ceiling at TP=4**: [Hy3](hy3/) at 301 GB still runs,
+with cache for 1.17 requests of full length.
 
 | Model | Variant measured | Engine | Status |
 |---|---|---|---|
