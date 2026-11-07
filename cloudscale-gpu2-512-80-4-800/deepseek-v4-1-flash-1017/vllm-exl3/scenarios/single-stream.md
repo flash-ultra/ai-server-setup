@@ -20,6 +20,21 @@ pack's required API key from `BENCH_API_KEY`. Thinking switch verified (19 → 0
 | Tokens per answer | 170 (76 % reasoning) | 55 (0 %) |
 | GPU utilisation | 93–98 % | 89–96 % |
 
+**Decode, measured separately** (one streaming request; `decode.py` now sends the API key —
+its first run here got 401s and was repeated after the eval)
+
+| | completion tokens | TTFT | Decode |
+|---|---|---|---|
+| thinking on, run 1 / 2 | 146 / 127 | 0.19 / 0.16 s | **175.2 / 186.2 tok/s** |
+| thinking off, run 1 / 2 | 33 / 74 | 0.16 / 0.15 s | **159.1 / 188.4 tok/s** |
+| thinking on, 1,500 tokens forced, run 1 / 2 | 1500 / 1500 | 0.51 / 0.17 s | 216.5 / 308.5 tok/s |
+| thinking on, behind a 64k prompt | 164 | 4.65 s | **168.9 tok/s** |
+
+The forced 1,500-token rows run past the model's own end of answer (`min_tokens`), into text
+the k=7 drafter predicts almost perfectly; they show the drafter's ceiling, not a real
+answer's rate. The 160–190 tok/s of the natural answers is the figure to quote, against
+114–128 on two cards.
+
 **153 tok/s, the fastest DeepSeek single stream measured**: 1.12× the same pack on two
 cards (136.5) and 1.37× Strata's 2.25-bit set on these four (111.8). TP=4 adds all-reduce
 hops over PCIe, and here they run through NCCL rather than the pack's 8-bit kernels; the
