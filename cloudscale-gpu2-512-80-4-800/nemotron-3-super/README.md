@@ -28,8 +28,13 @@ vLLM, below MiMo — but a single answer is the slowest on this machine.
 | Prefill 128k | 8,043 tok/s **on one card** | 7,782 on four | 4,865 on four |
 | Needles at 250k | 3 of 3 | 3 of 3 | 3 of 3 |
 
+**Under `q1` it holds its own**: GSM8K 0.970, IFEval 0.910, HumanEval 0.982 with thinking —
+level with Qwen3.8-Flash-Next — and MMLU-Pro 0.830, three points behind. With thinking off it
+keeps reasoning in the visible answer, and some answers loop until the token cap
+([quality](vllm/scenarios/quality.md)).
+
 ## Measurements
 
 | Setup | Scenarios |
 |---|---|
-| [`vllm/`](vllm/) | [single](vllm/scenarios/single-stream.md) · [concurrent](vllm/scenarios/concurrent-load.md) · [reasoning cost](vllm/scenarios/reasoning-cost.md) · [long context](vllm/scenarios/long-context.md) |
+| [`vllm/`](vllm/) | [single](vllm/scenarios/single-stream.md) · [concurrent](vllm/scenarios/concurrent-load.md) · [reasoning cost](vllm/scenarios/reasoning-cost.md) · [long context](vllm/scenarios/long-context.md) · [quality](vllm/scenarios/quality.md) |
