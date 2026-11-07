@@ -31,8 +31,12 @@ decode does not move with context.
 "none"` exists for this model (`none` is rejected by the chat template). The template maps the
 named levels to a budget the model is told about; on a summary prompt it does not keep to it.
 
+**Under `q1` it ties DeepSeek on knowledge and trails it on code.** MMLU-Pro 0.890, IFEval
+0.910, HumanEval 0.951 at the default effort; the minimal budget gives within one standard
+error of the same, in half the tokens ([quality](vllm/scenarios/quality.md)).
+
 ## Measurements
 
 | Setup | Scenarios |
 |---|---|
-| [`vllm/`](vllm/) | [single](vllm/scenarios/single-stream.md) · [concurrent](vllm/scenarios/concurrent-load.md) · [reasoning cost](vllm/scenarios/reasoning-cost.md) · [long context](vllm/scenarios/long-context.md) |
+| [`vllm/`](vllm/) | [single](vllm/scenarios/single-stream.md) · [concurrent](vllm/scenarios/concurrent-load.md) · [reasoning cost](vllm/scenarios/reasoning-cost.md) · [long context](vllm/scenarios/long-context.md) · [quality](vllm/scenarios/quality.md) |
