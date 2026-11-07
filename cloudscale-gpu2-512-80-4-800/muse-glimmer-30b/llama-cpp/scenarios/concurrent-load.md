@@ -24,6 +24,16 @@ the control against the two Gemma runs, which do speculate.
 | 16 | 0.93 | 368.8 | 1540.7 | 24.80 s | 58.20 s | 93 % |
 | 32 | 1.27 | 520.5 | 2135.9 | 42.01 s | 67.17 s | **92 %** |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.07 | 27.4 | 1.05× |
+| 4 | 0.21 | 86.3 | 1.43× |
+| 8 | 0.38 | 152.3 | 1.31× |
+| 16 | 0.65 | 255.8 | 1.44× |
+| 32 | 0.76 | 312.2 | 1.67× |
+
 ## Prompt mix
 
 | Traffic | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 |

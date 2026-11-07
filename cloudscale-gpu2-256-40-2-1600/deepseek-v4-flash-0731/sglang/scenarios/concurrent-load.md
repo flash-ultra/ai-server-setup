@@ -41,6 +41,18 @@ from 36 to 327 tokens, which an ignored key could not produce.
 | 128 | 27.05 | 981.1 | 33819.8 | 4.77 s | 6.82 s | 97 % · 94 % |
 | 256 | **32.58** | 1173.2 | 40719.2 | 7.96 s | 11.90 s | 99 % · 97 % |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 2.08 | 76.1 | — |
+| 8 | 6.15 | 220.4 | — |
+| 16 | 8.45 | 306.0 | — |
+| 32 | 11.15 | 408.6 | — |
+| 64 | 17.11 | 621.7 | 1.01× |
+| 128 | 26.83 | 973.3 | 1.01× |
+| 256 | 32.16 | 1,158 | 1.01× |
+
 **Run 2**
 
 | Concurrent | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 | GPU |
@@ -52,6 +64,18 @@ from 36 to 327 tokens, which an ignored key could not produce.
 | 64 | 17.75 | 640.0 | 22188.5 | 3.65 s | 4.83 s | 93 % · 84 % |
 | 128 | 27.52 | 999.8 | 34415.1 | 4.65 s | 6.58 s | 98 % · 96 % |
 | 256 | **32.65** | 1182.6 | 40819.7 | 7.95 s | 11.92 s | 96 % · 97 % |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 2.08 | 76.5 | — |
+| 8 | 6.35 | 226.0 | — |
+| 16 | 8.12 | 292.9 | — |
+| 32 | 11.47 | 415.0 | 1.02× |
+| 64 | 17.53 | 632.2 | 1.01× |
+| 128 | 27.52 | 999.8 | — |
+| 256 | 32.20 | 1,166 | 1.01× |
 
 ```mermaid
 xychart-beta
@@ -90,6 +114,14 @@ xychart-beta
 | 384 | 36.58 | 1331.6 | 45733.7 | 11.51 s | 16.25 s | 99 % · 98 % |
 | 512 | **39.62** | **1436.5** | 49541.2 | 15.66 s | 19.63 s | 98 % · 98 % |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 256 | 32.10 | 1,160 | — |
+| 384 | 33.36 | 1,214 | 1.10× |
+| 512 | 32.69 | 1,185 | 1.21× |
+
 Mix at concurrency 32: uniform 11.70 answers/s · 425.2 output tok/s · p50 2.77 s;
 mixed 3.25 · 1126.8 · 14.90 s.
 
@@ -106,6 +138,18 @@ mixed 3.25 · 1126.8 · 14.90 s.
 | 64 | 4.75 | 1584.7 | 7351.2 | 14.58 s | 24.80 s | 95 % · 92 % |
 | 128 | 7.47 | 2479.2 | 11553.9 | 19.88 s | 31.55 s | 96 % · 93 % |
 | 256 | 10.97 | **3583.8** | 16907.5 | 27.58 s | 46.19 s | 97 % · 95 % |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.27 | 93.7 | 1.02× |
+| 8 | 1.30 | 433.7 | 1.04× |
+| 16 | 2.01 | 644.7 | 1.11× |
+| 32 | 3.36 | 977.0 | 1.06× |
+| 64 | 4.39 | 1,464 | 1.08× |
+| 128 | 6.44 | 2,137 | 1.16× |
+| 256 | 9.28 | 3,032 | 1.18× |
 
 Mix at concurrency 32: uniform 3.52 answers/s · 1052.5 output tok/s · p50 10.08 s;
 mixed 2.40 · 1206.2 · 15.66 s.

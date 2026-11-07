@@ -24,6 +24,15 @@ and the protocol ladder's top would be forty seconds of waiting. Everything else
 | 8 | 3.12 | **645.5** | 4592.4 | 2.48 s | 3.88 s | 63 · 66 · 67 · 79 % |
 | 16 | 3.33 | 722.1 | 4921.6 | 4.70 s | 9.47 s | 70 · 66 · 67 · 82 % |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 1.18 | 228.0 | — |
+| 4 | 1.98 | 426.7 | 1.04× |
+| 8 | 3.12 | 645.5 | — |
+| 16 | 3.33 | 722.1 | — |
+
 **Prompt mix at concurrency 32**
 
 | Traffic | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 |
@@ -41,6 +50,15 @@ and the protocol ladder's top would be forty seconds of waiting. Everything else
 | 4 | 6.10 | 314.4 | 7774.7 | 0.64 s | 0.88 s | 52 · 51 · 52 · 60 % |
 | 8 | 7.97 | 405.2 | 10158.6 | 0.98 s | 1.34 s | 48 · 39 · 41 · 53 % |
 | 16 | 8.40 | 428.9 | 10702.0 | 1.63 s | 3.88 s | 46 · 48 · 47 · 57 % |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 3.45 | 179.9 | 1.01× |
+| 4 | 6.10 | 314.4 | — |
+| 8 | 7.97 | 405.2 | — |
+| 16 | 8.40 | 428.9 | — |
 
 **Prompt mix at concurrency 32**
 

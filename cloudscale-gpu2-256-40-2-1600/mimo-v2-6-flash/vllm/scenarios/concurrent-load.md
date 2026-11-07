@@ -25,6 +25,18 @@ machine, against 262,144 for DeepSeek-0731.
 | 128 | 28.80 | 1,929.7 | 37,008.1 | 4.55 s | 6.31 s | 100 % · 100 % |
 | 256 | **46.05** | **3,128.9** | 59,217.8 | **5.74 s** | 7.90 s | 100 % · 100 % |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 1.77 | 114.8 | — |
+| 8 | 4.80 | 322.7 | — |
+| 16 | 6.90 | 466.7 | — |
+| 32 | 10.26 | 694.3 | 1.01× |
+| 64 | 16.80 | 1,142 | 1.02× |
+| 128 | 28.13 | 1,885 | 1.02× |
+| 256 | 44.60 | 3,030 | 1.03× |
+
 **An earlier series on the same setup at a 49,152 window is indistinguishable:** 46.10
 answers/s and 3,115.6 output tok/s at concurrency 256, against 46.05 and 3,128.9 here.
 Quadrupling the served window cost 0.1 % of the answer rate. A third, partial run at

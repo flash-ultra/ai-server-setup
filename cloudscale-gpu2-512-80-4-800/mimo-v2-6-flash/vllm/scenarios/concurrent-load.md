@@ -22,6 +22,18 @@ the mixed run at 32.
 | 128 | 38.52 | 2597.7 | 49521.1 | 3.37 s | 4.60 s | 100 % × 4 |
 | 256 | **54.98** | **3739.6** | 70699.2 | 4.77 s | 6.47 s | 100 % × 4 |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 2.08 | 139.3 | — |
+| 8 | 6.95 | 465.2 | — |
+| 16 | 9.65 | 660.6 | — |
+| 32 | 13.95 | 949.2 | — |
+| 64 | 19.22 | 1,317 | 1.01× |
+| 128 | 37.98 | 2,561 | 1.01× |
+| 256 | 53.67 | 3,650 | 1.02× |
+
 **Prompt mix at concurrency 32**
 
 | Traffic | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 |
@@ -42,6 +54,18 @@ the mixed run at 32.
 | 64 | 26.60 | 1257.4 | 33709.4 | 2.42 s | 3.29 s | 100 % × 4 |
 | 128 | 54.27 | 2538.2 | 68753.7 | 2.40 s | 3.32 s | 100 % × 4 |
 | 256 | **75.58** | **3564.5** | 95766.0 | 3.44 s | 4.81 s | 100 % × 4 |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 2.78 | 137.2 | 1.01× |
+| 8 | 9.53 | 450.2 | — |
+| 16 | 14.07 | 652.7 | — |
+| 32 | 19.77 | 922.1 | — |
+| 64 | 26.45 | 1,250 | 1.01× |
+| 128 | 53.33 | 2,494 | 1.02× |
+| 256 | 74.42 | 3,510 | 1.02× |
 
 **Prompt mix at concurrency 32**
 

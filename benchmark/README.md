@@ -28,7 +28,7 @@ into a scenario document, prefixed with a comment recording the protocol version
 |---|---|---|
 | `max_tokens` | 512 | Reasoning models spend most of the budget on thinking; at 200 the visible answer gets truncated and answers/s is inflated |
 | Concurrency levels | 1, 8, 16, 32, 64, 128, 256 | Powers of two; the default series. `--levels` overrides it per run for configuration sweeps — every other parameter stays pinned, and the deviation is written into the output header. A run with overridden levels is still `v1`; state the override in the scenario's Method section |
-| Measurement window | 40 s per level | Long enough to fill the batch, short enough for a full sweep |
+| Measurement window | 40 s per level | Long enough to fill the batch, short enough for a full sweep — but see [the window overstates slow answers](#the-window-overstates-slow-answers) |
 | Warmup | 3 requests per level, discarded | The first request after start ran 21.55 s against 1.86 s afterwards |
 | Token counting | `usage` fields | Stream deltas miss reasoning tokens — this was off by a factor of 5 once |
 | Reasoning share | `usage.completion_tokens_details.reasoning_tokens` | **Engine-dependent, not model-dependent.** SGLang and vLLM report it; llama.cpp does not send the field at all, so the share reads 0 % even where the model puts every token into thinking. A 0 % in a llama.cpp row means "not reported", never "did not think" — and never compare this column across engines. **Verify against this `usage` field, not against a message field**: the name of the field carrying the thinking text differs per engine, see below |
@@ -99,6 +99,27 @@ name.
 
 **One measurement is not a result** where variance matters. Concurrency 128 was
 measured twice with 6 % spread; that is worth stating rather than hiding.
+
+## The window overstates slow answers
+
+`bench.py` counts every request that starts inside the 40 s window, lets it finish, and
+divides by 40 s. A request that starts at second 39 and takes 30 s is counted in full, so the
+real run time is up to one latency longer than the divisor — roughly ⌈40 ÷ latency⌉ ×
+latency ÷ 40. Answers of a few seconds barely notice; slow ones do. Hy3 at 256 clients
+answered in a median of 58 s: every client finished exactly one request, and the table says
+256 ÷ 40 = 6.40 answers/s where the cards delivered 256 ÷ 58 = 4.4.
+
+Every ladder in this repository therefore has a second table underneath: concurrency ÷
+median latency (Little's law for a closed loop), never above the measured value, with output
+tok/s scaled by the same factor. **Headline load figures in the READMEs are this estimate**;
+the measured tables stay as recorded. The factor was 1.02 for MiMo at 256 clients and 2.16 for
+GLM-5.3-Flash, whose answers took 86 s.
+
+Not corrected are the prompt-mix rows, whose latencies are too uneven for a median, and
+tables without a latency column. The single-stream scenario runs through the same window; at
+its latencies of 2–6 s it reads up to 8 % high, while the separately measured decode speed is
+unaffected. From 2026-11-08 `bench.py` also prints a wall-clock table — the same requests
+divided by the time until the last one finished — so new runs carry the exact figure.
 
 ## Quality: protocol `q1`, measured with Inspect AI
 

@@ -21,6 +21,18 @@ no deviations. The profile admits 128 sequences, so 256 queues half its clients.
 | 128 | 8.00 | 1309.9 | 11229.9 | 16.24 s | 31.87 s | 77–81 % |
 | 256 | **12.85** | **2111.8** | 18045.8 | 27.87 s | 37.19 s | 92–94 % |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.97 | 158.5 | — |
+| 8 | 2.75 | 467.2 | — |
+| 16 | 4.09 | 672.9 | 1.01× |
+| 32 | 4.08 | 676.8 | — |
+| 64 | 6.87 | 1,138 | 1.06× |
+| 128 | 7.88 | 1,291 | 1.01× |
+| 256 | 9.19 | 1,510 | 1.40× |
+
 **Prompt mix at concurrency 32:** uniform 5.85 answers/s, 967.6 tok/s, p50 5.53 s · mixed
 2.58 answers/s, 1194.0 tok/s, p50 15.47 s.
 
@@ -37,6 +49,18 @@ no deviations. The profile admits 128 sequences, so 256 queues half its clients.
 | 64 | 14.97 | 805.8 | 4.41 s | 6.09 s |
 | 128 | 16.25 | 881.7 | 7.34 s | 15.06 s |
 | 256 | **22.95** | 1247.8 | 13.14 s | 16.48 s |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 2.13 | 117.1 | 1.01× |
+| 8 | 5.30 | 285.6 | 1.02× |
+| 16 | 7.48 | 419.0 | 1.04× |
+| 32 | 10.29 | 557.7 | 1.05× |
+| 64 | 14.51 | 781.2 | 1.03× |
+| 128 | 16.25 | 881.7 | — |
+| 256 | 19.48 | 1,059 | 1.18× |
 
 **Prompt mix at concurrency 32:** uniform 10.97 answers/s, p50 3.02 s · mixed 3.02 answers/s, p50 12.39 s.
 

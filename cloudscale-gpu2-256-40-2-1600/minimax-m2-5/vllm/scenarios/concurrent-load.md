@@ -34,6 +34,18 @@ hardware class had therefore not earned trust.
 | 128 | 6.88 | 1942.9 | 10529.8 | 29.72 s | 36.70 s | 100 % · 100 % |
 | 256 | **9.75** | **2947.3** | **15125.1** | 57.34 s | 72.49 s | 100 % · 100 % |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.42 | 118.2 | — |
+| 8 | 1.93 | 513.1 | — |
+| 16 | 2.66 | 755.3 | 1.06× |
+| 32 | 3.97 | 1,165 | 1.07× |
+| 64 | 4.30 | 1,215 | 1.23× |
+| 128 | 4.31 | 1,216 | 1.60× |
+| 256 | 4.46 | 1,350 | 2.18× |
+
 **Run 2**
 
 | Concurrent | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 | GPU |
@@ -45,6 +57,18 @@ hardware class had therefore not earned trust.
 | 64 | 4.80 | 1525.4 | 7520.6 | 17.28 s | 21.84 s | 100 % · 100 % |
 | 128 | 6.42 | 2081.2 | 10106.0 | 34.11 s | 39.66 s | 100 % · 100 % |
 | 256 | **9.65** | **3125.5** | **15178.3** | 58.28 s | 75.68 s | 100 % · 100 % |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.41 | 115.8 | 1.08× |
+| 8 | 1.52 | 489.0 | 1.08× |
+| 16 | 2.37 | 768.4 | 1.06× |
+| 32 | 3.69 | 1,174 | 1.09× |
+| 64 | 3.70 | 1,177 | 1.30× |
+| 128 | 3.75 | 1,216 | 1.71× |
+| 256 | 4.39 | 1,423 | 2.20× |
 
 ```mermaid
 xychart-beta

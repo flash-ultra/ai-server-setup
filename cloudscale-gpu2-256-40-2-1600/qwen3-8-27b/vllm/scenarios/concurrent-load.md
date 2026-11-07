@@ -34,6 +34,18 @@ runs; this is a single pass per arm.
 | 128 | 7.97 | 1564.0 | 11636.4 | 17.41 s | 27.86 s | 100 % · 100 % |
 | 256 | **9.43** | **1821.0** | 13724.8 | 34.89 s | 45.22 s | 100 % · 100 % |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.26 | 49.4 | 1.06× |
+| 8 | 1.62 | 321.0 | 1.07× |
+| 16 | 2.83 | 549.6 | 1.05× |
+| 32 | 4.55 | 908.2 | 1.04× |
+| 64 | 6.23 | 1,221 | 1.04× |
+| 128 | 7.35 | 1,443 | 1.08× |
+| 256 | 7.34 | 1,417 | 1.29× |
+
 ## Result, thinking off
 
 <!-- protocol v1 · max_tokens 512 · 40 s/level · 3 warmup requests discarded · counted via usage fields · chat_template_kwargs: {"enable_thinking": false} -->
@@ -47,6 +59,18 @@ runs; this is a single pass per arm.
 | 64 | 11.80 | 631.2 | 15062.6 | 5.41 s | 8.15 s | 100 % · 100 % |
 | 128 | 12.60 | 677.4 | 16087.2 | 10.22 s | 16.60 s | 100 % · 100 % |
 | 256 | **13.45** | 718.0 | 17167.4 | 19.94 s | 34.81 s | 100 % · 100 % |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.85 | 45.2 | — |
+| 8 | 4.75 | 249.2 | — |
+| 16 | 7.33 | 390.6 | — |
+| 32 | 9.88 | 524.9 | — |
+| 64 | 11.80 | 631.2 | — |
+| 128 | 12.52 | 673.3 | 1.01× |
+| 256 | 12.84 | 685.4 | 1.05× |
 
 ## Prompt mix at concurrency 32
 

@@ -27,6 +27,18 @@ deviations: `max_tokens 512`, 40 s per level, 3 warmup requests discarded, token
 | 128 | 7.88 | 1623.4 | 11569.5 | 17.55 s | 29.59 s | 100 % × 4 |
 | 256 | 11.38 | **2274.9** | 16641.5 | 25.73 s | 42.92 s | 100 % × 4 |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.55 | 110.3 | — |
+| 8 | 2.15 | 446.6 | — |
+| 16 | 3.11 | 651.4 | — |
+| 32 | 4.24 | 884.8 | 1.01× |
+| 64 | 5.67 | 1,169 | 1.04× |
+| 128 | 7.29 | 1,503 | 1.08× |
+| 256 | 9.95 | 1,989 | 1.14× |
+
 **Prompt mix at concurrency 32**
 
 | Traffic | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 |
@@ -47,6 +59,18 @@ deviations: `max_tokens 512`, 40 s per level, 3 warmup requests discarded, token
 | 64 | 13.43 | 666.0 | 17084.8 | 4.80 s | 6.90 s | 100 % × 4 |
 | 128 | 15.95 | 799.0 | 20305.8 | 8.17 s | 12.71 s | 100 % × 4 |
 | 256 | **18.65** | 928.8 | 23737.7 | 14.20 s | 24.18 s | 100 % × 4 |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 2.00 | 98.5 | — |
+| 8 | 6.33 | 318.1 | — |
+| 16 | 8.18 | 413.3 | — |
+| 32 | 10.67 | 529.4 | — |
+| 64 | 13.33 | 661.2 | 1.01× |
+| 128 | 15.67 | 784.8 | 1.02× |
+| 256 | 18.03 | 897.8 | 1.03× |
 
 **Prompt mix at concurrency 32**
 
@@ -85,6 +109,18 @@ Thinking on only, same protocol, the container restarted with
 | 128 | 8.80 | 1772.2 | +9 % | 15.77 s | 25.36 s |
 | 256 | 11.05 | 2235.2 | −2 % | 27.38 s | 43.33 s |
 | mixed at 32 | 2.40 | 1169.6 | −1 % | 16.51 s | 20.46 s |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.82 | 174.0 | — |
+| 8 | 2.52 | 517.3 | — |
+| 16 | 3.55 | 721.5 | — |
+| 32 | 4.60 | 979.5 | — |
+| 64 | 6.63 | 1,337 | 1.04× |
+| 128 | 8.12 | 1,635 | 1.08× |
+| 256 | 9.35 | 1,891 | 1.18× |
 
 **The draft pays for the first few clients and is neutral at saturation**: +58 % alone,
 +10–16 % up to C=128, nothing at C=256, where every step is already batch-bound. Serving

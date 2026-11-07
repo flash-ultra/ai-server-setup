@@ -25,6 +25,16 @@ that transition. The other three cards were idle throughout.
 | 16 | 1.25 | 625.3 | 2157.8 | 14.62 s | 16.68 s | 59 % |
 | 32 | **1.60** | **816.9** | **2778.5** | 29.11 s | 38.07 s | 49 % |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.36 | 181.3 | 1.05× |
+| 4 | 0.68 | 347.8 | 1.06× |
+| 8 | 0.87 | 436.1 | 1.15× |
+| 16 | 1.09 | 547.5 | 1.14× |
+| 32 | 1.10 | 561.3 | 1.46× |
+
 GPU column is the card this model ran on; the other three read 0 % and are omitted.
 
 ## Prompt mix

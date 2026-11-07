@@ -161,7 +161,8 @@ def measure(url, model, level, picker, extra=None, duration=DURATION_S):
     for _ in range(WARMUP_REQUESTS):
         request(url, model, picker(random.Random(0)), extra, timeout=900)
 
-    results, deadline = [], time.time() + duration
+    results, t_start = [], time.time()
+    deadline = t_start + duration
     with GpuSampler() as gpu:
         def worker(seed):
             rnd = random.Random(seed)
@@ -173,6 +174,7 @@ def measure(url, model, level, picker, extra=None, duration=DURATION_S):
             for f in [ex.submit(worker, i) for i in range(level)]:
                 f.result()
         cards = gpu.per_card()
+    wall = time.time() - t_start   # until the last request started in the window has finished
 
     if not results:
         return None
@@ -185,7 +187,11 @@ def measure(url, model, level, picker, extra=None, duration=DURATION_S):
             "chars_per_answer": sum(r["chars"] for r in results) / len(results),
             "p50": lats[len(lats) // 2],
             "p95": lats[int(len(lats) * 0.95) - 1] if len(lats) > 1 else lats[0],
-            "gpu": cards}
+            "gpu": cards,
+            # Outside v1: v1 divides by the fixed window although requests started inside it may
+            # finish after it. At latencies near 40 s that overstates the rate; see README.
+            "wall": wall, "out_wall": out / wall, "answers_wall": len(results) / wall,
+            "mean_lat": sum(lats) / len(lats), "little": level / (sum(lats) / len(lats))}
 
 
 def fmt_gpu(cards):
@@ -196,13 +202,22 @@ def fmt_gpu(cards):
 def scenario_concurrent(url, model, levels=None):
     print(f"| Concurrent | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 | GPU |")
     print(f"|---|---|---|---|---|---|---|")
+    walls = []
     for lvl in (levels or LEVELS):
         r = measure(url, model, lvl, lambda _: PROMPT)
         if not r:
             print(f"| {lvl} | failed | | | | | |"); continue
         print(f"| {lvl} | {r['answers_s']:.2f} | {r['out_s']:.1f} | {r['total_s']:.1f} | "
               f"{r['p50']:.2f} s | {r['p95']:.2f} s | {fmt_gpu(r['gpu'])} |")
+        walls.append((lvl, r))
         sys.stdout.flush()
+    if walls:
+        print("\n<!-- wall-clock check, not part of v1: the same requests over the time until the last one finished -->\n")
+        print("| Concurrent | Wall | Answers/s (wall) | Output tok/s (wall) | Mean latency | C / mean latency |")
+        print("|---|---|---|---|---|---|")
+        for lvl, r in walls:
+            print(f"| {lvl} | {r['wall']:.1f} s | {r['answers_wall']:.2f} | {r['out_wall']:.1f} | "
+                  f"{r['mean_lat']:.2f} s | {r['little']:.2f} answers/s |")
 
     print("\n**Prompt mix at concurrency 32**\n")
     print("| Traffic | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 |")
@@ -227,6 +242,8 @@ def scenario_single(url, model):
     print(f"| Latency p50 | {r['p50']:.2f} s |")
     print(f"| Tokens per answer | {r['tokens_per_answer']:.0f} ({r['reasoning_pct']:.0f} % reasoning) |")
     print(f"| GPU utilisation | {fmt_gpu(r['gpu'])} |")
+    print(f"\n<!-- wall-clock check, not part of v1: wall {r['wall']:.1f} s · output {r['out_wall']:.1f} tok/s over wall · "
+          f"mean latency {r['mean_lat']:.2f} s -->")
 
 
 def scenario_reasoning(url, model, thinking_key="thinking"):

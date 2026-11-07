@@ -21,6 +21,18 @@ Protocol [`v1`](../../../../benchmark/README.md), levels 1 to 256, **default arm
 | 128 | 3.25 | 1248.6 | 5223.3 | 49.95 s | 55.84 s | 100 % × 4 |
 | 256 | **6.40** | **2346.7** | 10173.9 | **86.24 s** | 94.02 s | 100 % × 4 |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.26 | 93.9 | 1.08× |
+| 8 | 1.08 | 382.0 | 1.03× |
+| 16 | 1.42 | 528.9 | 1.02× |
+| 32 | 1.97 | 684.5 | 1.06× |
+| 64 | 1.97 | 762.8 | 1.22× |
+| 128 | 2.56 | 984.5 | 1.27× |
+| 256 | 2.97 | 1,088 | 2.16× |
+
 **Prompt mix at concurrency 32**
 
 | Traffic | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 |

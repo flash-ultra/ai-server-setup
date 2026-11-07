@@ -33,6 +33,18 @@ beside other models' concurrency figures without the caveat.
 | 128 | 4.58 | 751.1 | 6424.1 | 63.93 s | 87.73 s | 81 % · 88 % |
 | 256 | 7.88 | 1296.0 | 11061.0 | 105.62 s | 174.06 s | 81 % · 87 % |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.85 | 140.3 | — |
+| 8 | 1.57 | 261.0 | — |
+| 16 | 1.59 | 253.5 | 1.18× |
+| 32 | 1.53 | 265.2 | 1.42× |
+| 64 | 1.58 | 261.7 | 1.86× |
+| 128 | 2.00 | 328.4 | 2.29× |
+| 256 | 2.42 | 398.6 | 3.25× |
+
 **Prompt mix at concurrency 32**
 
 | Traffic | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 |

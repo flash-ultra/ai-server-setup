@@ -24,6 +24,16 @@ cards were idle throughout.
 | 16 | 0.60 | **230.0** | 965.6 | **40.57 s** | 43.60 s | 70 % |
 | 32 | 0.80 | 310.2 | 1291.0 | **113.78 s** | 135.92 s | **33 %** |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.13 | 50.7 | 1.18× |
+| 4 | 0.37 | 143.8 | 1.08× |
+| 8 | 0.50 | 197.6 | 1.21× |
+| 16 | 0.39 | 151.2 | 1.52× |
+| 32 | 0.28 | 109.1 | 2.84× |
+
 ## Prompt mix
 
 | Traffic | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 |

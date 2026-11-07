@@ -21,6 +21,15 @@ Protocol [`v1`](../../../../benchmark/README.md) with the same deviation as the
 | 32, uniform | 2.00 | 228.0 | 23.69 s | 3.00 | 204.0 | 13.59 s | |
 | 32, mixed | 0.80 | 384.9 | 109.32 s | 1.05 | 446.8 | 75.32 s | |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | thinking on: answers/s | output tok/s | v1 over by | thinking off: answers/s | output tok/s | v1 over by |
+|---|---|---|---|---|---|---|
+| 1 | 0.52 | 108.7 | 1.03× | 1.47 | 104.0 | 1.01× |
+| 4 | 1.48 | 153.5 | 1.02× | 2.15 | 152.7 | 1.02× |
+| 8 | 1.33 | 151.2 | 1.06× | 2.28 | 155.0 | 1.05× |
+| 16 | 1.35 | 153.7 | 1.19× | 2.35 | 160.0 | 1.10× |
+
 ## Two replicas: `--replicas 2`, one engine on cards 0–1 and one on 2–3
 
 Strata's server can cut the card list into equal groups and run one engine per group,
@@ -37,6 +46,15 @@ card, every expert in VRAM). Same protocol, levels 1 to 32, thinking on, measure
 | 16 | 2.42 | **338.6** | 1.86× | 7.93 s | 47–49 % |
 | 32, uniform | 2.80 | **389.2** | 1.71× | 15.46 s | 47–50 % |
 | 32, mixed | 0.82 | 392.3 | 1.02× | 57.62 s | |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.91 | 106.7 | 1.02× |
+| 4 | 2.35 | 278.1 | — |
+| 8 | 2.08 | 302.1 | 1.06× |
+| 16 | 2.02 | 282.3 | 1.20× |
 
 **Two engines double the throughput and halve nothing for one client.** Each card now does
 half of an engine's layers instead of a quarter, so it works half the time instead of a

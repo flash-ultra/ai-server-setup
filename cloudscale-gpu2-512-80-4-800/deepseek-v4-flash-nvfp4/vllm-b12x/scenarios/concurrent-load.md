@@ -30,6 +30,18 @@ run-to-run noise.
 | 128 | 4.83 | 198.3 | 6055.9 | 29.32 s | 49.93 s | 55 % · 25 % |
 | 256 | 9.30 | 382.1 | 11672.2 | 43.87 s | 61.90 s | 74 % · 34 % |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 2.42 | 96.5 | — |
+| 8 | 1.90 | 78.5 | 1.02× |
+| 16 | 2.81 | 115.9 | 1.04× |
+| 32 | 3.35 | 135.7 | 1.02× |
+| 64 | 1.39 | 55.2 | 1.35× |
+| 128 | 4.37 | 179.2 | 1.11× |
+| 256 | 5.84 | 239.8 | 1.59× |
+
 **Run 2**
 
 | Concurrent | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 | GPU |
@@ -41,6 +53,18 @@ run-to-run noise.
 | 64 | 3.27 | 133.4 | 4109.2 | 20.37 s | 36.98 s | 48 % · 24 % |
 | 128 | 5.80 | 236.8 | 7278.0 | 25.17 s | 41.90 s | 68 % · 33 % |
 | 256 | **9.97** | **403.6** | **12513.3** | 42.54 s | 55.85 s | 83 % · 37 % |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 2.44 | 98.3 | — |
+| 8 | 2.25 | 91.5 | 1.02× |
+| 16 | 2.95 | 116.8 | 1.03× |
+| 32 | 3.83 | 154.7 | 1.06× |
+| 64 | 3.14 | 128.2 | 1.04× |
+| 128 | 5.09 | 207.6 | 1.14× |
+| 256 | 6.02 | 243.6 | 1.66× |
 
 ```mermaid
 xychart-beta
@@ -125,6 +149,18 @@ does not survive the ladder:
 | 64 | **failed** | | | | | |
 | 128 | **failed** | | | | | |
 | 256 | **failed** | | | | | |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 2.58 | 93.2 | — |
+| 8 | 2.26 | 84.7 | — |
+| 16 | — | — | — |
+| 32 | — | — | — |
+| 64 | — | — | — |
+| 128 | — | — | — |
+| 256 | — | — | — |
 
 The engine died at concurrency 16 and every later level returned HTTP 500 against a dead
 process. The container exited with status 0 — nothing in `docker ps` output suggests a

@@ -37,6 +37,19 @@ but sample GPU utilisation as a single mean across all four cards.
 | 192 | 4287.5 | 21425.6 | 8.82 | 27.70 s | 97 % |
 | 256 | **5420.7** | **27025.5** | **11.12** | 31.15 s | 97 % |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.26 | 123.0 | 1.07× |
+| 8 | 1.22 | 590.1 | 1.07× |
+| 16 | 1.85 | 900.9 | 1.09× |
+| 32 | 2.71 | 1,331 | 1.18× |
+| 64 | 3.64 | 1,796 | 1.27× |
+| 128 | 4.29 | 2,104 | 1.40× |
+| 192 | 6.93 | 3,369 | 1.27× |
+| 256 | 8.22 | 4,006 | 1.35× |
+
 The second run repeated concurrency 128 and measured 3138.2 output tok/s against
 2956.0 in the first — about 6 % run-to-run variation at this level.
 

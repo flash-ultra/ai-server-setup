@@ -35,6 +35,18 @@ count. Every other parameter is pinned. The deviation is recorded in each output
 | 128 | 3.65 | 691.5 | 5301.5 | 159.22 s | 272.83 s | 45 % · 44 % |
 | 256 | 6.83 | 1301.8 | 9921.8 | 291.82 s | 548.00 s | 46 % · 45 % |
 
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.42 | 89.7 | — |
+| 8 | 0.54 | 91.5 | 1.32× |
+| 16 | 0.47 | 94.5 | 1.73× |
+| 32 | 0.55 | 108.5 | 2.27× |
+| 64 | 0.72 | 142.0 | 2.79× |
+| 128 | 0.80 | 152.3 | 4.54× |
+| 256 | 0.88 | 167.2 | 7.79× |
+
 **Run 2**
 
 | Concurrent | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 | GPU |
@@ -46,6 +58,18 @@ count. Every other parameter is pinned. The deviation is recorded in each output
 | 64 | 2.08 | 391.6 | 3012.3 | 87.62 s | 135.67 s | 46 % · 44 % |
 | 128 | 3.70 | 710.8 | 5383.9 | 161.00 s | 277.27 s | 46 % · 45 % |
 | 256 | 6.85 | 1297.6 | 9949.2 | 293.53 s | 539.76 s | 45 % · 45 % |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.50 | 89.8 | — |
+| 8 | 0.46 | 87.5 | 1.46× |
+| 16 | 0.49 | 91.4 | 1.73× |
+| 32 | 0.60 | 112.8 | 2.13× |
+| 64 | 0.73 | 137.5 | 2.85× |
+| 128 | 0.80 | 152.7 | 4.65× |
+| 256 | 0.87 | 165.2 | 7.85× |
 
 **Prompt mix at concurrency 32**
 
@@ -69,6 +93,18 @@ count. Every other parameter is pinned. The deviation is recorded in each output
 | 64 | 2.73 | 505.9 | 3947.6 | 48.29 s | 58.71 s | 42 % · 41 % |
 | 128 | 4.22 | 805.2 | 6141.4 | 78.76 s | 117.83 s | 43 % · 40 % |
 | 256 | **7.47** | **1390.3** | 10831.2 | 133.88 s | 226.67 s | 42 % · 40 % |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 1 | 0.47 | 85.6 | 1.01× |
+| 8 | 1.03 | 196.0 | 1.07× |
+| 16 | 1.22 | 215.3 | 1.23× |
+| 32 | 1.12 | 217.0 | 1.59× |
+| 64 | 1.33 | 245.6 | 2.06× |
+| 128 | 1.63 | 310.1 | 2.60× |
+| 256 | 1.91 | 355.9 | 3.91× |
 
 **Prompt mix at concurrency 32**
 
