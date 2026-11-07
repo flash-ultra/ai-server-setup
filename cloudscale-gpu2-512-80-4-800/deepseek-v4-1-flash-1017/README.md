@@ -1,10 +1,36 @@
-# DeepSeek-V4.1-Flash-1017 · GSQ-RCO 2.25 bpw
+# DeepSeek-V4.1-Flash-1017 · EXL3 3 bpw and GSQ-RCO 2.25 bpw
 
 DeepSeek's 763 B mixture-of-experts on all four cards of [this machine](../README.md),
-measured 2026-11-06. The official FP8 checkpoint is 510 GB and does not fit 382 GiB, so
-this is ISTA-DASLab's 2.25-bit GSQ-RCO set under Strata's DeepSeek engine. The
-[EXL3 3-bit pack on the two-card machine](../../cloudscale-gpu2-256-40-2-1600/deepseek-v4-1-flash-1017/README.md)
-is the reference.
+measured 2026-11-06 and 07. The official FP8 checkpoint is 510 GB and does not fit 382 GiB,
+so two quantised packs: the **EXL3 3-bit pack** with its own vLLM recipe, the one
+[measured on the two-card machine](../../cloudscale-gpu2-256-40-2-1600/deepseek-v4-1-flash-1017/README.md),
+here with its four-card profile; and **ISTA-DASLab's 2.25-bit GSQ-RCO set** under Strata's
+DeepSeek engine.
+
+## Verdict, EXL3 on four cards
+
+**The best DeepSeek setup measured, and close to the fastest model on this machine.** 153
+tok/s single stream, 467 / 682 tok/s at C=8 / 16 and **2,112 tok/s at C=256** — level with
+Qwen3.8-Flash-Next under vLLM — with every expert in VRAM, a 4.5 M-token KV pool, and a
+million-token prompt read in 88 s with every needle found. The quality is the pack's, measured
+on two cards: MMLU-Pro 0.880, IFEval 0.955, **HumanEval 1.000** with thinking. All of it on
+NCCL, because this VM lacks the peer atomics the pack's own all-reduce kernels need
+([setup](vllm-exl3/README.md#one-switch-this-machine-needs-no-p2p-atomics)).
+
+| | EXL3 3 bpw · 4 cards | EXL3 3 bpw · 2 cards | GSQ-RCO 2.25 bpw · Strata · 4 cards |
+|---|---|---|---|
+| Single stream, thinking on | **153.2 tok/s** | 136.5 | 111.8 |
+| C=8 / C=16 | **467 / 682 tok/s** | 261 / 299 | 160 / 182 (one engine), 319 / 339 (two) |
+| C=256 | **2,112 tok/s, 12.9 answers/s** | 1,296 | — |
+| Prefill 250k | **13,264 tok/s** | 11,386 (180k) | 4,159 |
+| Needles | 3 of 3 at **960k** | 3 of 3 at 960k | 3 of 3 at 250k |
+| `q1` thinking on: MMLU-Pro / IFEval / HumanEval | 0.880 / 0.955 / **1.000** (same pack, two cards) | | **0.890 / 0.965** / 0.994 |
+
+**Four cards scale this pack where they did not scale MiMo**: 1.6–2.3× the two-card
+throughput under load, against 1.19×, because the two-card setup runs at most 32 sequences
+and keeps part of the experts in host RAM, while four cards hold all of them and admit 128.
+
+## Verdict, GSQ-RCO under Strata
 
 | | |
 |---|---|
@@ -13,8 +39,6 @@ is the reference.
 | Setup | [Strata 0.2.11 with its DeepSeek engine `strata-dsv41` 0.1.57](strata/) |
 | Context served | 262,144 (1 M native) |
 | Thinking | on by default; off via `reasoning_effort: "none"` or `enable_thinking: false` |
-
-## Verdict
 
 **A fast single stream for a 763 B model, and almost nothing more under load.** 111.8 output
 tok/s for one client, decode a flat 110 tok/s even behind 64k of context, and every needle
@@ -30,10 +54,9 @@ which reached 645 tok/s at eight clients on the same cards.
 | Needles | 3 of 3 at 250k | 3 of 3 at 960k |
 | Output at C=16, thinking on | 182.4 tok/s | — (8 engine slots by default) |
 
-**Twice the cards, a lower bit width, and still behind the two-card EXL3 setup on every
-throughput column.** The EXL3 pack ships its own vLLM recipe with sm120 kernels compiled for
-exactly two of these cards; Strata's DeepSeek path is a port of a single-GPU engine that
-splits layers across cards and runs them one after another.
+**Behind the EXL3 pack on every throughput column**, on two cards as on four: Strata's
+DeepSeek path is a port of a single-GPU engine that splits layers across cards and runs
+them one after another, where the pack's recipe runs TP and EP with batched kernels.
 
 **Two engines on two cards each double that**: `--replicas 2` reaches 319 tok/s at C=8 and
 389 at C=32, the cards at 50 % — still a fifth of what vLLM serves with MiMo on these cards,
@@ -53,4 +76,5 @@ checkpoints on MMLU-Pro — [quality](strata/scenarios/quality.md).
 
 | Setup | Scenarios |
 |---|---|
+| [`vllm-exl3/`](vllm-exl3/) | [single](vllm-exl3/scenarios/single-stream.md) · [concurrent](vllm-exl3/scenarios/concurrent-load.md) · [reasoning cost](vllm-exl3/scenarios/reasoning-cost.md) · [long context](vllm-exl3/scenarios/long-context.md) |
 | [`strata/`](strata/) | [single](strata/scenarios/single-stream.md) · [concurrent](strata/scenarios/concurrent-load.md) · [reasoning cost](strata/scenarios/reasoning-cost.md) · [long context](strata/scenarios/long-context.md) · [quality](strata/scenarios/quality.md) |

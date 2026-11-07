@@ -35,6 +35,7 @@ page and in the model directories below; the hardware findings further down stil
 
 | Model | Setup | Status |
 |---|---|---|
+| [DeepSeek-V4.1-Flash-1017](deepseek-v4-1-flash-1017/) · EXL3 3 bpw | [vLLM + EXL3, the pack's recipe, `PROFILE=8x REPLICA=0`](deepseek-v4-1-flash-1017/vllm-exl3/) | measured 2026-11-07 — **153 tok/s single stream, 2,112 tok/s at C=256**, prefill 13.3 k tok/s, 3/3 needles at 960k · 1.6–2.3× the two-card pack under load · NCCL all-reduce: this VM has no P2P atomics |
 | [DeepSeek-V4.1-Flash-1017](deepseek-v4-1-flash-1017/) · GSQ-RCO 2.25 bpw | [Strata 0.2.11, DeepSeek engine, `DS4_SPLIT=10,10,10,10`, 8 slots](deepseek-v4-1-flash-1017/strata/) | measured 2026-11-06 — **111.8 tok/s single stream**, decode 110 flat, prefill 4.1–4.3 k tok/s to 250k (3/3 needles); 182 tok/s at C=16 with one engine, **319 / 389 tok/s at C=8 / 32 with `--replicas 2`** · the DeepSeek engine does not batch · the automatic layer split leaves two cards empty, set `DS4_SPLIT` · [`q1`](deepseek-v4-1-flash-1017/strata/scenarios/quality.md) with thinking: **the best of the series** — IFEval 0.965, MMLU-Pro 0.890, HumanEval 0.994 |
 | [GLM-5.3-Flash](glm-5-3-flash/) · NVFP4 | [vLLM 0.33.0, TP=4 + EP, FP8 KV](glm-5-3-flash/vllm/) | measured 2026-11-06 — NVFP4 runs on sm120 with stock vLLM · **thinking cannot be switched off**, 376 tokens per answer at the default effort: 103.5 tok/s single stream, 2,347 tok/s but only **6.4 answers/s at C=256** (p50 86 s) · `reasoning_effort: low` cuts answers to 52 tokens, 2.8× the answer rate · decode 102 flat · prefill 6.4 k tok/s flat to 250k, 3/3 needles · [`q1`](glm-5-3-flash/vllm/scenarios/quality.md) low / max: MMLU-Pro 0.815 / 0.870, IFEval 0.810 / 0.880, HumanEval 0.939 / 0.970 |
 | [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) · FP8 | [vLLM 0.33.0, TP=4, stock image](mimo-v2-6-flash/vllm/) | measured 2026-11-06 — **3,740 output tok/s and 55 answers/s at C=256** with thinking on, 75.6 answers/s off, p50 under 5 s · 140 tok/s single stream, decode 143 · prefill 6.1 k falling to 3.6 k tok/s at 250k, 3/3 needles · KV pool 4.3 M tokens · 1.19–1.23× the two-card machine · [`q1`](mimo-v2-6-flash/vllm/scenarios/quality.md): MMLU-Pro 0.775 / 0.850, IFEval 0.840 / 0.850, HumanEval 0.933 / 0.963 |
@@ -51,13 +52,17 @@ All on these four cards, thinking on, protocol `v1` for speed and `q1` for answe
 | [Qwen3.8-Flash-Next](qwen3-8-flash-next/vllm/) FP8 · vLLM (+ MTP) | 110 (175) | 2,275 tok/s at C=256 | 7,840 | 0.860 | 0.930 | 0.976 | a crowd that wants Qwen |
 | [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) FP8 · vLLM | 140 | **3,740 tok/s, 55 answers/s** at C=256 | 3,561 | 0.850 | 0.850 | 0.963 | a crowd with short questions |
 | [GLM-5.3-Flash](glm-5-3-flash/) NVFP4 · vLLM | 104 | 2,347 tok/s but 6.4 answers/s | 6,360 | 0.870 | 0.880 | 0.970 | only with `reasoning_effort: low` |
-| [DeepSeek-V4.1-Flash](deepseek-v4-1-flash-1017/) 2.25 bpw · Strata | 112 | 389 tok/s at C=32 (2 replicas) | 4,159 | **0.890** | **0.965** | **0.994** | a few users who want the best answer |
+| [DeepSeek-V4.1-Flash](deepseek-v4-1-flash-1017/vllm-exl3/) EXL3 3 bpw · vLLM, pack recipe | 153 | 2,112 tok/s at C=256 | 13,264 | 0.880 ¹ | 0.955 ¹ | **1.000** ¹ | **the best answers at Qwen's throughput** |
+| [DeepSeek-V4.1-Flash](deepseek-v4-1-flash-1017/strata/) 2.25 bpw · Strata | 112 | 389 tok/s at C=32 (2 replicas) | 4,159 | **0.890** | **0.965** | 0.994 | superseded by the EXL3 pack |
 | [MiniMax-M3.1-Flash](minimax-m3-1-flash/) | — | — | — | — | — | — | does not run on sm120 |
 
-**No model wins every column.** Strata with Qwen is the fastest thing on this machine for a
-handful of users and reads long prompts three times faster than anything else; MiMo under
-vLLM is the one to put in front of hundreds; DeepSeek gives the best answers and serves the
-fewest people. GLM matches Qwen on quality and loses to it on every speed column.
+¹ measured on the two-card machine with the same pack.
+
+**No model wins every column, but one comes close.** DeepSeek's EXL3 pack on all four cards
+gives the best answers measured here at the throughput of Qwen under vLLM, and reads a
+million tokens of context. Strata with Qwen stays the fastest for a handful of users and
+for long prompts up to 262k; MiMo under vLLM is the one to put in front of hundreds. GLM
+matches Qwen on quality and loses to it on every speed column.
 
 ## Test list, November 2026
 
@@ -72,7 +77,7 @@ on top, **about 280 GB of weights is the practical ceiling at TP=4**.
 | [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) | FP8 (178 GB) | vLLM 0.33 TP=4 | measured |
 | [GLM-5.3-Flash](glm-5-3-flash/) | NVIDIA NVFP4 (204 GB); the FP8 original is 328 GB | vLLM 0.33 TP=4 + EP | measured |
 | [MiniMax-M3.1-Flash](minimax-m3-1-flash/) | MXFP8 attention + NVFP4 experts (252 GB) | vLLM 0.33; SGLang 0.5.23; SGLang `dev-minimax-m31-flash` | **does not run on sm120**: MiniMax's sparse-attention kernels exist for SM100/SM103 only |
-| [DeepSeek-V4.1-Flash-1017](deepseek-v4-1-flash-1017/) | the official FP8 is 510 GB and does not fit; [ISTA-DASLab GSQ-RCO 2.25 bpw](https://huggingface.co/ISTA-DASLab/DeepSeek-V4.1-Flash-1017-GSQ-RCO-GGUF), 155 GB plus a 111 GB Engram table kept in host RAM | Strata 0.2.11, DeepSeek engine | measured. The [EXL3 pack](../cloudscale-gpu2-256-40-2-1600/deepseek-v4-1-flash-1017/) is built for two cards and measured there |
+| [DeepSeek-V4.1-Flash-1017](deepseek-v4-1-flash-1017/) | the official FP8 is 510 GB and does not fit; [ISTA-DASLab GSQ-RCO 2.25 bpw](https://huggingface.co/ISTA-DASLab/DeepSeek-V4.1-Flash-1017-GSQ-RCO-GGUF), 155 GB plus a 111 GB Engram table kept in host RAM | Strata 0.2.11, DeepSeek engine; and the [EXL3 3 bpw pack](https://huggingface.co/diffbot/DeepSeek-V4.1-Flash-EXL3-3bpw-2x-RTX-PRO-6000) with its own vLLM recipe | measured |
 
 ## Models tested, August 2026
 
