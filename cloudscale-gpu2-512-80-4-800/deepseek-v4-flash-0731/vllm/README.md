@@ -36,7 +36,9 @@ raises `attention workspace insufficient for resolved plan`. vLLM reserves a fix
 that kernel; with one card per copy each card computes all 64 heads, at TP=4 it is 16.
 Raising the constant to 1 GiB in a mounted copy of the file is enough, and then
 [four copies](scenarios/data-parallel.md) deliver **11,535 tok/s at 1,024 clients**, twice
-the TP=4 layout, at a fifth less single-stream speed.
+the TP=4 layout, at a fifth less single-stream speed. The same constant also stops the full
+1,048,576-token window at TP=4; with 1 GiB it starts and finds every needle at
+[960k](scenarios/long-context.md#full-context).
 
 ## Pinned values
 

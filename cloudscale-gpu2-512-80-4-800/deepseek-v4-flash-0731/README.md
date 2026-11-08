@@ -23,8 +23,9 @@ real run time ([why](../../benchmark/README.md#the-window-overstates-slow-answer
 2,762 and 4,438 for the August SGLang patchset read the same way. As **four copies** — after
 raising a fixed 128 MiB FlashInfer workspace to 1 GiB — the same image reaches **11,535 tok/s at
 1,024 clients**, the highest load figure measured on this machine, at half the latency of TP=4.
-With the checkpoint's DSpark module it instead nearly doubles the single stream and falls behind
-from 128 clients on.
+The same change opens the full million-token window at TP=4, with every needle found at 960k.
+With the checkpoint's DSpark module the image instead nearly doubles the single stream and falls
+behind from 128 clients on.
 
 | Thinking on | [vLLM 0.33](vllm/), TP=4 | [four copies](vllm/scenarios/data-parallel.md) ² | [TP=4 + DSpark](vllm/scenarios/dspark.md) | [SGLang patchset](sglang/), August |
 |---|---|---|---|---|
@@ -33,6 +34,7 @@ from 128 clients on.
 | C=1024, over the real run time | 5,956 tok/s · 29.5 answers/s | **11,535 · 57.9** | — | 4,438 · 14.3 |
 | Decode | 92 tok/s, 89 behind 64k | 73 flat | 155–320, 183 behind 64k | — |
 | Prefill at 250k | 5,844 tok/s, 3/3 needles | — | — | 1M verified ¹ |
+| Full 1 M window | [with ²](vllm/scenarios/long-context.md#full-context): 3/3 needles at 960k, prefill 3,724 tok/s | — | — | verified ¹ |
 | KV pool | 1.56 M tokens | 4.99 M | — | 2.80 M |
 | `q1` MMLU-Pro / IFEval / HumanEval | 0.870 / 0.925 / 0.970 | same model | — | — |
 
