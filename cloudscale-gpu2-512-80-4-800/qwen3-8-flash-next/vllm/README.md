@@ -60,7 +60,8 @@ Verified 2026-11-06 with `smoke.sh`:
 | Start to ready | **151 s** | 308 s |
 
 **Under load this is a different machine: 1,989 output tok/s at 256 clients and a KV pool
-for fourteen full-length conversations.** On the single stream the plain run loses to the
+for fourteen full-length conversations** — and the ceiling: [above 256](scenarios/concurrent-load.md#above-256-clients)
+it adds only latency, 2,481 tok/s at 1,024 with a median of 86 s. On the single stream the plain run loses to the
 two-card Strata setup, which drafts with the model's MTP head; with
 `--speculative-config qwen4_exp_mtp` vLLM drafts too and takes the single stream to
 **175 tok/s**, 1.24× Strata on the Rocky two-card machine (2× RTX PRO 4500), at an acceptance length of 2.06. Under

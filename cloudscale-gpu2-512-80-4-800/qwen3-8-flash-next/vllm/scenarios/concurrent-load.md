@@ -137,3 +137,77 @@ agents or a handful of users: switch it on. Serving hundreds: it does not matter
 
 Strata's eight slots hold their own up to C=8 on one sixth of the VRAM; above that
 only a KV pool like this one carries the load.
+
+## Above 256 clients
+
+Measured 2026-11-08 with the same server flags, levels 256 to 1024 (a documented deviation, for
+the comparison with [DeepSeek-V4-Flash-0731](../../../deepseek-v4-flash-0731/vllm/scenarios/concurrent-load.md),
+which keeps climbing there). `bench.py` now also prints the wall-clock time and concurrency ÷
+mean latency.
+
+<!-- protocol v1 · DEVIATION levels 256,384,512,768,1024 · otherwise as above -->
+
+**Thinking on**
+
+| Concurrent | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 | GPU |
+|---|---|---|---|---|---|---|
+| 256 | 11.25 | 2268.2 | 16476.9 | 26.95 s | 42.96 s | 98 % · 99 % · 98 % · 98 % |
+| 384 | 11.95 | 2439.2 | 17532.0 | 41.70 s | 49.82 s | 100 % · 100 % · 100 % · 100 % |
+| 512 | 13.00 | 2673.6 | 19092.6 | 48.57 s | 54.36 s | 100 % · 100 % · 100 % · 100 % |
+| 768 | 19.20 | 3948.1 | 28197.7 | 69.02 s | 76.10 s | 100 % · 100 % · 100 % · 100 % |
+| 1024 | 25.60 | 5345.3 | 37678.1 | 86.19 s | 101.90 s | 100 % · 100 % · 100 % · 100 % |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 256 | 9.50 | 1,915 | 1.18× |
+| 384 | 9.21 | 1,880 | 1.30× |
+| 512 | 10.54 | 2,168 | 1.23× |
+| 768 | 11.13 | 2,288 | 1.73× |
+| 1024 | 11.88 | 2,481 | 2.15× |
+
+Over the wall-clock time, measured, and concurrency ÷ mean latency:
+
+| Concurrent | Wall | Answers/s (wall) | Output tok/s (wall) | Mean latency | C / mean latency |
+|---|---|---|---|---|---|
+| 256 | 56.3 s | 8.00 | 1612.4 | 27.81 s | 9.20 answers/s |
+| 384 | 56.3 s | 8.50 | 1734.1 | 37.44 s | 10.26 answers/s |
+| 512 | 58.5 s | 8.90 | 1829.6 | 47.89 s | 10.69 answers/s |
+| 768 | 80.9 s | 9.49 | 1952.2 | 68.61 s | 11.19 answers/s |
+| 1024 | 107.4 s | 9.54 | 1991.5 | 85.04 s | 12.04 answers/s |
+
+**Thinking off**
+
+| Concurrent | Answers/s | Output tok/s | Total tok/s | Latency p50 | p95 | GPU |
+|---|---|---|---|---|---|---|
+| 256 | 18.55 | 937.8 | 23624.4 | 14.22 s | 23.57 s | 100 % · 100 % · 100 % · 100 % |
+| 384 | 19.23 | 962.6 | 24474.8 | 20.49 s | 36.49 s | 100 % · 100 % · 100 % · 100 % |
+| 512 | 20.52 | 1022.4 | 26124.4 | 29.78 s | 42.72 s | 100 % · 100 % · 100 % · 100 % |
+| 768 | 20.85 | 1039.2 | 26538.7 | 43.66 s | 45.61 s | 100 % · 100 % · 100 % · 100 % |
+| 1024 | 27.15 | 1345.3 | 34549.8 | 55.84 s | 59.32 s | 100 % · 100 % · 100 % · 100 % |
+
+Over the real run time — concurrency ÷ median latency, [why](../../../../benchmark/README.md#the-window-overstates-slow-answers):
+
+| Concurrent | answers/s | output tok/s | v1 over by |
+|---|---|---|---|
+| 256 | 18.00 | 910.1 | 1.03× |
+| 384 | 18.74 | 938.1 | 1.03× |
+| 512 | 17.19 | 856.6 | 1.19× |
+| 768 | 17.59 | 876.7 | 1.19× |
+| 1024 | 18.34 | 908.7 | 1.48× |
+
+Over the wall-clock time, measured, and concurrency ÷ mean latency:
+
+| Concurrent | Wall | Answers/s (wall) | Output tok/s (wall) | Mean latency | C / mean latency |
+|---|---|---|---|---|---|
+| 256 | 44.6 s | 16.65 | 841.6 | 14.52 s | 17.62 answers/s |
+| 384 | 44.6 s | 17.26 | 864.2 | 21.09 s | 18.20 answers/s |
+| 512 | 46.7 s | 17.59 | 876.2 | 27.36 s | 18.72 answers/s |
+| 768 | 46.7 s | 17.87 | 890.4 | 40.53 s | 18.95 answers/s |
+| 1024 | 61.5 s | 17.65 | 874.8 | 51.43 s | 19.91 answers/s |
+
+**The curve flattens above 256.** Over the real run time 1,915 tok/s at 256 in this rerun and
+2,481 at 1,024, while the median latency rises from 27 to 86 s; by mean latency 2,514. Without
+thinking it stays at 17–19 answers/s from 256 on. Here `v1` reads high by up to 2.15×: at 86 s
+per answer each client's one request is counted against a 40 s window.

@@ -27,14 +27,16 @@ has its own fallbacks and runs the checkpoint with the image as published. This 
 recipe's `single_node_tep` on four cards instead of eight, and it serves the DSpark draft
 module of the checkpoint too.
 
-## What did not run
+## Four copies need one changed line
 
 **Four data-parallel copies with expert parallelism**, the recipe's `single_node_dep` and the
-layout the August stack used for attention. The copies load (43 GiB each), profile
-(1,278,402 cache tokens per copy) and then fail during graph capture: FlashInfer's SM120
-sparse-MLA decode raises `attention workspace insufficient for resolved plan`. vLLM reserves a
-fixed 128 MiB for that kernel; with one card per copy each card computes all 64 heads, at TP=4
-it is 16.
+layout the August stack used for attention, fail in the stock image: the copies load (43 GiB
+each), profile and then stop during graph capture, where FlashInfer's SM120 sparse-MLA decode
+raises `attention workspace insufficient for resolved plan`. vLLM reserves a fixed 128 MiB for
+that kernel; with one card per copy each card computes all 64 heads, at TP=4 it is 16.
+Raising the constant to 1 GiB in a mounted copy of the file is enough, and then
+[four copies](scenarios/data-parallel.md) deliver **11,535 tok/s at 1,024 clients**, twice
+the TP=4 layout, at a fifth less single-stream speed.
 
 ## Pinned values
 

@@ -17,30 +17,33 @@ with stock vLLM.
 
 ## Verdict, November 2026
 
-**Stock vLLM 0.33 replaces the patched stack.** No patches and no draft model, and more
-throughput at every load level both were measured at: over the real run time
-([why](../../benchmark/README.md#the-window-overstates-slow-answers)) 3,869 tok/s at 256 clients
-and 5,956 at 1,024, against 2,762 and 4,438 for the August SGLang patchset read the same way.
-With the checkpoint's DSpark module the same image nearly doubles the single stream and falls
-behind from 128 clients on.
+**Stock vLLM 0.33 replaces the patched stack, and one changed line doubles it again.** Without
+patches or a draft model, TP=4 delivers 3,869 tok/s at 256 clients and 5,956 at 1,024 over the
+real run time ([why](../../benchmark/README.md#the-window-overstates-slow-answers)), against
+2,762 and 4,438 for the August SGLang patchset read the same way. As **four copies** — after
+raising a fixed 128 MiB FlashInfer workspace to 1 GiB — the same image reaches **11,535 tok/s at
+1,024 clients**, the highest load figure measured on this machine, at half the latency of TP=4.
+With the checkpoint's DSpark module it instead nearly doubles the single stream and falls behind
+from 128 clients on.
 
-| Thinking on | [vLLM 0.33](vllm/), no draft | [vLLM 0.33, DSpark](vllm/scenarios/dspark.md) | [SGLang patchset](sglang/), August |
-|---|---|---|---|
-| Single stream | 95.3 tok/s | **169.8** | 131.2 ¹ |
-| C=256, over the real run time | **3,869 tok/s** · 18.8 answers/s | 1,594 · 7.9 | 2,762 · 8.3 |
-| C=1024, over the real run time | **5,956 tok/s** · 29.5 answers/s | — | 4,438 · 14.3 |
-| Decode | 92 tok/s, 89 behind 64k | 155–320, 183 behind 64k | — |
-| Prefill at 250k | 5,844 tok/s, 3/3 needles | — | 1M verified ¹ |
-| Context served | 262,144 | 262,144 | 1,048,576 |
-| `q1` MMLU-Pro / IFEval / HumanEval | 0.870 / 0.925 / 0.970 | — | — |
+| Thinking on | [vLLM 0.33](vllm/), TP=4 | [four copies](vllm/scenarios/data-parallel.md) ² | [TP=4 + DSpark](vllm/scenarios/dspark.md) | [SGLang patchset](sglang/), August |
+|---|---|---|---|---|
+| Single stream | 95.3 tok/s | 79.2 | **169.8** | 131.2 ¹ |
+| C=256, over the real run time | 3,869 tok/s · 18.8 answers/s | **5,365 · 26.6** | 1,594 · 7.9 | 2,762 · 8.3 |
+| C=1024, over the real run time | 5,956 tok/s · 29.5 answers/s | **11,535 · 57.9** | — | 4,438 · 14.3 |
+| Decode | 92 tok/s, 89 behind 64k | 73 flat | 155–320, 183 behind 64k | — |
+| Prefill at 250k | 5,844 tok/s, 3/3 needles | — | — | 1M verified ¹ |
+| KV pool | 1.56 M tokens | 4.99 M | — | 2.80 M |
+| `q1` MMLU-Pro / IFEval / HumanEval | 0.870 / 0.925 / 0.970 | same model | — | — |
 
-¹ measured before protocol `v1`.
+¹ measured before protocol `v1`. ² one constant changed in a mounted copy of vLLM's FlashInfer
+backend for DeepSeek-V4.
 
-**Without thinking four cards give what two gave with the patched SGLang:** 29.8–31.5 answers/s from 256 to
-768 clients, against 32.1–33.4 for the patched SGLang on the
-[two-card machine](../../cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/). The 37-token
-answers leave prefill as the limit. Four data-parallel copies, which would have quadrupled the
-cache, [do not start](vllm/README.md#what-did-not-run) on this vLLM.
+**Without thinking TP=4 gives what two cards gave with the patched SGLang:** 29.8–31.5
+answers/s from 256 to 768 clients, against 32.1–33.4 on the
+[two-card machine](../../cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/); the 37-token
+answers leave prefill as the limit. Four copies lift that to 46 answers/s at 256 and 64 at
+1,024, but stumble between 32 and 64 clients, where short requests spread unevenly over them.
 
 ## Verdict, August 2026
 
@@ -89,6 +92,7 @@ faster configuration is a measured finding, not yet a recommendation.
 | Reasoning cost | not measured | [measured](sglang/scenarios/reasoning-cost.md) | [measured](vllm/scenarios/reasoning-cost.md) |
 | Quality (`q1`) | not measured | not measured | [both arms](vllm/scenarios/quality.md) |
 | DSpark | — | in the production config | [measured separately](vllm/scenarios/dspark.md) |
+| Four copies (DP=4 + EP) | — | the production layout | [one changed line](vllm/scenarios/data-parallel.md) |
 
 ## The one finding that decided it
 

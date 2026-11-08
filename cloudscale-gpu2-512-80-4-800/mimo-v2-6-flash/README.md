@@ -16,9 +16,11 @@ that series is the reference column throughout.
 
 ## Verdict
 
-**The highest throughput measured on this machine: 3,650 output tok/s and 54 answers per
-second at 256 clients over the real run time, with thinking on and a p50 under five
-seconds.** Thinking costs this model little — 68 tokens per answer, a fifth of them
+**The most answers per second measured on this machine: 3,650 output tok/s and 54 answers
+per second at 256 clients over the real run time, with thinking on and a p50 under five
+seconds, and [5,608 tok/s with 83 answers/s at 1,024](vllm/scenarios/concurrent-load.md#above-256-clients).**
+In tokens per second DeepSeek-V4-Flash-0731 is level with it at TP=4 and twice as fast as
+[four copies](../deepseek-v4-flash-0731/vllm/scenarios/data-parallel.md). Thinking costs this model little — 68 tokens per answer, a fifth of them
 scratchpad — so its answers per second are three to five and a half times those of
 Qwen3.8-Flash-Next at the same load.
 
