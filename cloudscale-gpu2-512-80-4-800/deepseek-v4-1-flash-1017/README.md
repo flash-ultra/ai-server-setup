@@ -77,5 +77,5 @@ checkpoints on MMLU-Pro — [quality](strata/scenarios/quality.md).
 
 | Setup | Scenarios |
 |---|---|
-| [`vllm-exl3/`](vllm-exl3/) | [single](vllm-exl3/scenarios/single-stream.md) · [concurrent](vllm-exl3/scenarios/concurrent-load.md) · [reasoning cost](vllm-exl3/scenarios/reasoning-cost.md) · [long context](vllm-exl3/scenarios/long-context.md) · [quality](vllm-exl3/scenarios/quality.md) |
+| [`vllm-exl3/`](vllm-exl3/) | [single](vllm-exl3/scenarios/single-stream.md) · [concurrent](vllm-exl3/scenarios/concurrent-load.md) · [reasoning cost](vllm-exl3/scenarios/reasoning-cost.md) · [long context](vllm-exl3/scenarios/long-context.md) · [quality](vllm-exl3/scenarios/quality.md) · [vision](vllm-exl3/scenarios/vision.md) |
 | [`strata/`](strata/) | [single](strata/scenarios/single-stream.md) · [concurrent](strata/scenarios/concurrent-load.md) · [reasoning cost](strata/scenarios/reasoning-cost.md) · [long context](strata/scenarios/long-context.md) · [quality](strata/scenarios/quality.md) |

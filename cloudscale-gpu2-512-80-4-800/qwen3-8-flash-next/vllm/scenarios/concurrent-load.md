@@ -81,9 +81,9 @@ Over the real run time — concurrency ÷ median latency, [why](../../../../benc
 
 ## Reading it
 
-**1,989 output tok/s at C=256 with thinking on, over the real run time, still rising.**
-Every doubling of clients adds 29–36 % of throughput; the ladder has not flattened at 256, and the KV pool would
-take seven times more. With thinking off the answers are 50 tokens, so the ladder is
+**1,989 output tok/s at C=256 with thinking on, over the real run time.** Up to 256 every
+doubling of clients adds 29–36 % of throughput; [above 256](#above-256-clients) the curve flattens
+(2,481 at 1,024), although the KV pool would take seven times more. With thinking off the answers are 50 tokens, so the ladder is
 request-bound: 18.0 answers/s at C=256 (24 k total tok/s measured, most of it prompt).
 
 **The mixed run is the one that tells you about agents.** At C=32 the mix produces more

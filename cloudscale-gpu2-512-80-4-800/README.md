@@ -78,6 +78,22 @@ that as four copies with one changed line — a step below V4.1 on answers. Hy3 
 and is the slowest to get there: ten times the tokens with thinking, and a cache for barely one
 long document.
 
+### Vision, November 2026
+
+DeepSeek-V4.1-Flash-1017 and Qwen3.8-Flash-Next both read images; DeepSeek-V4-Flash-0731 does
+not. Protocol [`vq1`](../benchmark/README.md#vision-protocol-vq1-measured-with-inspect-ai), the same
+200 samples per benchmark for both:
+
+| Thinking on / off | [DeepSeek-V4.1 EXL3 3 bpw](deepseek-v4-1-flash-1017/vllm-exl3/scenarios/vision.md) | [Qwen3.8-Flash-Next FP8](qwen3-8-flash-next/vllm/scenarios/vision.md) |
+|---|---|---|
+| MMMU (multiple choice) | 0.795 / **0.755** | **0.865** / 0.725 |
+| MathVista | 0.825 / **0.765** | **0.890** / 0.745 |
+| DocVQA (ANLS) | 0.838 / 0.891 | **0.955** / **0.893** |
+
+**With thinking Qwen reads images better, documents most of all** (0.955 against 0.838, beyond
+four standard errors); without thinking the two are level. DeepSeek loses part of its MMMU score
+to 15 answers that deliberate until the 50,000-token cap.
+
 ## Test list, November 2026
 
 Requested 2026-11-06, each with throughput under protocol [`v1`](../benchmark/README.md) and

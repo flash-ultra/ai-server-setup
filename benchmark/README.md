@@ -214,6 +214,21 @@ comparable to a published figure over the full set, and the numbers here are not
 meant to be compared against vendor benchmark tables — only against each other, on
 this hardware, with these limits.
 
+## Vision: protocol `vq1`, measured with Inspect AI
+
+The same tool and parameters as `q1`, on three image benchmarks from `inspect_evals`:
+
+| Parameter | Value | Why it is pinned |
+|---|---|---|
+| Benchmarks | `mmmu_multiple_choice` (validation), `mathvista` (testmini), `docvqa` (validation) | College-level questions over figures and diagrams, maths read from plots, and text read from scanned documents |
+| Samples | 200 per benchmark, **`--sample-shuffle 42`**, the tasks' own shuffling off (`-T shuffle=false` for MathVista and DocVQA) | MMMU is ordered by subject, so the first 200 would be seven subjects; MathVista and DocVQA shuffle without a seed by default, so two runs would see different samples. With one seed every model gets the same 200 |
+| DocVQA score | ANLS, reported by Inspect as `accuracy` | Partial credit for nearly right strings |
+| Everything else | as `q1`: `--max-connections 32`, `--max-tokens 50000`, `-M client_timeout=3600`, both thinking arms, the engine directly | |
+
+Check the sample IDs across models before comparing; the first `vq1` pair was identical in all
+three benchmarks. A sample that reaches the token cap is scored as wrong, and the stop-reason
+check reports it.
+
 ## Known deviations in existing documents
 
 The DeepSeek-V4-Flash-0731 series predates this protocol and is not fully consistent

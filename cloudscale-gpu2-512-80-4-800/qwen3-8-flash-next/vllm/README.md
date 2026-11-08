@@ -73,7 +73,8 @@ The FP8 checkpoint against the 3-bit one: [`q1`](scenarios/quality.md) cannot te
 | Scenario | Status |
 |---|---|
 | [single-stream](scenarios/single-stream.md) | measured — 110.4 output tok/s thinking on, 97.9 off, decode a flat 115; **with the MTP draft 175.4 / 132.4, decode 163–192** |
-| [concurrent-load](scenarios/concurrent-load.md) | measured — **2,275 output tok/s at C=256** thinking on, still rising; 18.65 answers/s at C=256 off; mixed traffic at C=32; MTP draft +10–16 % up to C=128, neutral at 256 |
+| [concurrent-load](scenarios/concurrent-load.md) | measured — **1,989 output tok/s at C=256** thinking on over the real run time, flat above it (2,481 at C=1024); 18.0 answers/s at C=256 off; mixed traffic at C=32; MTP draft +10–16 % up to C=128, neutral at 256 |
 | [reasoning-cost](scenarios/reasoning-cost.md) | measured — thinking costs 2.9× in answers/s, `low` buys a third back |
 | [long-context](scenarios/long-context.md) | measured — 64k / 128k / 250k, **3 of 3 needles each**, prefill 7.6–7.8 k tok/s flat |
 | [quality](scenarios/quality.md) | measured — `q1`, both arms, **HumanEval 0.976** with thinking (Docker sandbox), IFEval prompt_strict 0.930, GSM8K 0.990, MMLU-Pro 0.885 / 0.860 (2 of 200 truncated); **indistinguishable from the 3-bit Strata run on Rocky 2× RTX PRO 4500** |
+| [vision](scenarios/vision.md) | measured — `vq1`, both arms, thinking on: MMMU 0.865, MathVista 0.890, **DocVQA 0.955**; ahead of DeepSeek-V4.1 with thinking, level without |
