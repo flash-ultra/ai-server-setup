@@ -12,8 +12,9 @@ DeepSeek engine.
 **The best DeepSeek setup measured, and the fastest single stream of the vLLM setups on this
 machine.** 153 tok/s single stream, 467 / 673 tok/s at C=8 / 16 and **1,510 tok/s at C=256**,
 three quarters of Qwen3.8-Flash-Next under vLLM (1,989) — with every expert in VRAM, a 4.5 M-token KV pool, and a
-million-token prompt read in 88 s with every needle found. The quality is the pack's, measured
-on two cards: MMLU-Pro 0.880, IFEval 0.955, **HumanEval 1.000** with thinking. All of it on
+million-token prompt read in 88 s with every needle found. `q1` on these cards
+reproduces the two-card run: MMLU-Pro 0.850, IFEval 0.955, **HumanEval 0.994** with thinking
+([quality](vllm-exl3/scenarios/quality.md)). All of it on
 NCCL, because this VM lacks the peer atomics the pack's own all-reduce kernels need
 ([setup](vllm-exl3/README.md#one-switch-this-machine-needs-no-p2p-atomics)).
 
@@ -24,7 +25,7 @@ NCCL, because this VM lacks the peer atomics the pack's own all-reduce kernels n
 | C=256 | **1,510 tok/s, 9.2 answers/s** | 399 | — |
 | Prefill 250k | **13,264 tok/s** | 11,386 (180k) | 4,159 |
 | Needles | 3 of 3 at **960k** | 3 of 3 at 960k | 3 of 3 at 250k |
-| `q1` thinking on: MMLU-Pro / IFEval / HumanEval | 0.880 / 0.955 / **1.000** (same pack, two cards) | | **0.890 / 0.965** / 0.994 |
+| `q1` thinking on: MMLU-Pro / IFEval / HumanEval | 0.850 / 0.955 / **0.994** | 0.880 / 0.955 / **1.000** | **0.890 / 0.965** / **0.994** |
 
 **Four cards scale this pack where they did not scale MiMo**: 1.8–3.8× the two-card
 throughput under load, against 1.2×, because the two-card setup runs at most 32 sequences
@@ -76,5 +77,5 @@ checkpoints on MMLU-Pro — [quality](strata/scenarios/quality.md).
 
 | Setup | Scenarios |
 |---|---|
-| [`vllm-exl3/`](vllm-exl3/) | [single](vllm-exl3/scenarios/single-stream.md) · [concurrent](vllm-exl3/scenarios/concurrent-load.md) · [reasoning cost](vllm-exl3/scenarios/reasoning-cost.md) · [long context](vllm-exl3/scenarios/long-context.md) |
+| [`vllm-exl3/`](vllm-exl3/) | [single](vllm-exl3/scenarios/single-stream.md) · [concurrent](vllm-exl3/scenarios/concurrent-load.md) · [reasoning cost](vllm-exl3/scenarios/reasoning-cost.md) · [long context](vllm-exl3/scenarios/long-context.md) · [quality](vllm-exl3/scenarios/quality.md) |
 | [`strata/`](strata/) | [single](strata/scenarios/single-stream.md) · [concurrent](strata/scenarios/concurrent-load.md) · [reasoning cost](strata/scenarios/reasoning-cost.md) · [long context](strata/scenarios/long-context.md) · [quality](strata/scenarios/quality.md) |
