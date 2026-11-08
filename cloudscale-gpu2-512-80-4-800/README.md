@@ -37,6 +37,7 @@ page and in the model directories below; the hardware findings further down stil
 |---|---|---|
 | [DeepSeek-V4.1-Flash-1017](deepseek-v4-1-flash-1017/) · EXL3 3 bpw | [vLLM + EXL3, the pack's recipe, `PROFILE=8x REPLICA=0`](deepseek-v4-1-flash-1017/vllm-exl3/) | measured 2026-11-07 — **153 tok/s single stream, 1,510 tok/s at C=256**, prefill 13.3 k tok/s, 3/3 needles at 960k · 1.8–3.8× the two-card pack under load · NCCL all-reduce: this VM has no P2P atomics |
 | [DeepSeek-V4.1-Flash-1017](deepseek-v4-1-flash-1017/) · GSQ-RCO 2.25 bpw | [Strata 0.2.11, DeepSeek engine, `DS4_SPLIT=10,10,10,10`, 8 slots](deepseek-v4-1-flash-1017/strata/) | measured 2026-11-06 — **111.8 tok/s single stream**, decode 110 flat, prefill 4.1–4.3 k tok/s to 250k (3/3 needles); about 154 tok/s from C=4 on with one engine, **302 tok/s at C=8 with `--replicas 2`** · the DeepSeek engine does not batch · the automatic layer split leaves two cards empty, set `DS4_SPLIT` · [`q1`](deepseek-v4-1-flash-1017/strata/scenarios/quality.md) with thinking: **the best of the series** — IFEval 0.965, MMLU-Pro 0.890, HumanEval 0.994 |
+| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/) · FP8 | [vLLM 0.33.0, unpatched, TP=4 + EP](deepseek-v4-flash-0731/vllm/) | measured 2026-11-07/08 — the August DeepGEMM blocker is gone in stock vLLM · 95 tok/s single stream, decode 92 flat, **170 with DSpark** · **3,869 tok/s at C=256, 5,956 at C=1024**, 34–40 % over the August SGLang patchset at the same levels · DSpark loses from 128 clients on · prefill 5.8–6.7 k tok/s, 3/3 at 250k · KV pool 1.56 M tokens · four data-parallel copies fail in FlashInfer's SM120 decode workspace · [`q1`](deepseek-v4-flash-0731/vllm/scenarios/quality.md) on / off: MMLU-Pro 0.870 / 0.790, IFEval 0.925 / 0.840, HumanEval 0.970 / 0.909 |
 | [GLM-5.3-Flash](glm-5-3-flash/) · NVFP4 | [vLLM 0.33.0, TP=4 + EP, FP8 KV](glm-5-3-flash/vllm/) | measured 2026-11-06 — NVFP4 runs on sm120 with stock vLLM · **thinking cannot be switched off**, 376 tokens per answer at the default effort: 103.5 tok/s single stream, 1,088 tok/s and only **3.0 answers/s at C=256** (p50 86 s) · `reasoning_effort: low` cuts answers to 52 tokens, 2.8× the answer rate · decode 102 flat · prefill 6.4 k tok/s flat to 250k, 3/3 needles · [`q1`](glm-5-3-flash/vllm/scenarios/quality.md) low / max: MMLU-Pro 0.815 / 0.870, IFEval 0.810 / 0.880, HumanEval 0.939 / 0.970 |
 | [Beam-1.0-501B-A23B](beam-1-0/) · NVFP4 | [vLLM 0.33.0, TP=4, FP8 KV](beam-1-0/vllm/) | measured 2026-11-07 — 98 tok/s single stream, decode 97–99 flat · **2,972 tok/s, 12.8 answers/s at C=256**, second only to MiMo · prefill 4.6–5.2 k tok/s, 3/3 needles at 250k · thinking always on, the effort budget barely moves it · [`q1`](beam-1-0/vllm/scenarios/quality.md) MMLU-Pro 0.890, IFEval 0.910, HumanEval 0.951; minimal effort within one standard error |
 | [Hy3](hy3/) · FP8 | [vLLM 0.33.0, TP=4, FP8 KV](hy3/vllm/) | measured 2026-11-07 — 89.6 tok/s single stream, decode 85 flat · **2,254 tok/s, 4.4 answers/s at C=256**, every protocol answer at the 512-token cap at `reasoning_effort: high` · prefill 2.7 k falling to 1.8 k tok/s at 250k, 3/3 needles · KV pool 308 k tokens, 1.17 full-length requests · [`q1`](hy3/vllm/scenarios/quality.md) high / no_think: MMLU-Pro 0.880 / 0.795, IFEval 0.940 / 0.880, HumanEval 0.994 / 0.921 |
@@ -54,10 +55,11 @@ figures over the real run time ([why](../benchmark/README.md#the-window-overstat
 |---|---|---|---|---|---|---|---|
 | [Qwen3.8-Flash-Next](qwen3-8-flash-next/strata/) IQ3_S · Strata | **225 tok/s** | 722 tok/s at C=16 (8 slots) | **21,873 tok/s** | 0.860 | 0.910 | 0.988 | one to eight users, long documents |
 | [Qwen3.8-Flash-Next](qwen3-8-flash-next/vllm/) FP8 · vLLM (+ MTP) | 110 (175) | 1,989 tok/s at C=256 | 7,840 | 0.860 | 0.930 | 0.976 | a crowd that wants Qwen |
-| [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) FP8 · vLLM | 140 | **3,650 tok/s, 54 answers/s** at C=256 | 3,561 | 0.850 | 0.850 | 0.963 | a crowd with short questions |
+| [MiMo-V2.6-Flash-RL](mimo-v2-6-flash/) FP8 · vLLM | 140 | 3,650 tok/s, **54 answers/s** at C=256 | 3,561 | 0.850 | 0.850 | 0.963 | a crowd with short questions |
 | [GLM-5.3-Flash](glm-5-3-flash/) NVFP4 · vLLM | 104 | 1,088 tok/s at 3.0 answers/s | 6,360 | 0.870 | 0.880 | 0.970 | only with `reasoning_effort: low` |
 | [DeepSeek-V4.1-Flash](deepseek-v4-1-flash-1017/vllm-exl3/) EXL3 3 bpw · vLLM, pack recipe | 153 | 1,510 tok/s at C=256 | 13,264 | 0.880 ¹ | 0.955 ¹ | **1.000** ¹ | **the best answers, at three quarters of Qwen's throughput** |
 | [DeepSeek-V4.1-Flash](deepseek-v4-1-flash-1017/strata/) 2.25 bpw · Strata | 112 | 302 tok/s at C=8 (2 replicas) | 4,159 | **0.890** | **0.965** | 0.994 | superseded by the EXL3 pack |
+| [DeepSeek-V4-Flash-0731](deepseek-v4-flash-0731/vllm/) FP8 · vLLM, unpatched | 95 (170 with DSpark) | **3,869 tok/s at C=256, 5,956 at C=1024** | 5,844 | 0.870 | 0.925 | 0.970 | the most tokens under load, from the stock image |
 | [Beam-1.0](beam-1-0/) NVFP4 · vLLM | 98 | 2,972 tok/s at C=256 | 4,616 | **0.890** | 0.910 | 0.951 | a crowd, with DeepSeek-level knowledge |
 | [Hy3](hy3/) FP8 · vLLM | 90 | 2,254 tok/s at C=256 | 1,763 | 0.880 | 0.940 | 0.994 | hard questions, given time |
 | [Nemotron-3-Super](nemotron-3-super/) NVFP4 · vLLM, 4 copies | 83 | 2,408 tok/s at C=256 | 6,597 (one card) | 0.830 | 0.910 | 0.982 | long contexts on one card per copy |
@@ -69,7 +71,9 @@ figures over the real run time ([why](../benchmark/README.md#the-window-overstat
 gives the best answers measured here at three quarters of the throughput of Qwen under vLLM,
 and reads a million tokens of context. Strata with Qwen stays the fastest for a handful of users and
 for long prompts up to 262k; MiMo under vLLM is the one to put in front of hundreds. GLM
-matches Qwen on quality and loses to it on every speed column. Hy3 answers at DeepSeek's level
+matches Qwen on quality and loses to it on every speed column. DeepSeek-V4-Flash-0731 on stock
+vLLM moves the most tokens under load and keeps climbing to 1,024 clients, a step below V4.1 on
+answers. Hy3 answers at DeepSeek's level
 and is the slowest to get there: ten times the tokens with thinking, and a cache for barely one
 long document.
 
@@ -137,7 +141,12 @@ which made vLLM and stock SGLang abort with `Assertion error: Unsupported
 architecture`. Tracked in [DeepGEMM #317](https://github.com/deepseek-ai/DeepGEMM/issues/317)
 and [vLLM #41063](https://github.com/vllm-project/vllm/issues/41063).
 
-Expect to need a patched fork or a community image for any recent architecture.
+Expect to need a patched fork or a community image for any recent architecture — for a
+while. By November stock vLLM 0.33 had closed this gap for DeepSeek-V4: it serves the 0731
+checkpoint [unpatched](deepseek-v4-flash-0731/vllm/), faster than the August patchset, and
+NVFP4 checkpoints run without help. The gaps that remain are narrower: MiniMax-M3.1's sparse
+attention exists only for SM100/SM103, and FlashInfer's SM120 sparse-MLA decode does not fit
+its fixed workspace when one card computes all 64 heads of DeepSeek-V4.
 
 ### A model that fits one card changes which engine wins
 

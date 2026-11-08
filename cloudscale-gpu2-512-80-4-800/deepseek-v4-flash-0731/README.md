@@ -1,8 +1,9 @@
 # DeepSeek-V4-Flash-0731
 
-Two server setups measured with the same checkpoint on
+Three server setups measured with the same checkpoint on
 [cloudscale `GPU2-512-80-4-800`](../README.md) — 4× RTX PRO 6000 Blackwell, sm120, no
-NVLink. Tested 14–15 August 2026.
+NVLink. Tested 14–15 August 2026 with a patched SGLang and llama.cpp, and 7–8 November 2026
+with stock vLLM.
 
 | | |
 |---|---|
@@ -14,7 +15,34 @@ NVLink. Tested 14–15 August 2026.
 | Speculation | DSpark (`dspark_block_size: 5` shipped, **use 7** on SM120) |
 | MTP | not available on this release — DSpark only |
 
-## Verdict
+## Verdict, November 2026
+
+**Stock vLLM 0.33 replaces the patched stack.** No patches and no draft model, and more
+throughput at every load level both were measured at: over the real run time
+([why](../../benchmark/README.md#the-window-overstates-slow-answers)) 3,869 tok/s at 256 clients
+and 5,956 at 1,024, against 2,762 and 4,438 for the August SGLang patchset read the same way.
+With the checkpoint's DSpark module the same image nearly doubles the single stream and falls
+behind from 128 clients on.
+
+| Thinking on | [vLLM 0.33](vllm/), no draft | [vLLM 0.33, DSpark](vllm/scenarios/dspark.md) | [SGLang patchset](sglang/), August |
+|---|---|---|---|
+| Single stream | 95.3 tok/s | **169.8** | 131.2 ¹ |
+| C=256, over the real run time | **3,869 tok/s** · 18.8 answers/s | 1,594 · 7.9 | 2,762 · 8.3 |
+| C=1024, over the real run time | **5,956 tok/s** · 29.5 answers/s | — | 4,438 · 14.3 |
+| Decode | 92 tok/s, 89 behind 64k | 155–320, 183 behind 64k | — |
+| Prefill at 250k | 5,844 tok/s, 3/3 needles | — | 1M verified ¹ |
+| Context served | 262,144 | 262,144 | 1,048,576 |
+| `q1` MMLU-Pro / IFEval / HumanEval | 0.870 / 0.925 / 0.970 | — | — |
+
+¹ measured before protocol `v1`.
+
+**Without thinking four cards give what two gave with the patched SGLang:** 29.8–31.5 answers/s from 256 to
+768 clients, against 32.1–33.4 for the patched SGLang on the
+[two-card machine](../../cloudscale-gpu2-256-40-2-1600/deepseek-v4-flash-0731/). The 37-token
+answers leave prefill as the limit. Four data-parallel copies, which would have quadrupled the
+cache, [do not start](vllm/README.md#what-did-not-run) on this vLLM.
+
+## Verdict, August 2026
 
 **Production: [SGLang with SM120 patchset](sglang/).** [llama.cpp](llama-cpp/) was the
 alternative it was measured against; it is no longer deployed and its weights were
@@ -47,17 +75,20 @@ faster configuration is a measured finding, not yet a recommendation.
 
 | Setup | Role | Engine | Startup |
 |---|---|---|---|
+| [`vllm/`](vllm/) | measured 2026-11-07/08 | vLLM 0.33.0, unpatched, TP=4 + EP | 522 s, 572 s with DSpark |
 | [`sglang/`](sglang/) | production since 2026-08-15 | SGLang v0.5.16 + SM120 patchset | 151 s warm · 274 s cold |
 | [`llama-cpp/`](llama-cpp/) | measured, not deployed | llama.cpp `7e4c0a96`, GGUF UD-Q8_K_XL | 20 s warm |
 
 ### Scenario coverage
 
-| Scenario | llama.cpp | SGLang |
-|---|---|---|
-| Single stream | [measured](llama-cpp/scenarios/single-stream.md) | [measured](sglang/scenarios/single-stream.md) |
-| Concurrent load | [C 1–32](llama-cpp/scenarios/concurrent-load.md) | [C 1–256 + prompt mix](sglang/scenarios/concurrent-load.md) |
-| Long context | [0–128k](llama-cpp/scenarios/long-context.md) | [full 1M verified](sglang/scenarios/long-context.md) |
-| Reasoning cost | not measured | [measured](sglang/scenarios/reasoning-cost.md) |
+| Scenario | llama.cpp | SGLang | vLLM 0.33 |
+|---|---|---|---|
+| Single stream | [measured](llama-cpp/scenarios/single-stream.md) | [measured](sglang/scenarios/single-stream.md) | [measured](vllm/scenarios/single-stream.md) |
+| Concurrent load | [C 1–32](llama-cpp/scenarios/concurrent-load.md) | [C 1–256 + prompt mix](sglang/scenarios/concurrent-load.md) | [C 1–1024 + prompt mix](vllm/scenarios/concurrent-load.md) |
+| Long context | [0–128k](llama-cpp/scenarios/long-context.md) | [full 1M verified](sglang/scenarios/long-context.md) | [to 250k](vllm/scenarios/long-context.md) |
+| Reasoning cost | not measured | [measured](sglang/scenarios/reasoning-cost.md) | [measured](vllm/scenarios/reasoning-cost.md) |
+| Quality (`q1`) | not measured | not measured | [both arms](vllm/scenarios/quality.md) |
+| DSpark | — | in the production config | [measured separately](vllm/scenarios/dspark.md) |
 
 ## The one finding that decided it
 
