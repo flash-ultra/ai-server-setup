@@ -76,6 +76,15 @@ second — a 2.6× range from one request parameter, more than separates MiMo fr
 Qwen3.8-Flash-Next under vLLM on four cards (1.8×). A figure without a stated thinking arm is not comparable to
 anything, and neither column is wrong; they measure different work.
 
+### Embedding models
+
+Measured on [`GPU2-512-80-4-800`](cloudscale-gpu2-512-80-4-800/embeddings/), four copies each,
+protocol [`e1`](benchmark/README.md#embeddings-protocol-e1), 2026-11-08: **Nemotron-3.5-Embed-8B
+is the best on all four retrieval tasks** (SciFact 0.833, GerDaLIR court decisions 0.547);
+**bge-m3 ingests 1.16 M tokens/s** on four cards, 18 times the 8 B models; the 27 B
+harrier-oss-v1 costs three times the compute of an 8 B model and wins nothing; FP8 on the fly
+gives 1.7× for at most 0.004 nDCG@10.
+
 ---
 
 ## Layout

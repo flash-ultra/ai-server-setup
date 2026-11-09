@@ -1,0 +1,9 @@
+enable_chunked_prefill=True
+enable_prefix_caching=True
+max_num_batched_tokens=8192.
+Using FLASH_ATTN attention backend
+Model loading took 14.11 GiB
+0, 87059 MiB
+1, 87605 MiB
+2, 87605 MiB
+3, 87605 MiB

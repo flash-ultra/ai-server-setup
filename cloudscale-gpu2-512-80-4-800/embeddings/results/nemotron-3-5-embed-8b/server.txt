@@ -1,0 +1,8 @@
+enable_chunked_prefill=False
+enable_prefix_caching=False
+Using FLASH_ATTN attention backend
+Model loading took 15.74 GiB
+0, 17563 MiB
+1, 17563 MiB
+2, 17563 MiB
+3, 17563 MiB

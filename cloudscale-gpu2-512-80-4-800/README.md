@@ -94,6 +94,23 @@ not. Protocol [`vq1`](../benchmark/README.md#vision-protocol-vq1-measured-with-i
 four standard errors); without thinking the two are level. DeepSeek loses part of its MMMU score
 to 15 answers that deliberate until the 50,000-token cap.
 
+### Embeddings, November 2026
+
+Four embedding models as four copies each, vLLM 0.33 `--runner pooling`, protocol
+[`e1`](../benchmark/README.md#embeddings-protocol-e1), measured 2026-11-08. Full results on
+[the embeddings page](embeddings/).
+
+| Four cards | SciFact | GermanDPR | GerDaLIR (court decisions) | Ingest, 512-token chunks | 9,969 decisions |
+|---|---|---|---|---|---|
+| bge-m3 | 0.644 | 0.825 | 0.320 | **1,160,029 tok/s** | **53 s** |
+| Qwen3-Embedding-8B, BF16 / FP8 | 0.784 / 0.780 | 0.844 / 0.843 | 0.450 / 0.449 | 65,273 / 113,365 | 13.0 / 8.1 min |
+| harrier-oss-v1-27b, BF16 / FP8 | 0.800 / 0.797 | 0.809 / 0.810 | 0.471 / 0.469 | 18,184 / 30,470 | 36.7 / 22.2 min |
+| Nemotron-3.5-Embed-8B | **0.833** | **0.870** | **0.547** | 61,845 | 15.7 min |
+
+**Nemotron-3.5-Embed-8B is the best on every task at the cost of an 8 B model; bge-m3 is 18
+times faster and 23 points behind on court decisions.** Four copies are four times one card
+for every model, and FP8 on the fly adds 1.7× for at most 0.004 nDCG@10.
+
 ## Test list, November 2026
 
 Requested 2026-11-06, each with throughput under protocol [`v1`](../benchmark/README.md) and

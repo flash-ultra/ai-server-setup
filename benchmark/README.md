@@ -229,6 +229,43 @@ Check the sample IDs across models before comparing; the first `vq1` pair was id
 three benchmarks. A sample that reaches the token cap is scored as wrong, and the stop-reason
 check reports it.
 
+## Embeddings: protocol `e1`
+
+Throughput, query latency and retrieval quality of embedding models, one server copy per
+card. Scripts in [`embeddings/`](embeddings/): `embbench.py` for load, `embeval.py` for
+quality, `embcommon.py` for datasets, prompts and the HTTP client. Python 3.12 with `httpx`,
+`numpy`, `pyarrow` and `huggingface_hub`.
+
+| Parameter | Value | Why it is pinned |
+|---|---|---|
+| Server | vLLM `--runner pooling`, `--max-model-len` the model's limit, `--gpu-memory-utilization 0.90`, one copy per card | Embedding models fit one card; copies scale linearly and need no traffic between cards |
+| Ingest | 32 chunks of ~512 tokens per request, 30 s per level, worker *i* on copy *i* mod *n* | 512 tokens is a common RAG chunk. Chunks are cut at random offsets from a mixed English and German pool, so no two requests share a prefix and a prefix cache cannot help |
+| Throughput | `usage.prompt_tokens` of all responses ÷ (last response − start) | The real run time, not a window ([why](#the-window-overstates-slow-answers)) |
+| Queries | 200 real queries one at a time for latency, then one query per request at 1, 16, 64, 256 clients | Search is many tiny requests, a different load from ingest |
+| Long documents | one document of ~2k, ~8k and ~32k tokens per request, median of three | Shows where attention starts to cost |
+| Quality tasks | SciFact (English, 5,183 abstracts, 300 claims); GermanQuAD-Retrieval (474 passages, 2,204 questions); GermanDPR (2,876 passages with hard negatives, 1,025 questions); GerDaLIRSmall (9,969 German court decisions, 12,234 queries); test splits of the `mteb/` datasets | One English task with published scores as a correctness check; German from short QA to full court decisions |
+| Search and score | exact cosine over the whole corpus; nDCG@10, Recall@10 and @100 | No ANN index, so the number belongs to the model |
+| Truncation | every input at 8,192 tokens (`truncate_prompt_tokens`) | bge-m3's limit; one cut for every model keeps GerDaLIR comparable |
+| Query prompt | MTEB's: SciFact's task prompt, and for the German tasks the retrieval default "Retrieve text based on user query."; documents without prompt. Format per model, Nemotron via `input_type` on `/v2/embed` | Reproduces published MTEB results to ±0.002 |
+
+```bash
+python embeval.py --urls http://127.0.0.1:8001,http://127.0.0.1:8002 --style qwen --task scifact
+python embbench.py --urls http://127.0.0.1:8001 --scenario ingest --levels 1,2,4,8,16,32
+python embbench.py --urls http://127.0.0.1:8001 --style qwen --scenario query --levels 1,16,64,256
+```
+
+**Checked against published MTEB results:** bge-m3 SciFact 0.6438 against 0.6437;
+Qwen3-Embedding-8B SciFact 0.7841 against 0.7846, GermanQuAD 0.9704 against 0.9709, GermanDPR
+0.8439 against 0.8445, GerDaLIRSmall 0.4497 against 0.4519.
+
+**The query prompt is part of the result.** A specific instruction instead of MTEB's default
+moved Qwen by −9.5 and harrier by +3.9 points on the same German task, so a quality number
+without its prompt is not comparable.
+
+**One Python client process tops out at 600 to 1,900 queries/s**, below what four copies
+serve. Run the query scenario from several processes and add them up; a single process gives
+a lower bound.
+
 ## Known deviations in existing documents
 
 The DeepSeek-V4-Flash-0731 series predates this protocol and is not fully consistent
